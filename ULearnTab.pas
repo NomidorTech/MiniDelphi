@@ -33,6 +33,27 @@ unit ULearnTab;
 //  ckAnyOutput        — anything non-empty passes (free-form exercises)
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] ULearnTab.pas  -  Aba interativa de ensino "Aprenda Pascal"
+//
+//  Arquitetura
+//  ───────────
+//  TLearnCurriculum   — contém todas as lições e desafios (dados puros)
+//  TAnswerChecker     — executa o código do aluno e decide aprovado/reprovado
+//  TProgressStore     — lembra quais desafios foram concluídos (arquivo INI)
+//  TLearnTab          — painel VCL que controla tudo
+//  TCertificateForm   — janela de certificado ao concluir todos os desafios
+//
+//  Estratégias de verificação (TCheckKind)
+//  ───────────────────────────────────────
+//  ckExactOutput      — saída deve corresponder exatamente à string esperada
+//  ckContainsAll      — saída deve conter todas as strings da lista de verificação
+//  ckOutputIsNumber   — saída (sem espaços) deve ser um número igual a N
+//  ckOutputInRange    — número da saída deve estar entre Lo e Hi
+//  ckLineCount        — saída deve ter exatamente N linhas
+//  ckAnyOutput        — qualquer saída não vazia é aprovada (exercícios livres)
+// =============================================================================
+
 interface
 
 uses
@@ -60,6 +81,9 @@ type
 // ---------------------------------------------------------------------------
 //  One programming challenge
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Um desafio de programação
+// -------------------------------------------------------------------
   TChallenge = record
     ID           : Integer;
     Title        : string;
@@ -79,6 +103,9 @@ type
 // ---------------------------------------------------------------------------
 //  One lesson (a named group of challenges)
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Uma lição (um grupo nomeado de desafios)
+// -------------------------------------------------------------------
   TLesson = record
     Number     : Integer;
     Title      : string;
@@ -89,6 +116,9 @@ type
 // ---------------------------------------------------------------------------
 //  The full curriculum
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] O currículo completo
+// -------------------------------------------------------------------
   TLearnCurriculum = class
   private
     FLessons : TArray<TLesson>;
@@ -104,6 +134,9 @@ type
 // ---------------------------------------------------------------------------
 //  Answer checker — runs code, applies strategy
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Verificador de respostas — executa o código e aplica a estratégia
+// -------------------------------------------------------------------
   TAnswerChecker = class
   private
     class function RunCode(const Source: string;
@@ -118,6 +151,9 @@ type
 // ---------------------------------------------------------------------------
 //  Progress store — persists completions between sessions
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Armazenamento de progresso — persiste conclusões entre sessões
+// -------------------------------------------------------------------
   TProgressStore = class
   private
     FPath    : string;
@@ -140,6 +176,9 @@ type
 // ---------------------------------------------------------------------------
 //  Certificate pop-up
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Janela pop-up de certificado
+// -------------------------------------------------------------------
   TCertificateForm = class(TForm)
   private
     FMemo : TMemo;
@@ -156,6 +195,9 @@ type
 // ---------------------------------------------------------------------------
 //  The VCL Learn tab panel  (drop onto a TTabSheet)
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Painel VCL da aba Aprender  (coloque em um TTabSheet)
+// -------------------------------------------------------------------
   TLearnTab = class
   private
     FParent      : TWinControl;
@@ -246,6 +288,9 @@ implementation
 //  Each challenge has a unique ID (never reuse or renumber — used as keys
 //  in the progress INI file).
 // ═══════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════
+// [PT-BR] DADOS DO CURRÍCULO — cada desafio tem um ID único (nunca reutilize ou renumere — chave no INI de progresso)
+// ═════════════════════════════════════════════════════
 
 constructor TLearnCurriculum.Create;
 begin
@@ -1248,6 +1293,9 @@ end;
 // ═══════════════════════════════════════════════════════════════════════════
 //  PROGRESS STORE
 // ═══════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════
+// [PT-BR] ARMAZENAMENTO DE PROGRESSO
+// ═════════════════════════════════════════════════════
 
 constructor TProgressStore.Create;
 begin
@@ -1319,6 +1367,9 @@ end;
 // ═══════════════════════════════════════════════════════════════════════════
 //  CERTIFICATE FORM
 // ═══════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════
+// [PT-BR] FORMULÁRIO DE CERTIFICADO
+// ═════════════════════════════════════════════════════
 
 constructor TCertificateForm.Create(AOwner: TComponent;
   const StudentName: string; Points, Total: Integer);
@@ -1742,6 +1793,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Sync the TreeView selection to the current lesson/challenge
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Sincronizar a seleção da TreeView com a lição/desafio atual
+// -------------------------------------------------------------------
 procedure TLearnTab.SelectNavNode;
 var
   Node    : TTreeNode;
@@ -1763,6 +1817,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Update score label
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Atualizar rótulo de pontuação
+// -------------------------------------------------------------------
 procedure TLearnTab.UpdateScore;
 var
   Done, Total, Pts : Integer;
@@ -1777,6 +1834,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Update star display for current lesson
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Atualizar exibição de estrelas para a lição atual
+// -------------------------------------------------------------------
 procedure TLearnTab.UpdateStars;
 var
   Lesson  : TLesson;

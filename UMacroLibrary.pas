@@ -21,6 +21,21 @@ unit UMacroLibrary;
 //  The user can then edit, delete, or extend them freely.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UMacroLibrary.pas  -  Biblioteca inicial de macros de automação
+//
+//  Cada macro é um arquivo .mdp autocontido com metadados no comentário
+//  de cabeçalho:
+//
+//      // @name        Nome legível da macro
+//      // @description Resumo em uma linha exibido na lista
+//      // @category    Grupo em que aparece
+//
+//  Na primeira execução, a aba Macros verifica a pasta de macros do usuário
+//  e a propaga com essas macros iniciais se estiver vazia.
+//  O usuário pode editar, excluir ou estendê-las livremente.
+// =============================================================================
+
 interface
 
 uses

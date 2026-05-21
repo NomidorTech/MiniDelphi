@@ -21,6 +21,12 @@ unit UPreferencesDialog;
 //  Live preview as you click each radio.  OK commits, Cancel reverts.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UPreferencesDialog.pas  —  Diálogo de Preferências (View → Preferences)
+//  Permite ao usuário escolher entre os modos de tema:
+//  Escuro (Carbon), Claro (Iceberg Classico) ou Seguir o Windows.
+// =============================================================================
+
 interface
 
 procedure ShowPreferencesDialog;

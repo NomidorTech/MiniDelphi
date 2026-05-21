@@ -21,6 +21,12 @@ unit UAST;
 //  must come AFTER those nodes, or use forward declarations.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UAST.pas  -  Definições dos nós da Árvore Sintática Abstrata (AST)
+//  Cada nó representa uma construção da linguagem Pascal:
+//  declarações, instruções, expressões e o programa completo.
+// =============================================================================
+
 interface
 
 uses

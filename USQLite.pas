@@ -35,6 +35,12 @@ unit USQLite;
 //  for a learning environment.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] USQLite.pas  —  Funções integradas de banco de dados do Pythia (DbXxx)
+//  Fornece acesso SQLite a programas .mdp via DbOpen, DbExec, DbQuery e outros.
+//  Requer sqlite3.dll ao lado do Pythia.exe.
+// =============================================================================
+
 interface
 
 uses

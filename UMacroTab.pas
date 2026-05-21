@@ -26,6 +26,25 @@ unit UMacroTab;
 //   • First-run seeding from UMacroLibrary
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UMacroTab.pas  -  Interface da aba de Macros
+//
+//  Macros ficam em:  %USERPROFILE%\Documents\MiniDelphi\Macros\
+//  Cada macro é um arquivo .mdp com metadados no cabeçalho:
+//
+//      // @name        Nome da Macro
+//      // @description Descrição em uma linha
+//      // @category    Grupo ao qual pertence
+//
+//  Funcionalidades
+//  ───────────────
+//   • Árvore de macros agrupadas por @category
+//   • Editor de código-fonte para a macro selecionada
+//   • Botões Run / Stop / Save / New
+//   • Alternância "Confiável" por macro: permite chamadas Shell* silenciosamente
+//   • Propagação inicial de macros a partir do UMacroLibrary
+// =============================================================================
+
 interface
 
 uses
@@ -41,6 +60,9 @@ type
   // ---------------------------------------------------------------------------
   //  Parsed macro metadata
   // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------
+  // [PT-BR] Metadados de macro analisados
+  // -------------------------------------------------------------------
   TMacroInfo = class
   public
     FilePath    : string;     // full disk path
@@ -241,6 +263,9 @@ end;
 // ═══════════════════════════════════════════════════════════════════════════
 //  THEME
 // ═══════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════
+// [PT-BR] TEMA
+// ═════════════════════════════════════════════════════
 
 procedure TMacroTab.ApplyTheme;
 begin

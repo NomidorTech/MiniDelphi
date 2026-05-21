@@ -18,6 +18,12 @@ unit UInterpreter;
 //  No machine code is generated — this IS the "runtime".
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UInterpreter.pas  -  Interpretador em Modo Árvore do Pythia
+//  Percorre a AST produzida pelo TParser e executa cada nó diretamente.
+//  Nenhum código de máquina é gerado — este módulo É o "runtime".
+// =============================================================================
+
 interface
 
 uses
@@ -1952,6 +1958,9 @@ end;
 // ---------------------------------------------------------------------------
 //  is  operator  (type checking)
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] operador  is  (verificação de tipo)
+// -------------------------------------------------------------------
 function TInterpreter.EvalIsExpr(Obj: TValue;
   const TypeName: string): TValue;
 begin

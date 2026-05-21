@@ -26,6 +26,20 @@ unit UFormBuilderTab;
 //  Skinned by VCL Styles (via UTheme). No per-control color code.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UFormBuilderTab.pas  —  Aba de designer visual de formulários
+//
+//  Layout
+//  ──────
+//    Topo:     barra de ferramentas — Novo / Abrir / Salvar / Salvar Como / Excluir
+//    Esquerda: lista de arquivos .mdfrm no projeto atual
+//    Centro-E: paleta vertical (Ponteiro / Label / Button / Edit)
+//    Centro:   superfície de design
+//    Direita:  Inspetor de Objetos
+//
+//  Estilizado pelo VCL Styles (via UTheme). Sem código de cor por controle.
+// =============================================================================
+
 interface
 
 uses

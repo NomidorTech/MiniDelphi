@@ -23,6 +23,17 @@ unit UExampleProjects;
 //  Used by UProjectTab to populate the Examples panel.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UExampleProjects.pas  —  30 projetos de exemplo do Pythia totalmente documentados
+//
+//  Cada exemplo é uma string de código-fonte .mdp autocontida com:
+//    • Um bloco de cabeçalho explicando o que o programa faz e o que ensina
+//    • Comentários em cada linha não trivial
+//    • Momentos de ensino destacados com  // *** NOTA: ...
+//
+//  Usado pelo UProjectTab para popular o painel de Exemplos.
+// =============================================================================
+
 interface
 
 uses System.SysUtils, System.Classes, System.Generics.Collections;

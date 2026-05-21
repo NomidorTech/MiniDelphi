@@ -17,6 +17,11 @@ unit UParser;
 //  Consumes the token list produced by TLexer and builds a TProgramNode AST.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UParser.pas  -  Analisador Sintático do Pythia (descida recursiva)
+//  Consome a lista de tokens produzida pelo TLexer e constrói a AST TProgramNode.
+// =============================================================================
+
 interface
 
 uses
@@ -38,6 +43,9 @@ type
     // ------------------------------------------------------------------
     //  Token access helpers
     // ------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // [PT-BR] Auxiliares de acesso a tokens
+    // -------------------------------------------------------------------
     function  Current        : TToken;
     function  Consume        : TToken;
     function  Expect(Kind: TTokenKind) : TToken;
@@ -47,6 +55,9 @@ type
     // ------------------------------------------------------------------
     //  Grammar rules  (each method = one grammar production)
     // ------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // [PT-BR] Regras gramaticais  (cada método = uma produção gramatical)
+    // -------------------------------------------------------------------
     function  ParseProgram     : TProgramNode;
     procedure ParseVarBlock    (Decls: TObjectList<TVarDecl>);
     function  ParseVarDecl     : TVarDecl;
@@ -119,6 +130,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Token helpers
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Auxiliares de token
+// -------------------------------------------------------------------
 function TParser.Current: TToken;
 begin
   if FPos < FTokens.Count then

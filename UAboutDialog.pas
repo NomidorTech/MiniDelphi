@@ -21,6 +21,12 @@ unit UAboutDialog;
 //  The form is built entirely in code -- no DFM required.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UGraphics.pas  —  Funções gráficas integradas do Pythia (GfxXxx)
+//  Fornece uma janela de desenho simples acessível a partir de programas .mdp
+//  via GfxOpen, GfxLine, GfxRect, GfxCircle, GfxText e outros.
+// =============================================================================
+
 interface
 
 uses

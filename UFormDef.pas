@@ -60,6 +60,12 @@ unit UFormDef;
 //      OnClick=OnGreetClick
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UFormDef.pas  —  Modelo de definição de formulário (.mdfrm)
+//  Define TFormDef e TControlDef — as estruturas de dados que representam
+//  um formulário Pythia e seus controles, usados pelo UFormBuilderTab.
+// =============================================================================
+
 interface
 
 uses

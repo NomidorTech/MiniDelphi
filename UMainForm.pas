@@ -12,6 +12,11 @@ unit UMainForm;
 //  Skinned via VCL Styles (TStyleManager). See UTheme.pas for details.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UMainForm.pas  -  Interface VCL principal do Pythia
+//  Estilizado via VCL Styles (TStyleManager). Consulte UTheme.pas para detalhes.
+// =============================================================================
+
 interface
 
 uses

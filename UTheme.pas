@@ -46,6 +46,20 @@ unit UTheme;
 //  Stored in <exe>.settings.ini as before.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UTheme.pas  —  Wrapper fino em torno dos VCL Styles (TStyleManager).
+//
+//  Modos de tema:
+//     tmDark           — aplica um estilo escuro (Carbon)
+//     tmLight          — aplica um estilo claro (Iceberg Classico)
+//     tmFollowWindows  — lê o registro do sistema e escolhe claro/escuro
+//
+//  A API pública é preservada: Theme.Mode, Theme.Subscribe, Theme.ApplyForm etc.
+//  Os métodos Apply* são operações nulas — o VCL Styles cuida de toda a pintura.
+//
+//  Persistência: salvo em <exe>.settings.ini como antes.
+// =============================================================================
+
 interface
 
 uses

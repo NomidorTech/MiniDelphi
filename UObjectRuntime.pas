@@ -13,7 +13,7 @@ unit UObjectRuntime;
 // =============================================================================
 
 // =============================================================================
-//  UObjectRuntime.pas  —  Object-oriented runtime for MiniDelphi
+//  UObjectRuntime.pas  —  Object-oriented runtime for Pythia
 //
 //  Implements:
 //    • TObjectInstance   — a live object in memory (fields + class ref)
@@ -23,19 +23,25 @@ unit UObjectRuntime;
 //
 //  How it works
 //  ────────────
-//  When MiniDelphi runs  dog := TDog.Create:
+//  When Pythia runs  dog := TDog.Create:
 //    1. TClassRegistry finds TClassDecl for 'TDog'
 //    2. Creates a TObjectInstance with ClassName='TDog'
 //    3. Pre-populates all inherited fields with default values
 //    4. Runs the constructor body (if any)
 //    5. Returns a TValue of kind vkObject pointing to the instance
 //
-//  When MiniDelphi runs  dog.Speak:
+//  When Pythia runs  dog.Speak:
 //    1. Evaluates dog → TValue(vkObject, TObjectInstance)
 //    2. Asks TClassRegistry to find method 'Speak' for class 'TDog'
 //    3. Registry walks inheritance chain: TDog → TAnimal → TObject
 //    4. Returns the most-derived TMethodDecl found
 //    5. Interpreter executes its body with Self bound to the instance
+// =============================================================================
+
+// =============================================================================
+// [PT-BR] UObjectRuntime.pas  —  Suporte a classes e objetos em tempo de execução
+//  Implementa instâncias de objetos, herança, métodos virtuais e o registro
+//  global de classes usado pelo interpretador do Pythia.
 // =============================================================================
 
 interface
@@ -47,6 +53,9 @@ uses
 type
   // -------------------------------------------------------------------
   //  A live object instance — one per  TFoo.Create  call
+  // -------------------------------------------------------------------
+  // -------------------------------------------------------------------
+  // [PT-BR] Uma instância viva de objeto — uma por chamada  TFoo.Create
   // -------------------------------------------------------------------
   TObjectInstance = class
   public
@@ -60,6 +69,9 @@ type
   // -------------------------------------------------------------------
   //  Method resolution result
   // -------------------------------------------------------------------
+  // -------------------------------------------------------------------
+  // [PT-BR] Resultado da resolução de método
+  // -------------------------------------------------------------------
   TMethodLookup = record
     Found      : Boolean;
     Method     : TMethodDecl;
@@ -68,6 +80,9 @@ type
 
   // -------------------------------------------------------------------
   //  The class registry — built from the parsed AST before running
+  // -------------------------------------------------------------------
+  // -------------------------------------------------------------------
+  // [PT-BR] O registro de classes — construído a partir da AST antes da execução
   // -------------------------------------------------------------------
   TClassRegistry = class
   private
@@ -252,6 +267,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Find a field's type by walking the inheritance chain
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Encontrar o tipo de um campo percorrendo a cadeia de herança
+// -------------------------------------------------------------------
 function TClassRegistry.ResolveField(const ClassName, FieldName: string;
   out TypeName: string): Boolean;
 var
@@ -285,6 +303,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Check interface conformance
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Verificar conformidade com interface
+// -------------------------------------------------------------------
 function TClassRegistry.Implements(const ClassName,
   InterfaceName: string): Boolean;
 var
@@ -312,6 +333,9 @@ end;
 // ---------------------------------------------------------------------------
 //  IsDescendant: is AClass the same as or a subclass of BClass?
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] IsDescendant: AClass é igual ou subclasse de BClass?
+// -------------------------------------------------------------------
 function TClassRegistry.IsDescendant(const AClass, BClass: string): Boolean;
 var
   Current : string;
@@ -332,6 +356,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Collect all fields for a class including inherited ones
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Coletar todos os campos de uma classe, incluindo os herdados
+// -------------------------------------------------------------------
 procedure TClassRegistry.CollectFields(const ClassName: string;
   Fields: TObjectList<TFieldDecl>);
 var
@@ -369,6 +396,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Collect all methods visible on a class (most derived wins)
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Coletar todos os métodos visíveis em uma classe (o mais derivado tem prioridade)
+// -------------------------------------------------------------------
 procedure TClassRegistry.CollectMethods(const ClassName: string;
   Methods: TObjectList<TMethodDecl>);
 var

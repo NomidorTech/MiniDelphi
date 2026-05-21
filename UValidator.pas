@@ -41,6 +41,12 @@ unit UValidator;
 //    Hint      — suggested fix (shown below the error)
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UValidator.pas  -  Passo de validação pré-execução do Pythia
+//  Chamado entre o parse e a execução. Percorre a AST e o texto-fonte
+//  para capturar erros comuns antes que o interpretador os toque.
+// =============================================================================
+
 interface
 
 uses
@@ -272,6 +278,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Pass 1: collect all declared names so later passes can spot undeclared ones
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Passo 1: coletar todos os nomes declarados para que passos posteriores detectem nomes não declarados
+// -------------------------------------------------------------------
 procedure TValidator.CollectDeclarations;
 var
   V  : TVarDecl;
@@ -319,6 +328,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Pass 2: check the main block exists and is not empty
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Passo 2: verificar se o bloco principal existe e não está vazio
+// -------------------------------------------------------------------
 procedure TValidator.CheckMainBlock;
 begin
   if not Assigned(FProgram.MainBlock) then
@@ -343,6 +355,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Pass 3: check each routine
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Passo 3: verificar cada rotina
+// -------------------------------------------------------------------
 procedure TValidator.CheckRoutines;
 var
   R          : TRoutineDecl;
@@ -401,6 +416,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Pass 4: check main block statements
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Passo 4: verificar as instruções do bloco principal
+// -------------------------------------------------------------------
 procedure TValidator.CheckMainStatements;
 var
   Scope : TDictionary<string, Boolean>;
@@ -421,6 +439,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Statement and expression walkers
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Percorrentes de instruções e expressões
+// -------------------------------------------------------------------
 
 procedure TValidator.CheckBlock(Block: TBlockStmt;
   Scope: TDictionary<string, Boolean>);

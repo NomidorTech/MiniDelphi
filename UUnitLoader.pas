@@ -44,6 +44,32 @@ unit UUnitLoader;
 //  Missing files generate a clear error message.
 // =============================================================================
 
+// =============================================================================
+// [PT-BR] UUnitLoader.pas  —  Sistema de importação de unidades do Pythia
+//
+//  Permite que um programa .mdp importe rotinas de outros arquivos .mdp:
+//
+//      uses
+//        'MatematicaHelper.mdp',
+//        'StringUtils.mdp';
+//
+//  Um arquivo .mdp de biblioteca não possui bloco principal begin..end —
+//  apenas declarações de var e procedure/function. Se possuir um bloco
+//  principal, ele é silenciosamente ignorado (apenas as rotinas são importadas).
+//
+//  Arquitetura
+//  ───────────
+//  TUnitLoader.LoadUnits(MainSource, BaseDir)
+//    1. Verifica a cláusula uses do código-fonte principal em busca de nomes
+//    2. Carrega cada arquivo do disco (relativo a BaseDir)
+//    3. Faz o léxico e parse de cada um
+//    4. Coleta todos os nós TRoutineDecl em uma lista plana
+//    5. Retorna essa lista — o interpretador a mescla com as rotinas do programa principal
+//
+//  Importações circulares são detectadas e ignoradas.
+//  Arquivos ausentes geram uma mensagem de erro clara.
+// =============================================================================
+
 interface
 
 uses
@@ -213,6 +239,9 @@ end;
 // ---------------------------------------------------------------------------
 //  Load one unit file, parse it, store its routines
 // ---------------------------------------------------------------------------
+// -------------------------------------------------------------------
+// [PT-BR] Carregar um arquivo de unidade, fazer parse e armazenar suas rotinas
+// -------------------------------------------------------------------
 procedure TUnitLoader.LoadOne(const FileName: string);
 var
   FullPath : string;

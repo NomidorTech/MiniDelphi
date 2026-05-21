@@ -1,7 +1,7 @@
-﻿unit UGraphics;
+unit UGraphics;
 
 // =============================================================================
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia — A Pascal Learning Environment
 // Copyright (C) 2026 Nomidor Software, LLC.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -12,10 +12,10 @@
 // See the LICENSE file or https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
 //
-//  UGraphics.pas  -  Thread-safe animation window for MiniDelphi
+//  UGraphics.pas  -  Thread-safe animation window for Pythia
 //
 //  Architecture:
-//    The MiniDelphi interpreter runs on the MAIN thread.
+//    The Pythia interpreter runs on the MAIN thread.
 //    GfxShow uses TThread.Synchronize to push a bitmap copy to the
 //    TImage on the VCL thread — this is the only safe way to paint
 //    from a thread that also owns the message loop.
