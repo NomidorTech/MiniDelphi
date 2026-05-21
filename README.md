@@ -6,6 +6,9 @@ Think of MiniDelphi as a sandbox: a real Pascal-like language with a full tokeni
 
 It is **not** a Delphi compiler. It does not produce native binaries. It is a learning environment.
 
+<img width="1167" height="785" alt="image" src="https://github.com/user-attachments/assets/38c4d875-edc4-4456-beb7-aa91eab98630" />
+
+
 ---
 
 ## Why?
