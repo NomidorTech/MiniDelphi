@@ -1,7 +1,7 @@
 unit UAboutDialog;
 
 // =============================================================================
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // Copyright (C) 2026 Nomidor Software, LLC.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@ unit UAboutDialog;
 // =============================================================================
 //  UAboutDialog.pas  -  Modal About dialog with two tabs:
 //                       [About]            version, copyright, license, feature list
-//                       [Programming Guide] language reference for MiniDelphi
+//                       [Programming Guide] language reference for Pythia
 //
 //  Usage:
 //     ShowAboutDialog;
@@ -73,7 +73,7 @@ end;
 constructor TAboutForm.Create(AOwner: TComponent);
 begin
   inherited CreateNew(AOwner);
-  Caption       := 'About MiniDelphi';
+  Caption       := 'About Pythia';
   Width         := 720;
   Height        := 600;
   Position      := poScreenCenter;
@@ -165,10 +165,11 @@ begin
     BeginUpdate;
     try
       Clear;
-      Add('MiniDelphi Toy Compiler & Learning IDE');
+      Add('Pythia -- a Pascal learning environment');
+      Add('Where Pascal begins.');
       Add('------------------------------------------------------');
       Add('');
-      Add('Version 1.1   |   May 2026');
+      Add('Version 1.2   |   May 2026');
       Add('');
       Add('Copyright (c) 2026 Nomidor Software, LLC.');
       Add('All rights reserved.');
@@ -228,8 +229,8 @@ begin
       Clear;
 
       Add('============================================================');
-      Add(' MINIDELPHI PROGRAMMING GUIDE');
-      Add(' Quick reference for the MiniDelphi language');
+      Add(' PYTHIA PROGRAMMING GUIDE');
+      Add(' Quick reference for Pythia''s Pascal');
       Add('============================================================');
       Add('');
       Add('');
@@ -349,7 +350,7 @@ begin
       Add('    writeln(''F'');');
       Add('  end;');
       Add('');
-      Add('  -- caseof (string switch -- MiniDelphi extension) --');
+      Add('  -- caseof (string switch -- Pythia extension) --');
       Add('  caseof animal of');
       Add('    ''cat''   : writeln(''Meow!'');');
       Add('    ''dog''   : writeln(''Woof!'');');
@@ -455,7 +456,7 @@ begin
       Add('  text := ReadFile(name)        - read whole file');
       Add('  if FileExists(name) then ...');
       Add('  DeleteFile(name)');
-      Add('  GetAppPath                    - folder where MiniDelphi runs from');
+      Add('  GetAppPath                    - folder where Pythia runs from');
       Add('  GetDesktopPath                - user''s desktop folder');
       Add('');
       Add('');
@@ -555,7 +556,7 @@ begin
       Add('14. SQLITE DATABASE');
       Add('-------------------');
       Add('');
-      Add('Requires sqlite3.dll alongside the MiniDelphi executable.');
+      Add('Requires sqlite3.dll alongside Pythia.exe.');
       Add('');
       Add('  DbOpen(filename)              - open / create a database');
       Add('  DbClose                       - close it');
@@ -730,14 +731,14 @@ begin
       Add('  * Pascal source code');
       Add('  * a "Trusted" flag controlling whether shell builtins may run');
       Add('');
-      Add('Macro source uses the same MiniDelphi language as regular');
+      Add('Macro source uses the same Pascal as regular');
       Add('programs, but also has access to:');
       Add('');
       Add('  Shell(cmd)        Run a shell command, return its stdout');
       Add('  ShellConfirm(cmd) Run with confirmation prompt');
       Add('');
       Add('Shell builtins only work when the macro is marked Trusted. The');
-      Add('first time an untrusted macro tries to use Shell, MiniDelphi');
+      Add('first time an untrusted macro tries to use Shell, Pythia');
       Add('asks for confirmation; trust is remembered per macro.');
       Add('');
       Add('Macros live in a folder under the user''s AppData and are loaded');
@@ -757,11 +758,11 @@ begin
       Add('  * Follow Windows -- match the system''s dark/light setting');
       Add('');
       Add('Theme changes apply live. The choice is saved to a file named');
-      Add('MiniDelphi.settings.ini next to the executable, so it persists');
+      Add('Pythia.settings.ini next to the executable, so it persists');
       Add('across restarts.');
       Add('');
       Add('Follow Windows mode also responds to system theme changes while');
-      Add('MiniDelphi is running -- toggle Windows dark mode and the IDE');
+      Add('Pythia is running -- toggle Windows dark mode and the IDE');
       Add('updates immediately.');
       Add('');
       Add('Themes are powered by VCL Styles. The styles Carbon and Iceberg');

@@ -1,21 +1,23 @@
-# MiniDelphi
+# Pythia
 
-A toy Pascal/Delphi interpreter and learning IDE, written in Delphi 13 (Athens) for Windows.
+**Where Pascal begins.**
 
-Think of MiniDelphi as a sandbox: a real Pascal-like language with a full tokeniser, parser, and tree-walking interpreter, wrapped in a friendly IDE with lessons, examples, snippets, a calculator, a visual form builder, and a project system. It runs your code, draws your forms, opens database files, and teaches Delphi syntax with side-by-side tutorials.
+Pythia is a Pascal learning environment for Windows. It pairs a real interpreted Pascal — with classes, recursion, file I/O, graphics, and SQLite — to an IDE built around teaching the language rather than hiding it.
 
-It is **not** a Delphi compiler. It does not produce native binaries. It is a learning environment.
+Built in Delphi 13 (Athens). Win64.
 
 <img width="1167" height="785" alt="image" src="https://github.com/user-attachments/assets/38c4d875-edc4-4456-beb7-aa91eab98630" />
 
 
 ---
 
-## Why?
+## Why Pythia?
 
-Delphi is a beautiful language with a steep beginner ramp. A new programmer opening the real Delphi IDE meets an overwhelming wall of menus, components, properties, and tooling that has nothing to do with learning the language itself. MiniDelphi is what happens if you strip all of that away and keep only the parts that help a person actually learn Pascal: a place to type code, a button to run it, examples that don't assume prior knowledge, and a built-in reference for every feature.
+Pascal is a beautiful language with a steep first hour. A new programmer opening the real Delphi IDE meets an overwhelming wall of menus, components, properties, and tooling that has nothing to do with learning the language itself. Pythia is what happens when you strip all of that away and keep only the parts that help a person actually learn Pascal: a place to type code, a button to run it, examples that don't assume prior knowledge, friendly errors, and a built-in reference for every feature.
 
-It's also a fun toy for old hands who want a quick scratchpad for Pascal experiments.
+It's also a clean scratchpad for experienced Pascal programmers who want to experiment without spinning up the full Delphi IDE.
+
+The name comes from the Pythia — the priestess at the Oracle of Delphi. Where the Oracle spoke through her, Pascal speaks through Pythia.
 
 ---
 
@@ -72,10 +74,10 @@ It's also a fun toy for old hands who want a quick scratchpad for Pascal experim
 ### Building
 
 1. Clone this repository
-2. Open `MiniDelphi.dpr` in Delphi
+2. Open `Pythia.dpr` in Delphi
 3. **Project → Options → Application → Appearance** — tick the boxes for `Carbon`, `Iceberg Classico`, and (optionally) `Windows10 SlateGray` and `Glossy` as fallbacks
 4. **Project → Build** (Shift+F9)
-5. Run with **F9** or launch the produced `MiniDelphi.exe`
+5. Run with **F9** or launch the produced `Pythia.exe`
 
 ### Running
 
@@ -83,13 +85,13 @@ The IDE opens on the Compiler tab with a Hello World example pre-loaded. Click *
 
 ---
 
-## Hello, MiniDelphi
+## Hello, Pythia
 
 ```pascal
 program HelloWorld;
 begin
   writeln('Hello, World!');
-  writeln('Welcome to MiniDelphi!');
+  writeln('Welcome to Pythia!');
 end.
 ```
 
@@ -136,7 +138,7 @@ end.
 
 ## Project structure
 
-A MiniDelphi project lives in a folder with one `.mdproj` file and any number of `.mdp` library files and `.mdfrm` form definition files.
+A Pythia project lives in a folder with one `.mdproj` file and any number of `.mdp` library files and `.mdfrm` form definition files.
 
 The `.mdproj` is an INI-style file with three sections:
 
@@ -165,8 +167,8 @@ The main program lives in `[Source]`, exactly like a real Delphi `.dpr`. Library
 ## Architecture
 
 ```
-MiniDelphi/
-├── MiniDelphi.dpr            # project entry point
+Pythia/
+├── Pythia.dpr            # project entry point
 ├── UMainForm.pas             # main VCL form with the tab pages
 ├── ULexer.pas                # source → tokens
 ├── UParser.pas                # tokens → AST (recursive descent)
@@ -195,12 +197,12 @@ MiniDelphi/
 
 GPL-3.0. See [LICENSE](LICENSE) for the full text.
 
-This means: you can use, modify, and distribute MiniDelphi freely, as long as derivative works remain GPL-3.0 licensed and their source is made available.
+This means: you can use, modify, and distribute Pythia freely, as long as derivative works remain GPL-3.0 licensed and their source is made available.
 
 ---
 
 ## Author
 
-MiniDelphi is developed by **Nomidor Software, LLC.**
+Pythia is developed by **Nomidor Software, LLC.**
 
 For bugs, suggestions, or contributions, open an issue or pull request on GitHub.

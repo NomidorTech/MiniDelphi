@@ -1,0 +1,1708 @@
+﻿unit UProjectTab;
+
+// =============================================================================
+// Copyright (c) 2026 Nomidor Software, LLC.
+// All rights reserved.
+//
+// MiniDelphi Toy Compiler & Learning IDE
+// Unauthorised copying, distribution or modification is prohibited.
+// =============================================================================
+
+// =============================================================================
+//  UProjectTab.pas  —  Project IDE tab for MiniDelphi
+//
+//  Features
+//  ────────
+//  • New / Open / Save / Save As for .mdp source files
+//  • Project files (.mdproj) group multiple .mdp files together
+//  • When a project is open, ALL .mdp files in the project folder are
+//    discovered and shown in the tree (folder-scan approach)
+//  • Main file is shown in bold; right-click to change it
+//  • F5 / Run always executes the project main file, regardless of which
+//    file is currently being edited (Delphi-style)
+//  • New file (with project open) is created inside the project folder
+//  • Examples tree remains accessible below the Project node
+//  • Run / Stop buttons (Stop interrupts a running program)
+//  • Insert button + right-click menu for code snippets
+//
+//  File formats
+//  ────────────
+//  .mdp      Plain text MiniDelphi source  (UTF-8)
+//  .mdproj   Simple text project file:
+//              [Project]
+//              Name=MyProject
+//              Description=...
+//              MainFile=Main.mdp
+// =============================================================================
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Classes, System.Generics.Collections,
+  System.IniFiles, System.IOUtils,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.Graphics, Vcl.ComCtrls, Vcl.Buttons, Vcl.Menus, Vcl.Dialogs,
+  System.UITypes,
+  ULexer, UParser, UAST, UInterpreter,
+  UExampleProjects;
+
+type
+  // ---------------------------------------------------------------------------
+  //  Recent files list (persisted in INI)
+  // ---------------------------------------------------------------------------
+  TRecentFiles = class
+  private
+    FList : TStringList;
+    FPath : string;
+    const MAX = 10;
+  public
+    constructor Create;
+    destructor  Destroy; override;
+    procedure   Add(const Path: string);
+    procedure   Load;
+    procedure   Save;
+    property    Files : TStringList read FList;
+  end;
+
+  // ---------------------------------------------------------------------------
+  //  Snippet record — used by the Insert button and editor popup
+  // ---------------------------------------------------------------------------
+  TSnippet = record
+    Name         : string;
+    Body         : string;
+    CaretFromEnd : Integer;
+  end;
+
+  // ---------------------------------------------------------------------------
+  //  Tree node Data values. Negative values are sentinel categories; 0+ are
+  //  indices into FExamples; -200..-299 are indices into FProjectFiles.
+  // ---------------------------------------------------------------------------
+  // Encodings used in Node.Data:
+  //   -1                    = "Recent Files" root
+  //   -2                    = "Example Projects" root
+  //   -3                    = example category folder
+  //   -4                    = "Project: X" root
+  //   -(100 + recentIndex)  = a recent file entry
+  //   -(200 + projFileIdx)  = a project file entry  (NEW)
+  //    >= 0                 = index into FExamples.Items
+
+  // ---------------------------------------------------------------------------
+  //  The Project tab panel
+  // ---------------------------------------------------------------------------
+  TProjectTab = class
+  private
+    FParent       : TWinControl;
+    FExamples     : TExampleLibrary;
+    FRecent       : TRecentFiles;
+
+    // Current file state
+    FCurrentFile  : string;            // full path to open .mdp file
+    FProjectFile  : string;            // full path to open .mdproj file
+    FProjectName  : string;
+    FProjectMain  : string;            // full path of the project's main .mdp file
+    FProjectFiles : TStringList;       // full paths of all .mdp files in proj folder
+    FModified     : Boolean;
+
+    // ── UI controls ──────────────────────────────────────────────────────────
+    FOuterPanel     : TPanel;
+
+    // Toolbar
+    FToolBar        : TPanel;
+    FBtnNew         : TButton;
+    FBtnOpen        : TButton;
+    FBtnSave        : TButton;
+    FBtnSaveAs      : TButton;
+    FBtnRun         : TButton;
+    FBtnStop        : TButton;
+    FBtnInsert      : TButton;
+    FBtnNewProj     : TButton;
+    FBtnOpenProj    : TButton;
+    FBtnCloseProj   : TButton;
+    FBtnRefresh     : TButton;
+    FLabelFile      : TLabel;
+
+    // Left tree (project + examples + recent)
+    FLeftPanel      : TPanel;
+    FSplitter       : TSplitter;
+    FTree           : TTreeView;
+    FLabelTree      : TLabel;
+
+    // Right editor + output
+    FRightPanel     : TPanel;
+    FEditorLabel    : TLabel;
+    FEditor         : TMemo;
+    FSplitVert      : TSplitter;
+    FOutputLabel    : TLabel;
+    FOutput         : TMemo;
+
+    // Tree node roots
+    FNodeProject    : TTreeNode;       // "Project: X" — only when project is open
+    FNodeRecent     : TTreeNode;
+    FNodeExamples   : TTreeNode;
+
+    // Snippet popup menu (shared by toolbar button and editor right-click)
+    FSnippetMenu    : TPopupMenu;
+
+    // Project file right-click context menu
+    FProjFileMenu   : TPopupMenu;
+    FProjRootMenu   : TPopupMenu;       // shown on the "Project: X" root node
+    FProjMenuTargetPath : string;       // path of the file the menu opened on
+
+    // nil when not running
+    FInterp         : TInterpreter;
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    procedure BuildUI;
+    procedure BuildTree;
+    procedure BuildSnippetMenu;
+    procedure BuildProjectFileMenu;
+    procedure RefreshRecentNode;
+    procedure RefreshProjectNode;
+    procedure LoadProjectFiles;        // scan project folder for *.mdp
+    procedure UpdateTitleBar;
+    procedure SetModified(Val: Boolean);
+    procedure WriteProjectIni;          // save .mdproj from current state
+    function  IsProjectOpen : Boolean;
+    procedure SetMainFile(const Path: string);
+    procedure CloseProject;
+
+    function  ConfirmDiscard : Boolean;
+    procedure LoadFile(const Path: string);
+    procedure SaveFile(const Path: string);
+    procedure RunCurrentSource;
+    procedure RunProjectMain;
+    procedure InsertSnippet(const Body: string; CaretFromEnd: Integer);
+
+    // Event handlers
+    procedure OnNew         (Sender: TObject);
+    procedure OnOpen        (Sender: TObject);
+    procedure OnSave        (Sender: TObject);
+    procedure OnSaveAs      (Sender: TObject);
+    procedure OnRun         (Sender: TObject);
+    procedure OnStop        (Sender: TObject);
+    procedure OnInsertClick (Sender: TObject);
+    procedure OnSnippetClick(Sender: TObject);
+    procedure OnNewProject  (Sender: TObject);
+    procedure OnOpenProject (Sender: TObject);
+    procedure OnCloseProject(Sender: TObject);
+    procedure OnRefresh     (Sender: TObject);
+    procedure OnTreeDblClick(Sender: TObject);
+    procedure OnTreeMouseDown(Sender: TObject; Button: TMouseButton;
+                              Shift: TShiftState; X, Y: Integer);
+    procedure OnTreeCustomDraw(Sender: TCustomTreeView; Node: TTreeNode;
+                               State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure OnEditorChange(Sender: TObject);
+    procedure OnEditorKey   (Sender: TObject; var Key: Word; Shift: TShiftState);
+    // Project file context menu actions
+    procedure OnProjMenuNew       (Sender: TObject);
+    procedure OnProjMenuOpen      (Sender: TObject);
+    procedure OnProjMenuSetMain   (Sender: TObject);
+    procedure OnProjMenuRename    (Sender: TObject);
+    procedure OnProjMenuDelete    (Sender: TObject);
+
+  public
+    constructor Create(AParent: TWinControl);
+    destructor  Destroy; override;
+
+    property CurrentFile : string  read FCurrentFile;
+    property Modified    : Boolean read FModified;
+  end;
+
+// =============================================================================
+implementation
+// =============================================================================
+
+const
+  MDP_FILTER   = 'MiniDelphi Source|*.mdp|All Files|*.*';
+  MPROJ_FILTER = 'MiniDelphi Project|*.mdproj|All Files|*.*';
+  MDP_EXT      = 'mdp';
+  MPROJ_EXT    = 'mdproj';
+
+  NEW_SOURCE =
+    '// ============================================================' + #13#10 +
+    '// NEW MINIDELPHI PROGRAM' + #13#10 +
+    '// Replace this comment with your program''s name and purpose.' + #13#10 +
+    '// ============================================================' + #13#10 +
+    '' + #13#10 +
+    'begin' + #13#10 +
+    '  // Write your code here' + #13#10 +
+    '  writeln(''Hello, MiniDelphi!'');' + #13#10 +
+    'end.';
+
+  NEW_LIBRARY_SOURCE =
+    '// ============================================================' + #13#10 +
+    '// LIBRARY UNIT' + #13#10 +
+    '// Contains declarations only — no main begin..end block.' + #13#10 +
+    '// Import in a main program with:' + #13#10 +
+    '//     uses' + #13#10 +
+    '//       ''ThisFile.mdp'';' + #13#10 +
+    '// ============================================================' + #13#10 +
+    '' + #13#10 +
+    'function MyFunc(n: Integer): Integer;' + #13#10 +
+    'begin' + #13#10 +
+    '  Result := n * n;' + #13#10 +
+    'end;';
+
+// ---------------------------------------------------------------------------
+//  Snippet library
+// ---------------------------------------------------------------------------
+const
+  SNIPPETS : array[0..14] of TSnippet = (
+
+    // ── Control flow ────────────────────────────────────────────────────────
+    (Name         : 'if ... then';
+     Body         : '// Run inner statement only when condition is true' + #13#10 +
+                    'if  then' + #13#10 +
+                    '  ;';
+     CaretFromEnd : 11),
+
+    (Name         : 'if ... then ... else';
+     Body         : '// Choose between two branches' + #13#10 +
+                    'if  then' + #13#10 +
+                    '  ' + #13#10 +
+                    'else' + #13#10 +
+                    '  ;';
+     CaretFromEnd : 20),
+
+    (Name         : 'while ... do';
+     Body         : '// Repeat while condition is true (may run 0 times)' + #13#10 +
+                    'while  do' + #13#10 +
+                    'begin' + #13#10 +
+                    '  ' + #13#10 +
+                    'end;';
+     CaretFromEnd : 19),
+
+    (Name         : 'repeat ... until';
+     Body         : '// Repeat until condition is true (always runs at least once)' + #13#10 +
+                    'repeat' + #13#10 +
+                    '  ' + #13#10 +
+                    'until ;';
+     CaretFromEnd : 1),
+
+    (Name         : 'for ... to ... do';
+     Body         : '// Loop counting up from start to end' + #13#10 +
+                    'for i := 1 to 10 do' + #13#10 +
+                    'begin' + #13#10 +
+                    '  ' + #13#10 +
+                    'end;';
+     CaretFromEnd : 9),
+
+    (Name         : 'for ... downto ... do';
+     Body         : '// Loop counting down from start to end' + #13#10 +
+                    'for i := 10 downto 1 do' + #13#10 +
+                    'begin' + #13#10 +
+                    '  ' + #13#10 +
+                    'end;';
+     CaretFromEnd : 9),
+
+    (Name         : 'case ... of (integer)';
+     Body         : '// Switch on an integer value' + #13#10 +
+                    'case  of' + #13#10 +
+                    '  1 : ;' + #13#10 +
+                    '  2 : ;' + #13#10 +
+                    'else' + #13#10 +
+                    '  ;' + #13#10 +
+                    'end;';
+     CaretFromEnd : 39),
+
+    (Name         : 'caseof ... of (string)';
+     Body         : '// Switch on a string value (MiniDelphi extension)' + #13#10 +
+                    'caseof  of' + #13#10 +
+                    '  ''a'' : ;' + #13#10 +
+                    '  ''b'' : ;' + #13#10 +
+                    'else' + #13#10 +
+                    '  ;' + #13#10 +
+                    'end;';
+     CaretFromEnd : 47),
+
+    // ── I/O ─────────────────────────────────────────────────────────────────
+    (Name         : 'writeln(...)';
+     Body         : 'writeln('''');';
+     CaretFromEnd : 3),
+
+    (Name         : 'ShowMessage(...)';
+     Body         : 'ShowMessage('''');';
+     CaretFromEnd : 3),
+
+    (Name         : 'InputBox(prompt, title, default)';
+     Body         : ' := InputBox(''Prompt:'', ''Title'', '''');';
+     CaretFromEnd : 36),
+
+    (Name         : 'if Confirm(...) then ...';
+     Body         : 'if Confirm(''Are you sure?'') then' + #13#10 +
+                    '  ;';
+     CaretFromEnd : 1),
+
+    // ── Routines ────────────────────────────────────────────────────────────
+    (Name         : 'procedure ... begin ... end;';
+     Body         : 'procedure MyProc;' + #13#10 +
+                    'begin' + #13#10 +
+                    '  ' + #13#10 +
+                    'end;';
+     CaretFromEnd : 6),
+
+    (Name         : 'function ... begin Result := ... end;';
+     Body         : 'function MyFunc: Integer;' + #13#10 +
+                    'begin' + #13#10 +
+                    '  Result := 0;' + #13#10 +
+                    'end;';
+     CaretFromEnd : 7),
+
+    // ── OOP ─────────────────────────────────────────────────────────────────
+    (Name         : 'class skeleton (type + impl)';
+     Body         : 'type' + #13#10 +
+                    '  TMyClass = class' + #13#10 +
+                    '    Name : String;' + #13#10 +
+                    '    procedure SayHello;' + #13#10 +
+                    '  end;' + #13#10 +
+                    '' + #13#10 +
+                    'procedure TMyClass.SayHello;' + #13#10 +
+                    'begin' + #13#10 +
+                    '  writeln(''Hello from '', Self.Name);' + #13#10 +
+                    'end;';
+     CaretFromEnd : 0)
+  );
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  RECENT FILES
+// ═══════════════════════════════════════════════════════════════════════════
+
+constructor TRecentFiles.Create;
+begin
+  inherited;
+  FList := TStringList.Create;
+  FPath := ChangeFileExt(ParamStr(0), '.recent.ini');
+  Load;
+end;
+
+destructor TRecentFiles.Destroy;
+begin
+  Save;
+  FList.Free;
+  inherited;
+end;
+
+procedure TRecentFiles.Add(const Path: string);
+var I: Integer;
+begin
+  I := FList.IndexOf(Path);
+  if I >= 0 then FList.Delete(I);
+  FList.Insert(0, Path);
+  while FList.Count > MAX do
+    FList.Delete(FList.Count - 1);
+  Save;
+end;
+
+procedure TRecentFiles.Load;
+var
+  Ini : TIniFile;
+  I   : Integer;
+  S   : string;
+begin
+  FList.Clear;
+  if not TFile.Exists(FPath) then Exit;
+  Ini := TIniFile.Create(FPath);
+  try
+    for I := 0 to MAX - 1 do
+    begin
+      S := Ini.ReadString('Recent', 'File' + IntToStr(I), '');
+      if (S <> '') and TFile.Exists(S) then
+        FList.Add(S);
+    end;
+  finally
+    Ini.Free;
+  end;
+end;
+
+procedure TRecentFiles.Save;
+var
+  Ini : TIniFile;
+  I   : Integer;
+begin
+  Ini := TIniFile.Create(FPath);
+  try
+    Ini.EraseSection('Recent');
+    for I := 0 to FList.Count - 1 do
+      Ini.WriteString('Recent', 'File' + IntToStr(I), FList[I]);
+  finally
+    Ini.Free;
+  end;
+end;
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PROJECT TAB
+// ═══════════════════════════════════════════════════════════════════════════
+
+constructor TProjectTab.Create(AParent: TWinControl);
+begin
+  inherited Create;
+  FParent        := AParent;
+  FExamples      := TExampleLibrary.Create;
+  FRecent        := TRecentFiles.Create;
+  FProjectFiles  := TStringList.Create;
+  FProjectFiles.CaseSensitive := False;
+  FCurrentFile   := '';
+  FProjectFile   := '';
+  FProjectName   := '';
+  FProjectMain   := '';
+  FModified      := False;
+  FInterp        := nil;
+
+  BuildUI;
+  BuildSnippetMenu;
+  BuildProjectFileMenu;
+  BuildTree;
+  UpdateTitleBar;
+
+  // Pre-load the new file template
+  FEditor.Lines.Text := NEW_SOURCE;
+  FModified          := False;
+end;
+
+destructor TProjectTab.Destroy;
+begin
+  FProjectFiles.Free;
+  FExamples.Free;
+  FRecent.Free;
+  inherited;
+end;
+
+procedure TProjectTab.OnStop(Sender: TObject);
+begin
+  if Assigned(FInterp) then
+    FInterp.RequestStop;
+end;
+
+function TProjectTab.IsProjectOpen: Boolean;
+begin
+  Result := FProjectFile <> '';
+end;
+
+// ---------------------------------------------------------------------------
+//  Build the entire UI
+// ---------------------------------------------------------------------------
+procedure TProjectTab.BuildUI;
+const
+  BW  = 80;
+  BH  = 28;
+  PAD = 5;
+  DARK    = $00252526;
+  DARKER  = $001E1E1E;
+  GREEN   = $0056D364;
+
+  procedure Btn(var B: TButton; Parent: TWinControl;
+                const Cap: string; var X: Integer;
+                Handler: TNotifyEvent; Hint: string = '');
+  begin
+    B          := TButton.Create(Parent);
+    B.Parent   := Parent;
+    B.Caption  := Cap;
+    B.Left     := X;  B.Top := PAD;
+    B.Width    := BW; B.Height := BH;
+    B.OnClick  := Handler;
+    B.Hint     := Hint;
+    B.ShowHint := Hint <> '';
+    Inc(X, BW + PAD);
+  end;
+
+var X : Integer;
+begin
+  if FParent = nil then
+    raise Exception.Create('TProjectTab requires a non-nil parent');
+
+  // Outer panel
+  FOuterPanel            := TPanel.Create(FParent);
+  FOuterPanel.Parent     := FParent;
+  FOuterPanel.Align      := alClient;
+  FOuterPanel.BevelOuter := bvNone;
+  FOuterPanel.Color      := DARKER;
+
+  // ── Toolbar ───────────────────────────────────────────────────────────────
+  FToolBar               := TPanel.Create(FOuterPanel);
+  FToolBar.Parent        := FOuterPanel;
+  FToolBar.Align         := alTop;
+  FToolBar.Height        := BH + PAD * 2;
+  FToolBar.BevelOuter    := bvNone;
+  FToolBar.Color         := $00303030;
+
+  X := PAD;
+  Btn(FBtnNew,        FToolBar, 'New',        X, OnNew,          'New file  (Ctrl+N)');
+  Btn(FBtnOpen,       FToolBar, 'Open',       X, OnOpen,         'Open .mdp file  (Ctrl+O)');
+  Btn(FBtnSave,       FToolBar, 'Save',       X, OnSave,         'Save  (Ctrl+S)');
+  Btn(FBtnSaveAs,     FToolBar, 'Save As',    X, OnSaveAs,       'Save with new name');
+  Btn(FBtnRun,        FToolBar, 'Run',        X, OnRun,          'Run main file  (F5)');
+  Btn(FBtnStop,       FToolBar, 'Stop',       X, OnStop,         'Stop running program');
+  Btn(FBtnInsert,     FToolBar, 'Insert',     X, OnInsertClick,  'Insert code snippet (or right-click)');
+  Inc(X, PAD);
+  Btn(FBtnNewProj,    FToolBar, 'New Proj',   X, OnNewProject,   'Create a new project');
+  Btn(FBtnOpenProj,   FToolBar, 'Open Proj',  X, OnOpenProject,  'Open a project');
+  Btn(FBtnCloseProj,  FToolBar, 'Close Proj', X, OnCloseProject, 'Close the current project');
+  Btn(FBtnRefresh,    FToolBar, 'Refresh',    X, OnRefresh,      'Rescan the project folder');
+
+  // File label
+  FLabelFile              := TLabel.Create(FToolBar);
+  FLabelFile.Parent       := FToolBar;
+  FLabelFile.Left         := X + PAD;
+  FLabelFile.Top          := PAD + 6;
+  FLabelFile.Width        := 400;
+  FLabelFile.Font.Color   := clSilver;
+  FLabelFile.Caption      := 'No file open';
+
+  // ── Left panel (tree) ─────────────────────────────────────────────────────
+  FLeftPanel              := TPanel.Create(FOuterPanel);
+  FLeftPanel.Parent       := FOuterPanel;
+  FLeftPanel.Align        := alLeft;
+  FLeftPanel.Width        := 260;
+  FLeftPanel.BevelOuter   := bvNone;
+  FLeftPanel.Color        := DARK;
+
+  FLabelTree              := TLabel.Create(FLeftPanel);
+  FLabelTree.Parent       := FLeftPanel;
+  FLabelTree.Align        := alTop;
+  FLabelTree.Height       := 22;
+  FLabelTree.Caption      := '  Projects & Examples';
+  FLabelTree.Font.Style   := [fsBold];
+  FLabelTree.Font.Color   := clSilver;
+
+  FTree                   := TTreeView.Create(FLeftPanel);
+  FTree.Parent            := FLeftPanel;
+  FTree.Align             := alClient;
+  FTree.ReadOnly          := True;
+  FTree.Color             := DARK;
+  FTree.Font.Color        := clSilver;
+  FTree.HideSelection     := False;
+  FTree.Indent            := 14;
+  FTree.OnDblClick        := OnTreeDblClick;
+  FTree.OnMouseDown       := OnTreeMouseDown;
+  FTree.OnCustomDrawItem  := OnTreeCustomDraw;
+
+  // ── Splitter ──────────────────────────────────────────────────────────────
+  FSplitter               := TSplitter.Create(FOuterPanel);
+  FSplitter.Parent        := FOuterPanel;
+  FSplitter.Align         := alLeft;
+  FSplitter.Width         := 4;
+
+  // ── Right panel (editor + output) ─────────────────────────────────────────
+  FRightPanel             := TPanel.Create(FOuterPanel);
+  FRightPanel.Parent      := FOuterPanel;
+  FRightPanel.Align       := alClient;
+  FRightPanel.BevelOuter  := bvNone;
+  FRightPanel.Color       := DARKER;
+
+  FEditorLabel            := TLabel.Create(FRightPanel);
+  FEditorLabel.Parent     := FRightPanel;
+  FEditorLabel.Align      := alTop;
+  FEditorLabel.Height     := 20;
+  FEditorLabel.Caption    := '  Source Editor  —  Ctrl+S to save  |  F5 to run main';
+  FEditorLabel.Font.Color := $0056D364;
+  FEditorLabel.Font.Style := [fsBold];
+
+  FEditor                 := TMemo.Create(FRightPanel);
+  FEditor.Parent          := FRightPanel;
+  FEditor.Align           := alTop;
+  FEditor.Height          := 380;
+  FEditor.WordWrap        := False;
+  FEditor.ScrollBars      := ssBoth;
+  FEditor.Font.Name       := 'Consolas';
+  FEditor.Font.Size       := 10;
+  FEditor.Color           := $001E1E1E;
+  FEditor.Font.Color      := $00DCDCDC;
+  FEditor.OnChange        := OnEditorChange;
+  FEditor.OnKeyDown       := OnEditorKey;
+
+  FSplitVert              := TSplitter.Create(FRightPanel);
+  FSplitVert.Parent       := FRightPanel;
+  FSplitVert.Align        := alTop;
+  FSplitVert.Height       := 4;
+
+  FOutputLabel            := TLabel.Create(FRightPanel);
+  FOutputLabel.Parent     := FRightPanel;
+  FOutputLabel.Align      := alTop;
+  FOutputLabel.Height     := 20;
+  FOutputLabel.Caption    := '  Output';
+  FOutputLabel.Font.Color := $0056D364;
+
+  FOutput                 := TMemo.Create(FRightPanel);
+  FOutput.Parent          := FRightPanel;
+  FOutput.Align           := alClient;
+  FOutput.ReadOnly        := True;
+  FOutput.WordWrap        := False;
+  FOutput.ScrollBars      := ssBoth;
+  FOutput.Font.Name       := 'Consolas';
+  FOutput.Font.Size       := 9;
+  FOutput.Color           := $00121212;
+  FOutput.Font.Color      := $0056D364;
+end;
+
+// ---------------------------------------------------------------------------
+//  Snippet popup menu
+// ---------------------------------------------------------------------------
+procedure TProjectTab.BuildSnippetMenu;
+var
+  I        : Integer;
+  Item     : TMenuItem;
+  Sep      : TMenuItem;
+begin
+  FSnippetMenu := TPopupMenu.Create(FOuterPanel);
+
+  for I := 0 to High(SNIPPETS) do
+  begin
+    if (I = 8) or (I = 12) or (I = 14) then
+    begin
+      Sep := TMenuItem.Create(FSnippetMenu);
+      Sep.Caption := '-';
+      FSnippetMenu.Items.Add(Sep);
+    end;
+
+    Item         := TMenuItem.Create(FSnippetMenu);
+    Item.Caption := SNIPPETS[I].Name;
+    Item.Tag     := I;
+    Item.OnClick := OnSnippetClick;
+    FSnippetMenu.Items.Add(Item);
+  end;
+
+  FEditor.PopupMenu := FSnippetMenu;
+end;
+
+// ---------------------------------------------------------------------------
+//  Project file context menu (Open / Set as Main / Rename / Delete)
+// ---------------------------------------------------------------------------
+procedure TProjectTab.BuildProjectFileMenu;
+var
+  RootItem : TMenuItem;
+
+  procedure AddItem(const Cap: string; H: TNotifyEvent);
+  var M: TMenuItem;
+  begin
+    M := TMenuItem.Create(FProjFileMenu);
+    M.Caption := Cap;
+    M.OnClick := H;
+    FProjFileMenu.Items.Add(M);
+  end;
+
+  procedure AddSep;
+  var M: TMenuItem;
+  begin
+    M := TMenuItem.Create(FProjFileMenu);
+    M.Caption := '-';
+    FProjFileMenu.Items.Add(M);
+  end;
+
+begin
+  FProjFileMenu := TPopupMenu.Create(FOuterPanel);
+  AddItem('New File...',       OnProjMenuNew);
+  AddSep;
+  AddItem('Open',              OnProjMenuOpen);
+  AddItem('Set as Main File',  OnProjMenuSetMain);
+  AddSep;
+  AddItem('Rename...',         OnProjMenuRename);
+  AddItem('Delete...',         OnProjMenuDelete);
+
+  // Smaller menu shown when right-clicking the "Project: X" root node
+  // (no file is "targeted" there, so most actions don't apply)
+  FProjRootMenu := TPopupMenu.Create(FOuterPanel);
+  RootItem := TMenuItem.Create(FProjRootMenu);
+  RootItem.Caption := 'New File...';
+  RootItem.OnClick := OnProjMenuNew;
+  FProjRootMenu.Items.Add(RootItem);
+end;
+
+procedure TProjectTab.InsertSnippet(const Body: string; CaretFromEnd: Integer);
+var
+  StartPos : Integer;
+begin
+  StartPos := FEditor.SelStart;
+  FEditor.SelText   := Body;
+  FEditor.SelStart  := StartPos + Length(Body) - CaretFromEnd;
+  FEditor.SelLength := 0;
+  SetModified(True);
+  FEditor.SetFocus;
+end;
+
+procedure TProjectTab.OnSnippetClick(Sender: TObject);
+var
+  Idx : Integer;
+begin
+  Idx := (Sender as TMenuItem).Tag;
+  if (Idx >= 0) and (Idx <= High(SNIPPETS)) then
+    InsertSnippet(SNIPPETS[Idx].Body, SNIPPETS[Idx].CaretFromEnd);
+end;
+
+procedure TProjectTab.OnInsertClick(Sender: TObject);
+var
+  P : TPoint;
+begin
+  P := FBtnInsert.ClientToScreen(Point(0, FBtnInsert.Height));
+  FSnippetMenu.Popup(P.X, P.Y);
+end;
+
+// ---------------------------------------------------------------------------
+//  Build the tree:  [Project] + Recent + Examples
+// ---------------------------------------------------------------------------
+procedure TProjectTab.BuildTree;
+var
+  Cats     : TStringList;
+  Cat      : string;
+  CatNode  : TTreeNode;
+  I        : Integer;
+  Ex       : TExampleProject;
+  ExNode   : TTreeNode;
+begin
+  FTree.Items.BeginUpdate;
+  try
+    FTree.Items.Clear;
+
+    // ── PROJECT (only when one is open) ──────────────────────────────────
+    if IsProjectOpen then
+    begin
+      FNodeProject := FTree.Items.Add(nil, 'Project: ' + FProjectName);
+      FNodeProject.Data := Pointer(-4);
+      RefreshProjectNode;
+      FNodeProject.Expand(True);
+    end
+    else
+      FNodeProject := nil;
+
+    // ── RECENT FILES ─────────────────────────────────────────────────────
+    FNodeRecent := FTree.Items.Add(nil, 'Recent Files');
+    FNodeRecent.Data := Pointer(-1);
+    RefreshRecentNode;
+
+    // ── EXAMPLE PROJECTS ─────────────────────────────────────────────────
+    FNodeExamples := FTree.Items.Add(nil, 'Example Projects');
+    FNodeExamples.Data := Pointer(-2);
+
+    Cats := FExamples.Categories;
+    try
+      for Cat in Cats do
+      begin
+        CatNode      := FTree.Items.AddChild(FNodeExamples, '  ' + Cat);
+        CatNode.Data := Pointer(-3);
+
+        for I := 0 to FExamples.Count - 1 do
+        begin
+          Ex := FExamples.Items(I);
+          if Ex.Category = Cat then
+          begin
+            ExNode      := FTree.Items.AddChild(CatNode, '    ' + Ex.Name);
+            ExNode.Data := Pointer(I);
+          end;
+        end;
+        CatNode.Expand(False);
+      end;
+    finally
+      Cats.Free;
+    end;
+
+    FNodeRecent.Expand(True);
+    FNodeExamples.Expand(False);
+  finally
+    FTree.Items.EndUpdate;
+  end;
+end;
+
+procedure TProjectTab.RefreshRecentNode;
+var
+  I    : Integer;
+  Name : string;
+  Node : TTreeNode;
+begin
+  while FNodeRecent.Count > 0 do
+    FTree.Items.Delete(FNodeRecent.Item[0]);
+
+  if FRecent.Files.Count = 0 then
+  begin
+    FTree.Items.AddChild(FNodeRecent, '  (none yet)').Data := Pointer(-99);
+  end
+  else
+  begin
+    for I := 0 to FRecent.Files.Count - 1 do
+    begin
+      Name := ExtractFileName(FRecent.Files[I]);
+      Node := FTree.Items.AddChild(FNodeRecent, '  ' + Name);
+      Node.Data := Pointer(-(100 + I));
+    end;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Rebuild the project subtree from FProjectFiles
+// ---------------------------------------------------------------------------
+procedure TProjectTab.RefreshProjectNode;
+var
+  I    : Integer;
+  Name : string;
+  Node : TTreeNode;
+begin
+  if FNodeProject = nil then Exit;
+
+  while FNodeProject.Count > 0 do
+    FTree.Items.Delete(FNodeProject.Item[0]);
+
+  if FProjectFiles.Count = 0 then
+  begin
+    FTree.Items.AddChild(FNodeProject, '  (no .mdp files yet)').Data := Pointer(-99);
+    Exit;
+  end;
+
+  for I := 0 to FProjectFiles.Count - 1 do
+  begin
+    Name := ExtractFileName(FProjectFiles[I]);
+    // Main file gets a star prefix (the bold styling is applied in CustomDraw)
+    if SameText(FProjectFiles[I], FProjectMain) then
+      Node := FTree.Items.AddChild(FNodeProject, '  * ' + Name)
+    else
+      Node := FTree.Items.AddChild(FNodeProject, '    ' + Name);
+    Node.Data := Pointer(-(200 + I));
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Scan the project folder for *.mdp files
+// ---------------------------------------------------------------------------
+procedure TProjectTab.LoadProjectFiles;
+var
+  Dir   : string;
+  Files : TArray<string>;
+  F     : string;
+begin
+  FProjectFiles.Clear;
+  if FProjectFile = '' then Exit;
+
+  Dir   := ExtractFilePath(FProjectFile);
+  if not TDirectory.Exists(Dir) then Exit;
+  Files := TDirectory.GetFiles(Dir, '*.mdp');
+  for F in Files do
+    FProjectFiles.Add(F);
+  FProjectFiles.Sort;
+end;
+
+// ---------------------------------------------------------------------------
+//  Custom draw — bold the main file in the project tree
+// ---------------------------------------------------------------------------
+procedure TProjectTab.OnTreeCustomDraw(Sender: TCustomTreeView; Node: TTreeNode;
+  State: TCustomDrawState; var DefaultDraw: Boolean);
+var
+  Tag : NativeInt;
+  Idx : Integer;
+begin
+  DefaultDraw := True;
+  if Node = nil then Exit;
+  Tag := NativeInt(Node.Data);
+  if (Tag <= -200) and (Tag > -300) then
+  begin
+    Idx := -(Tag + 200);
+    if (Idx >= 0) and (Idx < FProjectFiles.Count) and
+       SameText(FProjectFiles[Idx], FProjectMain) then
+      FTree.Canvas.Font.Style := [fsBold]
+    else
+      FTree.Canvas.Font.Style := [];
+  end
+  else
+    FTree.Canvas.Font.Style := [];
+end;
+
+// ---------------------------------------------------------------------------
+//  Right-click on tree: show project-file context menu if appropriate
+// ---------------------------------------------------------------------------
+procedure TProjectTab.OnTreeMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  Node : TTreeNode;
+  Tag  : NativeInt;
+  Idx  : Integer;
+  P    : TPoint;
+begin
+  if Button <> mbRight then Exit;
+  Node := FTree.GetNodeAt(X, Y);
+  if Node = nil then Exit;
+  Tag := NativeInt(Node.Data);
+  P   := FTree.ClientToScreen(Point(X, Y));
+
+  if (Tag <= -200) and (Tag > -300) then
+  begin
+    // Right-clicked an individual project file — full file menu
+    Idx := -(Tag + 200);
+    if (Idx >= 0) and (Idx < FProjectFiles.Count) then
+    begin
+      FProjMenuTargetPath := FProjectFiles[Idx];
+      FTree.Selected      := Node;
+      FProjFileMenu.Popup(P.X, P.Y);
+    end;
+  end
+  else if Tag = -4 then
+  begin
+    // Right-clicked the "Project: X" root node — just offer New File
+    FProjMenuTargetPath := '';
+    FTree.Selected      := Node;
+    FProjRootMenu.Popup(P.X, P.Y);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Title bar / file label
+// ---------------------------------------------------------------------------
+procedure TProjectTab.UpdateTitleBar;
+var
+  Title : string;
+begin
+  if FCurrentFile <> '' then
+    Title := ExtractFileName(FCurrentFile)
+  else
+    Title := 'Untitled.mdp';
+
+  if FModified then Title := '* ' + Title;
+
+  if FProjectName <> '' then
+    Title := '[' + FProjectName + ']  ' + Title;
+
+  FLabelFile.Caption := Title;
+end;
+
+procedure TProjectTab.SetModified(Val: Boolean);
+begin
+  FModified := Val;
+  UpdateTitleBar;
+end;
+
+function TProjectTab.ConfirmDiscard: Boolean;
+begin
+  if not FModified then begin Result := True; Exit; end;
+  Result := MessageDlg(
+    'You have unsaved changes. Discard them?',
+    mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+end;
+
+procedure TProjectTab.LoadFile(const Path: string);
+begin
+  if not TFile.Exists(Path) then
+  begin
+    ShowMessage('File not found: ' + Path);
+    Exit;
+  end;
+  FEditor.Lines.Text := TFile.ReadAllText(Path, TEncoding.UTF8);
+  FCurrentFile       := Path;
+  FModified          := False;
+  FRecent.Add(Path);
+  RefreshRecentNode;
+  UpdateTitleBar;
+  FOutput.Clear;
+end;
+
+procedure TProjectTab.SaveFile(const Path: string);
+var
+  WasNewToProject : Boolean;
+begin
+  WasNewToProject := IsProjectOpen and
+                     SameText(ExtractFilePath(Path),
+                              ExtractFilePath(FProjectFile)) and
+                     (FProjectFiles.IndexOf(Path) < 0);
+
+  TFile.WriteAllText(Path, FEditor.Lines.Text, TEncoding.UTF8);
+  FCurrentFile := Path;
+  FModified    := False;
+  FRecent.Add(Path);
+  RefreshRecentNode;
+
+  // If the saved file is in the project folder, refresh the tree
+  if WasNewToProject then
+  begin
+    LoadProjectFiles;
+    RefreshProjectNode;
+  end;
+  UpdateTitleBar;
+end;
+
+// ---------------------------------------------------------------------------
+//  Run the source currently in the editor (used by Run-currently-edited)
+// ---------------------------------------------------------------------------
+procedure TProjectTab.RunCurrentSource;
+var
+  Lex   : TLexer;
+  Par   : TParser;
+  Prog  : TProgramNode;
+  T0    : Cardinal;
+begin
+  if Assigned(FInterp) then Exit;
+
+  FOutput.Clear;
+  FOutput.Lines.Add('Running...');
+  T0 := GetTickCount;
+
+  try
+    Lex := TLexer.Create(FEditor.Lines.Text);
+    try
+      Lex.Tokenise;
+      Par := TParser.Create(Lex.Tokens);
+      try
+        Prog := Par.Parse;
+        try
+          FInterp := TInterpreter.Create(Prog, FOutput.Lines);
+          try
+            FOutput.Lines.Clear;
+            FInterp.SourceText := FEditor.Lines.Text;
+            if FCurrentFile <> '' then
+              FInterp.SourcePath := ExtractFilePath(FCurrentFile)
+            else
+              FInterp.SourcePath := GetCurrentDir;
+            FInterp.Run;
+            FOutput.Lines.Add('');
+            FOutput.Lines.Add(Format('─── Done  (%d ms) ───', [GetTickCount - T0]));
+          finally
+            FInterp.Free;
+            FInterp := nil;
+          end;
+        finally
+          Prog.Free;
+        end;
+      finally
+        Par.Free;
+      end;
+    finally
+      Lex.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      FOutput.Lines.Add('');
+      FOutput.Lines.Add('*** ' + E.Message);
+    end;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Run the project main file (Delphi-style: F5 = run main, not run current)
+//
+//  Auto-saves the currently-being-edited file first so library edits aren't
+//  lost when running. Then loads the main file's source from disk and runs
+//  it through the interpreter with SourcePath set so the uses clause can
+//  resolve sibling .mdp files.
+// ---------------------------------------------------------------------------
+procedure TProjectTab.RunProjectMain;
+var
+  Lex   : TLexer;
+  Par   : TParser;
+  Prog  : TProgramNode;
+  T0    : Cardinal;
+  MainSrc : string;
+begin
+  if Assigned(FInterp) then Exit;
+
+  // Auto-save the current file if it's part of the project
+  if (FCurrentFile <> '') and FModified and
+     (FProjectFiles.IndexOf(FCurrentFile) >= 0) then
+    SaveFile(FCurrentFile);
+
+  if (FProjectMain = '') or (not TFile.Exists(FProjectMain)) then
+  begin
+    ShowMessage('Project main file not set or not found.' + sLineBreak +
+                'Right-click a file in the tree and choose "Set as Main File".');
+    Exit;
+  end;
+
+  MainSrc := TFile.ReadAllText(FProjectMain, TEncoding.UTF8);
+
+  FOutput.Clear;
+  FOutput.Lines.Add('Running project main: ' + ExtractFileName(FProjectMain));
+  T0 := GetTickCount;
+
+  try
+    Lex := TLexer.Create(MainSrc);
+    try
+      Lex.Tokenise;
+      Par := TParser.Create(Lex.Tokens);
+      try
+        Prog := Par.Parse;
+        try
+          FInterp := TInterpreter.Create(Prog, FOutput.Lines);
+          try
+            FOutput.Lines.Clear;
+            FInterp.SourceText := MainSrc;
+            FInterp.SourcePath := ExtractFilePath(FProjectMain);
+            FInterp.Run;
+            FOutput.Lines.Add('');
+            FOutput.Lines.Add(Format('─── Done  (%d ms) ───', [GetTickCount - T0]));
+          finally
+            FInterp.Free;
+            FInterp := nil;
+          end;
+        finally
+          Prog.Free;
+        end;
+      finally
+        Par.Free;
+      end;
+    finally
+      Lex.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      FOutput.Lines.Add('');
+      FOutput.Lines.Add('*** ' + E.Message);
+    end;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Write the .mdproj file from the current state
+// ---------------------------------------------------------------------------
+procedure TProjectTab.WriteProjectIni;
+var
+  Ini : TIniFile;
+begin
+  if FProjectFile = '' then Exit;
+  Ini := TIniFile.Create(FProjectFile);
+  try
+    Ini.WriteString('Project', 'Name',     FProjectName);
+    Ini.WriteString('Project', 'MainFile', ExtractFileName(FProjectMain));
+  finally
+    Ini.Free;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Change the project's main file
+// ---------------------------------------------------------------------------
+procedure TProjectTab.SetMainFile(const Path: string);
+begin
+  if not TFile.Exists(Path) then Exit;
+  FProjectMain := Path;
+  WriteProjectIni;
+  RefreshProjectNode;
+  UpdateTitleBar;
+end;
+
+// ---------------------------------------------------------------------------
+//  Close the current project (back to standalone editing)
+// ---------------------------------------------------------------------------
+procedure TProjectTab.CloseProject;
+begin
+  if not ConfirmDiscard then Exit;
+  FProjectFile := '';
+  FProjectName := '';
+  FProjectMain := '';
+  FProjectFiles.Clear;
+  FEditor.Lines.Text := NEW_SOURCE;
+  FCurrentFile := '';
+  FModified    := False;
+  BuildTree;
+  UpdateTitleBar;
+  FOutput.Clear;
+  FOutput.Lines.Add('Project closed.');
+end;
+
+// ---------------------------------------------------------------------------
+//  EVENT HANDLERS
+// ---------------------------------------------------------------------------
+
+procedure TProjectTab.OnNew(Sender: TObject);
+var
+  Dlg    : TSaveDialog;
+  Path   : string;
+  Name   : string;
+  IsLib  : Boolean;
+  Choice : Integer;
+begin
+  if not ConfirmDiscard then Exit;
+
+  // If a project is open, create the new file inside the project folder
+  if IsProjectOpen then
+  begin
+    Name := InputBox('New file in project ' + FProjectName,
+                     'File name (without .mdp):', 'NewFile');
+    if Trim(Name) = '' then Exit;
+    Path := IncludeTrailingPathDelimiter(ExtractFilePath(FProjectFile)) +
+            Name + '.mdp';
+    if TFile.Exists(Path) then
+    begin
+      ShowMessage('A file with that name already exists.');
+      Exit;
+    end;
+
+    // Ask whether this is a library (declarations only) or a runnable program
+    Choice := MessageDlg(
+      'Is this a library file (declarations only) or a runnable program?' +
+      sLineBreak + sLineBreak +
+      'Yes  = library  (no begin..end block)' + sLineBreak +
+      'No   = runnable program  (has begin..end)',
+      mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+    if Choice = mrCancel then Exit;
+    IsLib := Choice = mrYes;
+
+    if IsLib then
+      TFile.WriteAllText(Path, NEW_LIBRARY_SOURCE, TEncoding.UTF8)
+    else
+      TFile.WriteAllText(Path, NEW_SOURCE, TEncoding.UTF8);
+
+    LoadProjectFiles;
+    RefreshProjectNode;
+    LoadFile(Path);
+    Exit;
+  end;
+
+  // No project open: classic untitled new file
+  FEditor.Lines.Text := NEW_SOURCE;
+  FCurrentFile       := '';
+  FModified          := False;
+  FOutput.Clear;
+  UpdateTitleBar;
+end;
+
+procedure TProjectTab.OnOpen(Sender: TObject);
+var
+  Dlg : TOpenDialog;
+begin
+  if not ConfirmDiscard then Exit;
+  Dlg := TOpenDialog.Create(nil);
+  try
+    Dlg.Filter      := MDP_FILTER;
+    Dlg.DefaultExt  := MDP_EXT;
+    Dlg.Options     := [ofFileMustExist];
+    if IsProjectOpen then
+      Dlg.InitialDir := ExtractFilePath(FProjectFile);
+    if Dlg.Execute then
+      LoadFile(Dlg.FileName);
+  finally
+    Dlg.Free;
+  end;
+end;
+
+procedure TProjectTab.OnSave(Sender: TObject);
+begin
+  if FCurrentFile = '' then
+    OnSaveAs(Sender)
+  else
+    SaveFile(FCurrentFile);
+end;
+
+procedure TProjectTab.OnSaveAs(Sender: TObject);
+var
+  Dlg : TSaveDialog;
+begin
+  Dlg := TSaveDialog.Create(nil);
+  try
+    Dlg.Filter     := MDP_FILTER;
+    Dlg.DefaultExt := MDP_EXT;
+    if FCurrentFile <> '' then
+      Dlg.FileName := FCurrentFile
+    else if IsProjectOpen then
+      Dlg.InitialDir := ExtractFilePath(FProjectFile);
+    if Dlg.Execute then
+      SaveFile(Dlg.FileName);
+  finally
+    Dlg.Free;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Run button — runs the project main file when a project is open,
+//  otherwise runs the editor's current source.
+// ---------------------------------------------------------------------------
+procedure TProjectTab.OnRun(Sender: TObject);
+begin
+  if IsProjectOpen then
+  begin
+    RunProjectMain;
+  end
+  else
+  begin
+    if (FCurrentFile <> '') and FModified then
+      SaveFile(FCurrentFile);
+    RunCurrentSource;
+  end;
+end;
+
+procedure TProjectTab.OnNewProject(Sender: TObject);
+var
+  ProjName    : string;
+  ProjDir     : string;
+  ProjFile    : string;
+  MainProjPath: string;
+  ProjSrc     : string;
+  Dlg         : TSaveDialog;
+  Ini         : TIniFile;
+begin
+  ProjName := InputBox('Project name:', 'New Project', 'MyProject');
+  if ProjName = '' then Exit;
+
+  Dlg := TSaveDialog.Create(nil);
+  try
+    Dlg.Title      := 'Save Project File';
+    Dlg.Filter     := MPROJ_FILTER;
+    Dlg.DefaultExt := MPROJ_EXT;
+    Dlg.FileName   := ProjName;
+    if not Dlg.Execute then Exit;
+    ProjFile := Dlg.FileName;
+  finally
+    Dlg.Free;
+  end;
+
+  ProjDir := ExtractFilePath(ProjFile);
+
+  // Write the .mdproj file
+  Ini := TIniFile.Create(ProjFile);
+  try
+    Ini.WriteString('Project', 'Name',        ProjName);
+    Ini.WriteString('Project', 'Description', '');
+    Ini.WriteString('Project', 'MainFile',    ProjName + '.mdp');
+    Ini.WriteString('Project', 'Created',     DateTimeToStr(Now));
+  finally
+    Ini.Free;
+  end;
+
+  // Create the main source file
+  MainProjPath := ProjDir + ProjName + '.mdp';
+  ProjSrc :=
+    '// ============================================================' + #13#10 +
+    '// ' + UpperCase(ProjName) + #13#10 +
+    '// Project: ' + ProjName + #13#10 +
+    '// Created: ' + DateToStr(Now) + #13#10 +
+    '// ============================================================' + #13#10 +
+    'begin' + #13#10 +
+    '  writeln(' + Chr(39) + 'Hello from ' + ProjName + '!' + Chr(39) + ');' + #13#10 +
+    'end.';
+  TFile.WriteAllText(MainProjPath, ProjSrc, TEncoding.UTF8);
+
+  FProjectFile := ProjFile;
+  FProjectName := ProjName;
+  FProjectMain := MainProjPath;
+  LoadProjectFiles;
+  BuildTree;
+  LoadFile(MainProjPath);
+
+  MessageDlg('Project "' + ProjName + '" created!' + #13#10 +
+             'Project file: ' + ProjFile, mtInformation, [mbOK], 0);
+end;
+
+procedure TProjectTab.OnOpenProject(Sender: TObject);
+var
+  Dlg         : TOpenDialog;
+  Ini         : TIniFile;
+  MainFile    : string;
+  ProjDir     : string;
+  FullProjPath: string;
+begin
+  if not ConfirmDiscard then Exit;
+  Dlg := TOpenDialog.Create(nil);
+  try
+    Dlg.Filter     := MPROJ_FILTER;
+    Dlg.DefaultExt := MPROJ_EXT;
+    Dlg.Options    := [ofFileMustExist];
+    if not Dlg.Execute then Exit;
+
+    Ini := TIniFile.Create(Dlg.FileName);
+    try
+      FProjectName := Ini.ReadString('Project', 'Name', '');
+      MainFile     := Ini.ReadString('Project', 'MainFile', '');
+    finally
+      Ini.Free;
+    end;
+
+    FProjectFile := Dlg.FileName;
+    ProjDir      := ExtractFilePath(Dlg.FileName);
+
+    // Resolve the main file's full path
+    if MainFile <> '' then
+      FullProjPath := ProjDir + MainFile
+    else
+      FullProjPath := '';
+
+    FProjectMain := FullProjPath;
+
+    LoadProjectFiles;
+    BuildTree;
+
+    // Load the main file into the editor
+    if (FullProjPath <> '') and TFile.Exists(FullProjPath) then
+      LoadFile(FullProjPath)
+    else if FProjectFiles.Count > 0 then
+      LoadFile(FProjectFiles[0])
+    else
+      MessageDlg('Project has no source files yet. Use New to add one.',
+                 mtInformation, [mbOK], 0);
+
+    UpdateTitleBar;
+  finally
+    Dlg.Free;
+  end;
+end;
+
+procedure TProjectTab.OnCloseProject(Sender: TObject);
+begin
+  if not IsProjectOpen then
+  begin
+    ShowMessage('No project is open.');
+    Exit;
+  end;
+  CloseProject;
+end;
+
+procedure TProjectTab.OnRefresh(Sender: TObject);
+begin
+  if IsProjectOpen then
+  begin
+    LoadProjectFiles;
+    RefreshProjectNode;
+    FOutput.Lines.Add('Project folder rescanned. ' +
+                      IntToStr(FProjectFiles.Count) + ' file(s) found.');
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Tree double-click handler
+// ---------------------------------------------------------------------------
+procedure TProjectTab.OnTreeDblClick(Sender: TObject);
+var
+  Node    : TTreeNode;
+  Tag     : NativeInt;
+  Ex      : TExampleProject;
+  RecentI : Integer;
+  ProjI   : Integer;
+  TempDir : string;
+  MainPath: string;
+  MFI     : Integer;
+  EF      : TExampleFile;
+  FilePath: string;
+begin
+  Node := FTree.Selected;
+  if not Assigned(Node) then Exit;
+
+  Tag := NativeInt(Node.Data);
+
+  if Tag >= 0 then
+  begin
+    // Example project
+    if not ConfirmDiscard then Exit;
+    Ex := FExamples.Items(Tag);
+    FOutput.Clear;
+
+    if Ex.IsMultiFile then
+    begin
+      TempDir := TPath.Combine(TPath.GetTempPath,
+                   'MiniDelphi_' + StringReplace(Ex.Name, ' ', '_', [rfReplaceAll]));
+      TDirectory.CreateDirectory(TempDir);
+
+      MainPath := '';
+      for MFI := 0 to High(Ex.Files) do
+      begin
+        EF := Ex.Files[MFI];
+        FilePath := TPath.Combine(TempDir, EF.FileName);
+        TFile.WriteAllText(FilePath, EF.Source, TEncoding.UTF8);
+        if EF.IsMain then MainPath := FilePath;
+      end;
+
+      if MainPath = '' then
+        MainPath := TPath.Combine(TempDir, Ex.Files[High(Ex.Files)].FileName);
+
+      FEditor.Lines.Text := TFile.ReadAllText(MainPath, TEncoding.UTF8);
+      FCurrentFile       := MainPath;
+      FModified          := False;
+      FLabelFile.Caption := 'Multi-file Example: ' + Ex.Name +
+                            '  [' + IntToStr(Length(Ex.Files)) + ' files in ' + TempDir + ']';
+
+      FOutput.Lines.Add('// Multi-file Example: ' + Ex.Name);
+      FOutput.Lines.Add('// ' + Ex.Description);
+      FOutput.Lines.Add('// Files written to: ' + TempDir);
+      for MFI := 0 to High(Ex.Files) do
+      begin
+        if Ex.Files[MFI].IsMain then
+          FOutput.Lines.Add('//   ' + Ex.Files[MFI].FileName + '  <-- main file')
+        else
+          FOutput.Lines.Add('//   ' + Ex.Files[MFI].FileName);
+      end;
+      FOutput.Lines.Add('//');
+      FOutput.Lines.Add('// Click Run to execute. All library files are ready to import.');
+      FOutput.Lines.Add('// Save As to save the main file to your own project folder.');
+    end
+    else
+    begin
+      FEditor.Lines.Text := Ex.Source;
+      FCurrentFile       := '';
+      FModified          := False;
+      FLabelFile.Caption := 'Example: ' + Ex.Name + ' — Save As to keep your changes';
+      FOutput.Lines.Add('// Example: ' + Ex.Name);
+      FOutput.Lines.Add('// ' + Ex.Description);
+      FOutput.Lines.Add('// Click Run to execute. Save As to keep your changes.');
+    end;
+  end
+  else if (Tag <= -200) and (Tag > -300) then
+  begin
+    // Project file
+    ProjI := -(Tag + 200);
+    if (ProjI >= 0) and (ProjI < FProjectFiles.Count) then
+    begin
+      if not ConfirmDiscard then Exit;
+      LoadFile(FProjectFiles[ProjI]);
+    end;
+  end
+  else if Tag <= -100 then
+  begin
+    // Recent file
+    RecentI := (-Tag) - 100;
+    if (RecentI >= 0) and (RecentI < FRecent.Files.Count) then
+    begin
+      if not ConfirmDiscard then Exit;
+      LoadFile(FRecent.Files[RecentI]);
+    end;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+//  Project file context menu actions
+// ---------------------------------------------------------------------------
+procedure TProjectTab.OnProjMenuNew(Sender: TObject);
+begin
+  // Same flow as toolbar New when a project is open — just delegate to it.
+  // If no project is open the toolbar handler does the right thing too.
+  OnNew(Sender);
+end;
+
+procedure TProjectTab.OnProjMenuOpen(Sender: TObject);
+begin
+  if FProjMenuTargetPath = '' then Exit;
+  if not ConfirmDiscard then Exit;
+  LoadFile(FProjMenuTargetPath);
+end;
+
+procedure TProjectTab.OnProjMenuSetMain(Sender: TObject);
+begin
+  if FProjMenuTargetPath = '' then Exit;
+  SetMainFile(FProjMenuTargetPath);
+  FOutput.Lines.Add('Main file set to: ' + ExtractFileName(FProjMenuTargetPath));
+end;
+
+procedure TProjectTab.OnProjMenuRename(Sender: TObject);
+var
+  OldPath, NewPath, NewName, OldName : string;
+  WasMain, WasCurrent : Boolean;
+begin
+  if FProjMenuTargetPath = '' then Exit;
+  OldPath := FProjMenuTargetPath;
+  OldName := ExtractFileName(OldPath);
+  NewName := InputBox('Rename file', 'New name (with .mdp extension):', OldName);
+  if Trim(NewName) = '' then Exit;
+  if SameText(NewName, OldName) then Exit;
+
+  NewPath := IncludeTrailingPathDelimiter(ExtractFilePath(OldPath)) + NewName;
+  if TFile.Exists(NewPath) then
+  begin
+    ShowMessage('A file with that name already exists.');
+    Exit;
+  end;
+
+  WasMain    := SameText(OldPath, FProjectMain);
+  WasCurrent := SameText(OldPath, FCurrentFile);
+
+  try
+    TFile.Move(OldPath, NewPath);
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Could not rename: ' + E.Message);
+      Exit;
+    end;
+  end;
+
+  if WasMain then
+  begin
+    FProjectMain := NewPath;
+    WriteProjectIni;
+  end;
+  if WasCurrent then
+    FCurrentFile := NewPath;
+
+  LoadProjectFiles;
+  RefreshProjectNode;
+  UpdateTitleBar;
+end;
+
+procedure TProjectTab.OnProjMenuDelete(Sender: TObject);
+var
+  Path    : string;
+  WasMain : Boolean;
+begin
+  if FProjMenuTargetPath = '' then Exit;
+  Path := FProjMenuTargetPath;
+
+  if MessageDlg('Delete "' + ExtractFileName(Path) + '" permanently?',
+       mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+
+  WasMain := SameText(Path, FProjectMain);
+
+  try
+    TFile.Delete(Path);
+  except
+    on E: Exception do
+    begin
+      ShowMessage('Could not delete: ' + E.Message);
+      Exit;
+    end;
+  end;
+
+  // If we were editing the deleted file, clear the editor
+  if SameText(Path, FCurrentFile) then
+  begin
+    FEditor.Clear;
+    FCurrentFile := '';
+    FModified    := False;
+  end;
+
+  // If main was deleted, pick a new main if possible
+  if WasMain then
+  begin
+    FProjectMain := '';
+    LoadProjectFiles;
+    if FProjectFiles.Count > 0 then
+    begin
+      FProjectMain := FProjectFiles[0];
+      ShowMessage('Main file was deleted. New main file: ' +
+                  ExtractFileName(FProjectMain));
+    end;
+    WriteProjectIni;
+  end;
+
+  LoadProjectFiles;
+  RefreshProjectNode;
+  UpdateTitleBar;
+end;
+
+// ---------------------------------------------------------------------------
+//  Editor change / key handlers
+// ---------------------------------------------------------------------------
+procedure TProjectTab.OnEditorChange(Sender: TObject);
+begin
+  SetModified(True);
+end;
+
+procedure TProjectTab.OnEditorKey(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  // Ctrl+S = Save
+  if (Key = Ord('S')) and (ssCtrl in Shift) then
+  begin
+    OnSave(Sender);
+    Key := 0;
+  end
+  // Ctrl+N = New
+  else if (Key = Ord('N')) and (ssCtrl in Shift) then
+  begin
+    OnNew(Sender);
+    Key := 0;
+  end
+  // Ctrl+O = Open
+  else if (Key = Ord('O')) and (ssCtrl in Shift) then
+  begin
+    OnOpen(Sender);
+    Key := 0;
+  end
+  // F5 = Run
+  else if Key = VK_F5 then
+  begin
+    OnRun(Sender);
+    Key := 0;
+  end;
+end;
+
+end.

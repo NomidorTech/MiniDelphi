@@ -1,7 +1,7 @@
 unit UMacroLibrary;
 
 // =============================================================================
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // Copyright (C) 2026 Nomidor Software, LLC.
 // GPL v3 — see https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
@@ -326,7 +326,7 @@ begin
       '// LOCK COMPUTER' + #13#10 +
       '//' + #13#10 +
       '// Equivalent to Win+L. Useful as a hotkey target via Windows' + #13#10 +
-      '// shortcut: create a shortcut to MiniDelphi.exe with' + #13#10 +
+      '// shortcut: create a shortcut to Pythia.exe with' + #13#10 +
       '//    "--run-macro LockComputer"' + #13#10 +
       '// then assign a hotkey to that shortcut.' + #13#10 +
       '// ============================================================' + #13#10 +

@@ -1,7 +1,7 @@
 unit UValidator;
 
 // =============================================================================
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // Copyright (C) 2026 Nomidor Software, LLC.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@ unit UValidator;
 // =============================================================================
 
 // =============================================================================
-//  UValidator.pas  -  Pre-run validation pass for MiniDelphi
+//  UValidator.pas  -  Pre-run validation pass for Pythia
 //
 //  Called between parsing and execution.  Walks the AST and source text to
 //  catch common mistakes early, before the interpreter touches them.
@@ -325,7 +325,7 @@ begin
   begin
     AddIssue(vsError, 1, 1,
       'This program has no main "begin..end." block.',
-      'Every MiniDelphi program needs a main block that runs when ' +
+      'Every Pythia program needs a main block that runs when ' +
       'the program starts:' + sLineBreak +
       '    begin' + sLineBreak +
       '      // your code here' + sLineBreak +

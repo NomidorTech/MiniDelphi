@@ -1,7 +1,7 @@
 unit UInterpreter;
 
 // =============================================================================
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // Copyright (C) 2026 Nomidor Software, LLC.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@ unit UInterpreter;
 // =============================================================================
 
 // =============================================================================
-//  UInterpreter.pas  -  Tree-walking interpreter for MiniDelphi
+//  UInterpreter.pas  -  Tree-walking interpreter for Pythia
 //  Walks the AST produced by TParser and executes each node directly.
 //  No machine code is generated — this IS the "runtime".
 // =============================================================================
@@ -35,7 +35,7 @@ uses
 type
 
   // -------------------------------------------------------------------
-  //  The three possible types a MiniDelphi value can have at runtime
+  //  The three possible types a Pythia value can have at runtime
   // -------------------------------------------------------------------
   TValueKind = (vkInt, vkFloat, vkString, vkBool, vkNil, vkObject);
 
@@ -593,7 +593,7 @@ end;
 
 procedure TInterpreter.ExecReadln(Node: TReadlnStmt; Env: TEnvironment);
 begin
-  // In this toy we use a pre-set input string; in a real UI you would
+  // In this implementation we use a pre-set input string; in a real UI you would
   // prompt the user via an InputBox.  For now, consume FInputLine.
   if Node.VarName <> '' then
     Env.SetVar(Node.VarName, TValue.MakeStr(FInputLine));
@@ -1270,7 +1270,7 @@ begin
     var GW1, GH1 : Integer;
     var GT1 : string;
     GW1 := A(0).ToInt; GH1 := A(1).ToInt;
-    if Args.Count > 2 then GT1 := A(2).ToStr else GT1 := 'MiniDelphi Graphics';
+    if Args.Count > 2 then GT1 := A(2).ToStr else GT1 := 'Pythia Graphics';
     GfxOpenWindow(GW1, GH1, GT1);
     Val := TValue.MakeNil;
   end

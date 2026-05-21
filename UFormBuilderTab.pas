@@ -4,7 +4,7 @@ unit UFormBuilderTab;
 // Copyright (c) 2026 Nomidor Software, LLC.
 // All rights reserved.
 //
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // =============================================================================
 
 // =============================================================================
@@ -33,7 +33,7 @@ uses
   UFormDef, UTheme;
 
 const
-  MDFRM_FILTER = 'MiniDelphi Form|*.mdfrm|All Files|*.*';
+  MDFRM_FILTER = 'Pythia Form|*.mdfrm|All Files|*.*';
   MDFRM_EXT    = 'mdfrm';
 
 type

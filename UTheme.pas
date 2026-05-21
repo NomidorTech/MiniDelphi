@@ -1,10 +1,10 @@
-﻿unit UTheme;
+unit UTheme;
 
 // =============================================================================
 // Copyright (c) 2026 Nomidor Software, LLC.
 // All rights reserved.
 //
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // =============================================================================
 
 // =============================================================================

@@ -4,13 +4,13 @@ unit UAST;
 // Copyright (c) 2026 Nomidor Software, LLC.
 // All rights reserved.
 //
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // Unauthorised copying, distribution or modification is prohibited.
 // =============================================================================
 
 // =============================================================================
 //  UAST.pas  -  Abstract Syntax Tree node definitions
-//  Every grammatical construct in MiniDelphi becomes one of these nodes.
+//  Every grammatical construct in Pythia becomes one of these nodes.
 //  The Parser builds the tree; the Interpreter walks it.
 //
 //  Declaration order matters in Delphi — nodes that reference other nodes

@@ -1,13 +1,13 @@
-﻿unit UMainForm;
+unit UMainForm;
 
 // =============================================================================
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // Copyright (C) 2026 Nomidor Software, LLC.
 // GPL v3 — see https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
 
 // =============================================================================
-//  UMainForm.pas  -  VCL front-end for the MiniDelphi Toy Compiler
+//  UMainForm.pas  -  VCL front-end for Pythia
 //
 //  Skinned via VCL Styles (TStyleManager). See UTheme.pas for details.
 // =============================================================================
@@ -163,7 +163,7 @@ const
     ''                                                               + #13#10 +
     'begin'                                                          + #13#10 +
     '  writeln(''Hello, World!'');'                                  + #13#10 +
-    '  writeln(''Welcome to MiniDelphi!'');'                         + #13#10 +
+    '  writeln(''Welcome to Pythia!'');'                         + #13#10 +
     'end.',
 
     'program FizzBuzz;'                                              + #13#10 +
@@ -243,7 +243,7 @@ const
     '  s, t : String;'                                               + #13#10 +
     ''                                                               + #13#10 +
     'begin'                                                          + #13#10 +
-    '  s := ''Hello, MiniDelphi!'';'                                 + #13#10 +
+    '  s := ''Hello, Pythia!'';'                                 + #13#10 +
     '  writeln(''Original  : '', s);'                                + #13#10 +
     '  writeln(''Length    : '', length(s));'                        + #13#10 +
     '  writeln(''Upper     : '', uppercase(s));'                     + #13#10 +
@@ -351,7 +351,7 @@ const
      CaretFromEnd : 39),
 
     (Name         : 'caseof ... of (string)';
-     Body         : '// Switch on a string value (MiniDelphi extension)' + #13#10 +
+     Body         : '// Switch on a string value (Pythia extension)' + #13#10 +
                     'caseof  of' + #13#10 +
                     '  ''a'' : ;' + #13#10 +
                     '  ''b'' : ;' + #13#10 +
@@ -411,9 +411,9 @@ begin
 
   // NOTE: Theme.Load is called from the .dpr BEFORE Application.CreateForm.
   // VCL Styles needs the style applied before any controls are constructed
-  // so they pick up the right paint colors.  See MiniDelphi.dpr.
+  // so they pick up the right paint colors.  See Pythia.dpr.
 
-  Caption   := 'MiniDelphi Toy Compiler';
+  Caption   := 'Pythia';
   Width     := 1180;
   Height    := 780;
   Position  := poScreenCenter;
@@ -577,7 +577,7 @@ begin
   end;
 
   MakeSep (MIHelp);
-  MakeItem(MIHelp, '&About MiniDelphi...', OnAbout);
+  MakeItem(MIHelp, '&About Pythia...', OnAbout);
 
   Self.Menu := MM;
 end;
@@ -950,7 +950,7 @@ begin
 
   with FCalcHistory.Lines do
   begin
-    Add('   MiniDelphi Calculator');
+    Add('   Pythia Calculator');
     Add('   -------------------------------------');
     Add('   Type any expression and press Enter.');
     Add('');

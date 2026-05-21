@@ -1,7 +1,7 @@
 unit UParser;
 
 // =============================================================================
-// MiniDelphi Toy Compiler & Learning IDE
+// Pythia -- a Pascal learning environment
 // Copyright (C) 2026 Nomidor Software, LLC.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@ unit UParser;
 // =============================================================================
 
 // =============================================================================
-//  UParser.pas  -  Recursive-descent parser for MiniDelphi
+//  UParser.pas  -  Recursive-descent parser for Pythia
 //  Consumes the token list produced by TLexer and builds a TProgramNode AST.
 // =============================================================================
 
