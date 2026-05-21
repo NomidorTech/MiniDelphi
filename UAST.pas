@@ -1,4 +1,4 @@
-﻿unit UAST;
+unit UAST;
 
 // =============================================================================
 // Copyright (c) 2026 Nomidor Software, LLC.
@@ -132,6 +132,15 @@ type
     destructor  Destroy; override;
   end;
 
+  // Array index access (read):  a[i],  obj.arr[i+1]
+  //   Target  — the array-valued expression (usually TVarExpr)
+  //   Index   — the integer index expression
+  TArrayIndexExpr = class(TExprNode)
+    Target : TExprNode;
+    Index  : TExprNode;
+    destructor Destroy; override;
+  end;
+
   // =========================================================================
   //  STATEMENT NODES  (do something, produce no value)
   // =========================================================================
@@ -149,6 +158,17 @@ type
     Obj       : TExprNode;
     FieldName : string;
     Value     : TExprNode;
+    destructor Destroy; override;
+  end;
+
+  // Array indexed assignment:  a[i] := expr
+  //   Target  — the array-valued expression
+  //   Index   — the integer index expression
+  //   Value   — the right-hand side
+  TArrayIndexAssignStmt = class(TStmtNode)
+    Target : TExprNode;
+    Index  : TExprNode;
+    Value  : TExprNode;
     destructor Destroy; override;
   end;
 
@@ -283,19 +303,28 @@ type
   //  These must come BEFORE any OOP nodes that reference them.
   // =========================================================================
 
-  // Variable declaration:  name : TypeName
+  // Variable declaration:  name : TypeName   OR   name : array of TypeName
+  //   IsArray      — True for dynamic-array vars
+  //   ElementType  — element type name (only meaningful if IsArray=True)
+  //   TypeName     — for non-array vars, the type; for arrays, the synthetic
+  //                  string 'array of <elementtype>' so existing code that
+  //                  inspects TypeName still gets a recognisable token.
   TVarDecl = class(TASTNode)
-    Name     : string;
-    TypeName : string;
-    InitExpr : TExprNode;
+    Name        : string;
+    TypeName    : string;
+    IsArray     : Boolean;
+    ElementType : string;
+    InitExpr    : TExprNode;
     destructor Destroy; override;
   end;
 
-  // Parameter declaration:  name : TypeName
+  // Parameter declaration:  name : TypeName   OR   name : array of TypeName
   TParamDecl = class(TASTNode)
-    Name     : string;
-    TypeName : string;
-    IsVar    : Boolean;
+    Name        : string;
+    TypeName    : string;
+    IsArray     : Boolean;
+    ElementType : string;
+    IsVar       : Boolean;
   end;
 
   // Standalone procedure/function declaration
@@ -458,6 +487,14 @@ begin
   inherited;
 end;
 
+{ TArrayIndexExpr }
+destructor TArrayIndexExpr.Destroy;
+begin
+  Target.Free;
+  Index.Free;
+  inherited;
+end;
+
 { TAssignStmt }
 destructor TAssignStmt.Destroy;
 begin
@@ -469,6 +506,15 @@ end;
 destructor TFieldAssignStmt.Destroy;
 begin
   Obj.Free;
+  Value.Free;
+  inherited;
+end;
+
+{ TArrayIndexAssignStmt }
+destructor TArrayIndexAssignStmt.Destroy;
+begin
+  Target.Free;
+  Index.Free;
   Value.Free;
   inherited;
 end;

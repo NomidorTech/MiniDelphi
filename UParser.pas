@@ -74,6 +74,10 @@ type
     function  ParseInlineVarStmt : TStmtNode;
     procedure ParseArgList     (Args: TExprList);
 
+    // Type-reference helper: handles  Integer / String / Foo / array of Integer
+    procedure ParseTypeRef(out TypeName: string; out IsArray: Boolean;
+                           out ElementType: string);
+
     // Expression parsing (precedence climbing)
     function  ParseExpr        : TExprNode;
     function  ParseOrExpr      : TExprNode;
@@ -357,6 +361,8 @@ var
   D        : TVarDecl;
   Names    : TStringList;
   TypeName : string;
+  IsArr    : Boolean;
+  ElemT    : string;
   I        : Integer;
 begin
   Expect(tkVar);
@@ -370,19 +376,17 @@ begin
       while Match(tkComma) do
         Names.Add(Expect(tkIdentifier).Value);
       Expect(tkColon);
-      // Type name
-      if Current.Kind in [tkInteger_kw, tkString_kw,
-                          tkBoolean_kw, tkReal_kw] then
-        TypeName := LowerCase(Consume.Value)
-      else
-        TypeName := Expect(tkIdentifier).Value;
+      // Type name (may be  array of T )
+      ParseTypeRef(TypeName, IsArr, ElemT);
       Expect(tkSemicolon);
       // Create one TVarDecl per name
       for I := 0 to Names.Count - 1 do
       begin
-        D          := TVarDecl.Create;
-        D.Name     := Names[I];
-        D.TypeName := TypeName;
+        D             := TVarDecl.Create;
+        D.Name        := Names[I];
+        D.TypeName    := TypeName;
+        D.IsArray     := IsArr;
+        D.ElementType := ElemT;
         Decls.Add(D);
       end;
     finally
@@ -394,15 +398,18 @@ end;
 // ParseVarDecl kept for compatibility (used by ParseRoutine locals)
 function TParser.ParseVarDecl: TVarDecl;
 var
-  D    : TVarDecl;
+  D     : TVarDecl;
+  IsArr : Boolean;
+  ElemT : string;
+  TN    : string;
 begin
   D    := TVarDecl.Create;
   D.Name := Expect(tkIdentifier).Value;
   Expect(tkColon);
-  if Current.Kind in [tkInteger_kw, tkString_kw, tkBoolean_kw, tkReal_kw] then
-    D.TypeName := LowerCase(Consume.Value)
-  else
-    D.TypeName := Expect(tkIdentifier).Value;
+  ParseTypeRef(TN, IsArr, ElemT);
+  D.TypeName    := TN;
+  D.IsArray     := IsArr;
+  D.ElementType := ElemT;
   Expect(tkSemicolon);
   Result := D;
 end;
@@ -442,10 +449,11 @@ begin
     if Current.Kind = tkColon then
     begin
       Consume;
-      if Current.Kind in [tkInteger_kw, tkString_kw, tkBoolean_kw, tkReal_kw] then
-        R.ReturnType := LowerCase(Consume.Value)
-      else
-        R.ReturnType := Expect(tkIdentifier).Value;
+      var RetTN : string;
+      var RetIsArr : Boolean;
+      var RetElem : string;
+      ParseTypeRef(RetTN, RetIsArr, RetElem);
+      R.ReturnType := RetTN;
     end;
   end;
   Expect(tkSemicolon);
@@ -464,6 +472,8 @@ var
   P        : TParamDecl;
   IsVar    : Boolean;
   TypeName : string;
+  IsArr    : Boolean;
+  ElemT    : string;
   Names    : TStringList;
   I        : Integer;
 begin
@@ -476,17 +486,15 @@ begin
       while Match(tkComma) do
         Names.Add(Expect(tkIdentifier).Value);
       Expect(tkColon);
-      if Current.Kind in [tkInteger_kw, tkString_kw,
-                          tkBoolean_kw, tkReal_kw] then
-        TypeName := LowerCase(Consume.Value)
-      else
-        TypeName := Expect(tkIdentifier).Value;
+      ParseTypeRef(TypeName, IsArr, ElemT);
       for I := 0 to Names.Count - 1 do
       begin
-        P          := TParamDecl.Create;
-        P.Name     := Names[I];
-        P.TypeName := TypeName;
-        P.IsVar    := IsVar;
+        P             := TParamDecl.Create;
+        P.Name        := Names[I];
+        P.TypeName    := TypeName;
+        P.IsArray     := IsArr;
+        P.ElementType := ElemT;
+        P.IsVar       := IsVar;
         Params.Add(P);
       end;
     finally
@@ -748,6 +756,25 @@ begin
     Exit;
   end;
 
+  // Array indexed assignment:  Name[expr] := expr
+  // (only valid form here — array-index used as an expression-statement
+  //  doesn't make sense by itself, so we require the := afterwards)
+  if Current.Kind = tkLBracket then
+  begin
+    Consume;  // eat '['
+    var IdxExpr := ParseExpr;
+    Expect(tkRBracket);
+    Expect(tkAssign);
+    var AIAS    := TArrayIndexAssignStmt.Create;
+    VE          := TVarExpr.Create;
+    VE.Name     := LowerCase(Name);
+    AIAS.Target := VE;
+    AIAS.Index  := IdxExpr;
+    AIAS.Value  := ParseExpr;
+    Result      := AIAS;
+    Exit;
+  end;
+
   if Current.Kind = tkAssign then
   begin
     // Assignment
@@ -785,6 +812,49 @@ begin
   Args.Add(ParseExpr);
   while Match(tkComma) do
     Args.Add(ParseExpr);
+end;
+
+// ---------------------------------------------------------------------------
+//  ParseTypeRef
+//
+//  Reads a type name after the ":" in declarations.  Accepts:
+//      Integer | String | Boolean | Real     (built-in type keywords)
+//      Foo                                   (any identifier — class names)
+//      array of <element-type>               (dynamic arrays)
+//
+//  Outputs are mutually consistent:
+//    IsArray = False : TypeName = the type, ElementType = ''
+//    IsArray = True  : ElementType = the element type,
+//                      TypeName    = 'array of <element-type>'  (synthetic)
+// ---------------------------------------------------------------------------
+procedure TParser.ParseTypeRef(out TypeName: string; out IsArray: Boolean;
+  out ElementType: string);
+
+  function ReadBaseType : string;
+  begin
+    if Current.Kind in [tkInteger_kw, tkString_kw,
+                        tkBoolean_kw, tkReal_kw] then
+      Result := LowerCase(Consume.Value)
+    else
+      Result := Expect(tkIdentifier).Value;
+  end;
+
+begin
+  IsArray     := False;
+  ElementType := '';
+
+  if Current.Kind = tkArray then
+  begin
+    Consume;            // eat 'array'
+    Expect(tkOf);       // friendly error if missing
+    ElementType := ReadBaseType;
+    IsArray     := True;
+    TypeName    := 'array of ' + ElementType;
+  end
+  else
+  begin
+    TypeName := ReadBaseType;
+  end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -1044,29 +1114,44 @@ begin
         Result  := VE;
       end;
 
-      // Dot-chain:  Self.Name  /  Self.Name.SubField  /  obj.Method(args)
-      while Current.Kind = tkDot do
+      // Dot-chain or bracket-chain:
+      //   Self.Name  /  obj.Method(args)  /  a[i]  /  obj.arr[i]  /  a[i].field
+      while Current.Kind in [tkDot, tkLBracket] do
       begin
-        Consume;  // eat the dot
-        FldName := Expect(tkIdentifier).Value;
-        if Current.Kind = tkLParen then
+        if Current.Kind = tkLBracket then
         begin
-          // obj.Method(args)  ->  TMethodCallExpr
-          Consume;
-          MCE            := TMethodCallExpr.Create;
-          MCE.Obj        := Result;
-          MCE.MethodName := FldName;
-          ParseArgList(MCE.Args);
-          Expect(tkRParen);
-          Result := MCE;
+          // Array index access  a[expr]  ->  TArrayIndexExpr
+          Consume;  // eat '['
+          var IdxExpr := ParseExpr;
+          Expect(tkRBracket);
+          var AIE     := TArrayIndexExpr.Create;
+          AIE.Target  := Result;
+          AIE.Index   := IdxExpr;
+          Result      := AIE;
         end
         else
         begin
-          // obj.Field  ->  TFieldExpr
-          FE           := TFieldExpr.Create;
-          FE.Obj       := Result;
-          FE.FieldName := FldName;
-          Result       := FE;
+          Consume;  // eat '.'
+          FldName := Expect(tkIdentifier).Value;
+          if Current.Kind = tkLParen then
+          begin
+            // obj.Method(args)  ->  TMethodCallExpr
+            Consume;
+            MCE            := TMethodCallExpr.Create;
+            MCE.Obj        := Result;
+            MCE.MethodName := FldName;
+            ParseArgList(MCE.Args);
+            Expect(tkRParen);
+            Result := MCE;
+          end
+          else
+          begin
+            // obj.Field  ->  TFieldExpr
+            FE           := TFieldExpr.Create;
+            FE.Obj       := Result;
+            FE.FieldName := FldName;
+            Result       := FE;
+          end;
         end;
       end;
     end;
@@ -1282,11 +1367,11 @@ begin
       Consume;
       PropD2.Name     := Expect(tkIdentifier).Value;
       Expect(tkColon);
-      if Current.Kind in [tkInteger_kw, tkString_kw,
-                          tkBoolean_kw, tkReal_kw] then
-        PropD2.TypeName := LowerCase(Consume.Value)
-      else
-        PropD2.TypeName := Expect(tkIdentifier).Value;
+      var PropTN : string;
+      var PropArr : Boolean;
+      var PropElem : string;
+      ParseTypeRef(PropTN, PropArr, PropElem);
+      PropD2.TypeName := PropTN;
       if Match(tkIdentifier) then
         PropD2.ReadName := Expect(tkIdentifier).Value;
       if Match(tkIdentifier) then
@@ -1303,11 +1388,9 @@ begin
         while Match(tkComma) do
           FldNames.Add(Expect(tkIdentifier).Value);
         Expect(tkColon);
-        if Current.Kind in [tkInteger_kw, tkString_kw,
-                            tkBoolean_kw, tkReal_kw] then
-          FldType := LowerCase(Consume.Value)
-        else
-          FldType := Expect(tkIdentifier).Value;
+        var FldArr : Boolean;
+        var FldElem : string;
+        ParseTypeRef(FldType, FldArr, FldElem);
         Match(tkSemicolon);
         for FI := 0 to FldNames.Count - 1 do
         begin
@@ -1394,11 +1477,11 @@ begin
   if Current.Kind = tkColon then
   begin
     Consume;
-    if Current.Kind in [tkInteger_kw, tkString_kw,
-                        tkBoolean_kw, tkReal_kw] then
-      M.ReturnType := LowerCase(Consume.Value)
-    else
-      M.ReturnType := Expect(tkIdentifier).Value;
+    var MRetTN : string;
+    var MRetArr : Boolean;
+    var MRetElem : string;
+    ParseTypeRef(MRetTN, MRetArr, MRetElem);
+    M.ReturnType := MRetTN;
   end;
   Expect(tkSemicolon);
 
@@ -1465,6 +1548,8 @@ function TParser.ParseInlineVarStmt: TStmtNode;
 var
   Names    : TStringList;
   TypeName : string;
+  IsArr    : Boolean;
+  ElemT    : string;
   Dummy    : TAssignStmt;
   NilExpr  : TNilLitExpr;
   I        : Integer;
@@ -1476,11 +1561,7 @@ begin
     while Match(tkComma) do
       Names.Add(Expect(tkIdentifier).Value);
     Expect(tkColon);
-    if Current.Kind in [tkInteger_kw, tkString_kw,
-                        tkBoolean_kw, tkReal_kw] then
-      TypeName := LowerCase(Consume.Value)
-    else
-      TypeName := Expect(tkIdentifier).Value;
+    ParseTypeRef(TypeName, IsArr, ElemT);
     Match(tkSemicolon);
     // Return assignment to nil for each var — interpreter auto-declares on set
     // For multiple names, wrap in a block
