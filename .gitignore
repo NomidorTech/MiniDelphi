@@ -1,0 +1,55 @@
+﻿# =============================================================================
+# .gitignore for Pythia (Delphi 13 Athens / Win64 VCL)
+# =============================================================================
+# Source of truth: .pas .dpr .dproj .res files
+# Everything else listed below is build output, IDE state, or user-local data.
+# =============================================================================
+
+# Delphi compiled output
+*.dcu
+*.dcp
+*.dcpil
+*.bpl
+*.dll
+*.exe
+*.rsm
+*.map
+*.drc
+*.ddp
+*.identcache
+*.tvsconfig
+*.skincfg
+
+# Delphi IDE state -- per-developer
+*.local
+*.dproj.local
+*.progress
+*.recent
+__history/
+__recovery/
+*.~*
+
+# Build output folders
+Win32/
+Win64/
+Debug/
+Release/
+__astcache__/
+
+# User-local Pythia state
+Pythia.settings.ini
+
+# Test artefacts and accidental commits
+hello.db
+commit_msg.txt
+*.tmp
+*.bak
+
+# OS / editor noise
+Thumbs.db
+.DS_Store
+*.swp
+*.swo
+
+# Random downloads / patches
+*.zip
