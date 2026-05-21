@@ -1,11 +1,15 @@
-﻿unit ULearnTab;
+unit ULearnTab;
 
 // =============================================================================
-// Copyright (c) 2026 Nomidor Software, LLC.
-// All rights reserved.
+// Pythia — A Pascal Learning Environment
+// Copyright (C) 2026 Nomidor Software, LLC.
 //
-// MiniDelphi Toy Compiler & Learning IDE
-// Unauthorised copying, distribution or modification is prohibited.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// See the LICENSE file or https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
 
 // =============================================================================
@@ -778,8 +782,66 @@ begin
        '           4 is Perfect Square   5 is Prime   ...'                 + #13#10 +
        '  (perfect squares: 1,4,9,16; primes take priority over fizzbuzz)',
        'Write IsPrime and IsSquare functions first, then a for loop with nested if/else if.',
-       'function IsPrime(n: Integer): Boolean;' + #13#10 + 'var i : Integer;' + #13#10 + 'begin' + #13#10 + '  if n < 2 then begin Result := false; exit; end;' + #13#10 + '  Result := true; i := 2;' + #13#10 + '  while i*i <= n do begin' + #13#10 + '    if n mod i = 0 then begin Result := false; exit; end;' + #13#10 + '    inc(i);' + #13#10 + '  end;' + #13#10 + 'end;' + #13#10 + #13#10 + 'function IsSquare(n: Integer): Boolean;' + #13#10 + 'var r : Integer;' + #13#10 + 'begin' + #13#10 + '  r := round(sqrt(n));' + #13#10 + '  Result := (r * r = n);' + #13#10 + 'end;' + #13#10 + #13#10 + 'var i : Integer;' + #13#10 + 'begin' + #13#10 + '  for i := 1 to 15 do' + #13#10 + '  begin' + #13#10 + '    write(i, '' is '');' + #13#10 + '    if IsSquare(i) and not IsPrime(i) then writeln(''Perfect Square'')' + #13#10 + '    else if IsPrime(i) then writeln(''Prime'')' + #13#10 + '    else if i mod 15 = 0 then writeln(''FizzBuzz'')' + #13#10 + '    else if i mod 3 = 0 then writeln(''Fizz'')' + #13#10 + '    else if i mod 5 = 0 then writeln(''Buzz'')' + #13#10 + '    else writeln(''Plain'');' + #13#10 + '  end;' + #13#10 + 'end.',
-       'function IsPrime(n:Integer):Boolean; var i:Integer; begin if n<2 then begin Result:=false; exit; end; Result:=true; i:=2; while i*i<=n do begin if n mod i=0 then begin Result:=false; exit; end; inc(i); end; end; function IsSquare(n:Integer):Boolean; var r:Integer; begin r:=round(sqrt(n)); Result:=(r*r=n); end; var i:Integer; begin for i:=1 to 15 do begin write(i,'' is ''); if IsSquare(i) and not IsPrime(i) then writeln(''Perfect Square'') else if IsPrime(i) then writeln(''Prime'') else if i mod 15=0 then writeln(''FizzBuzz'') else if i mod 3=0 then writeln(''Fizz'') else if i mod 5=0 then writeln(''Buzz'') else writeln(''Plain''); end; end.',
+       'function IsPrime(n: Integer): Boolean;'                            + #13#10 +
+       'var i : Integer;'                                                  + #13#10 +
+       'begin'                                                             + #13#10 +
+       '  if n < 2 then begin Result := false; exit; end;'                + #13#10 +
+       '  Result := true; i := 2;'                                        + #13#10 +
+       '  while i*i <= n do begin'                                        + #13#10 +
+       '    if n mod i = 0 then begin Result := false; exit; end;'        + #13#10 +
+       '    inc(i);'                                                       + #13#10 +
+       '  end;'                                                            + #13#10 +
+       'end;'                                                              + #13#10 +
+       ''                                                                  + #13#10 +
+       'function IsSquare(n: Integer): Boolean;'                           + #13#10 +
+       'var r : Integer;'                                                  + #13#10 +
+       'begin'                                                             + #13#10 +
+       '  r := round(sqrt(n));'                                            + #13#10 +
+       '  Result := (r * r = n);'                                         + #13#10 +
+       'end;'                                                              + #13#10 +
+       ''                                                                  + #13#10 +
+       'var i : Integer;'                                                  + #13#10 +
+       'begin'                                                             + #13#10 +
+       '  for i := 1 to 15 do'                                            + #13#10 +
+       '  begin'                                                           + #13#10 +
+       '    write(i, '' is '');'                                           + #13#10 +
+       '    if IsSquare(i) and not IsPrime(i) then writeln(''Perfect Square'')' + #13#10 +
+       '    else if IsPrime(i) then writeln(''Prime'')'                   + #13#10 +
+       '    else if i mod 15 = 0 then writeln(''FizzBuzz'')'              + #13#10 +
+       '    else if i mod 3 = 0 then writeln(''Fizz'')'                   + #13#10 +
+       '    else if i mod 5 = 0 then writeln(''Buzz'')'                   + #13#10 +
+       '    else writeln(''Plain'');'                                      + #13#10 +
+       '  end;'                                                            + #13#10 +
+       'end.',
+       'function IsPrime(n:Integer):Boolean;'                              + #13#10 +
+       'var i:Integer;'                                                    + #13#10 +
+       'begin'                                                             + #13#10 +
+       '  if n<2 then begin Result:=false; exit; end;'                    + #13#10 +
+       '  Result:=true; i:=2;'                                            + #13#10 +
+       '  while i*i<=n do begin'                                          + #13#10 +
+       '    if n mod i=0 then begin Result:=false; exit; end;'            + #13#10 +
+       '    inc(i);'                                                       + #13#10 +
+       '  end;'                                                            + #13#10 +
+       'end;'                                                              + #13#10 +
+       'function IsSquare(n:Integer):Boolean;'                             + #13#10 +
+       'var r:Integer;'                                                    + #13#10 +
+       'begin'                                                             + #13#10 +
+       '  r:=round(sqrt(n));'                                              + #13#10 +
+       '  Result:=(r*r=n);'                                                + #13#10 +
+       'end;'                                                              + #13#10 +
+       'var i:Integer;'                                                    + #13#10 +
+       'begin'                                                             + #13#10 +
+       '  for i:=1 to 15 do'                                              + #13#10 +
+       '  begin'                                                           + #13#10 +
+       '    write(i,'' is '');'                                            + #13#10 +
+       '    if IsSquare(i) and not IsPrime(i) then writeln(''Perfect Square'')' + #13#10 +
+       '    else if IsPrime(i) then writeln(''Prime'')'                   + #13#10 +
+       '    else if i mod 15=0 then writeln(''FizzBuzz'')'                + #13#10 +
+       '    else if i mod 3=0 then writeln(''Fizz'')'                     + #13#10 +
+       '    else if i mod 5=0 then writeln(''Buzz'')'                     + #13#10 +
+       '    else writeln(''Plain'');'                                      + #13#10 +
+       '  end;'                                                            + #13#10 +
+       'end.',
        ckContainsAll, 'is Prime|is Perfect Square|is Fizz|is Buzz', 0,0,0, 0, 40)
   ];
 

@@ -1,13 +1,17 @@
-﻿program Pythia;
+program Pythia;
 // =============================================================================
-// Copyright (c) 2026 Nomidor Software, LLC.
-// All rights reserved.
+// Pythia — A Pascal Learning Environment
+// Copyright (C) 2026 Nomidor Software, LLC.
 //
-// MiniDelphi Toy Compiler & Learning IDE
-// Unauthorised copying, distribution or modification is prohibited.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// See the LICENSE file or https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
 // =============================================================================
-//  MiniDelphi.dpr  -  Project file for the MiniDelphi Toy Compiler
+//  Pythia.dpr  -  Project file for Pythia
 //
 //  Units in this project:
 //    ULexer.pas        — Tokeniser
@@ -49,7 +53,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   TStyleManager.TrySetStyle('Iceberg Classico');
-  Application.Title := 'MiniDelphi Toy Compiler';
+  Application.Title := 'Pythia';
 
   // Apply theme BEFORE creating any forms so VCL Styles paints correctly.
   Theme.Load;

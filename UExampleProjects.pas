@@ -1,15 +1,19 @@
-﻿unit UExampleProjects;
+unit UExampleProjects;
 
 // =============================================================================
-// Copyright (c) 2026 Nomidor Software, LLC.
-// All rights reserved.
+// Pythia — A Pascal Learning Environment
+// Copyright (C) 2026 Nomidor Software, LLC.
 //
-// MiniDelphi Toy Compiler & Learning IDE
-// Unauthorised copying, distribution or modification is prohibited.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// See the LICENSE file or https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
 
 // =============================================================================
-//  UExampleProjects.pas  —  30 fully-documented MiniDelphi example projects
+//  UExampleProjects.pas  —  30 fully-documented Pythia example projects
 //
 //  Every example is a self-contained .mdp source string with:
 //    • A header block explaining what the program does and what it teaches
