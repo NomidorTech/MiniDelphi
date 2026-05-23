@@ -1,32 +1,21 @@
 unit UGraphics;
 
 // =============================================================================
-// Pythia — A Pascal Learning Environment
+// Pythia -- ambiente de aprendizado Pascal
 // Copyright (C) 2026 Nomidor Software, LLC.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// See the LICENSE file or https://www.gnu.org/licenses/gpl-3.0.html
+// GPL v3 — veja https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
 //
-//  UGraphics.pas  -  Thread-safe animation window for Pythia
+//  UGraphics.pas  -  Janela de animação 2D para o Pythia
 //
-//  Architecture:
-//    The Pythia interpreter runs on the MAIN thread.
-//    GfxShow uses TThread.Synchronize to push a bitmap copy to the
-//    TImage on the VCL thread — this is the only safe way to paint
-//    from a thread that also owns the message loop.
+//  Como funciona:
+//    O interpretador roda na thread principal (mesma que a VCL).
+//    Usamos InvalidateRect + UpdateWindow para pintar de forma síncrona,
+//    forçando um WM_PAINT imediato antes de retornar.
 //
-//    Actually simpler: we use a TWinControl (TPanel) and paint via
-//    a custom Windows message WM_GFX_SHOW posted from GfxShow.
-//    The panel's WndProc handles the message and does the BitBlt.
-//
-//  Since the interpreter runs ON the main thread (same as VCL), the
-//  real solution is to paint SYNCHRONOUSLY using InvalidateRect +
-//  UpdateWindow which forces an immediate WM_PAINT before returning.
+//  Eventos de mouse são registrados tanto no formulário quanto no painel
+//  filho (TGfxPanel) para garantir que cliques na área de desenho sejam
+//  capturados corretamente.
 // =============================================================================
 
 interface
@@ -41,7 +30,7 @@ const
   WM_GFX_SHOW = WM_USER + 100;
 
 type
-  // A TWinControl subclass so we get a real HWND and handle WM_PAINT ourselves
+  // Painel de desenho — possui o bitmap e trata WM_PAINT via BitBlt
   TGfxPanel = class(TWinControl)
   private
     FBitmap : TBitmap;
@@ -53,24 +42,23 @@ type
     property    Bitmap : TBitmap read FBitmap;
   end;
 
+  // Janela gráfica principal
   TGfxWindow = class(TForm)
   private
-    FPanel     : TGfxPanel;
-    FKeyQueue  : TStringList;
-    FRunning   : Boolean;
-    FMouseX    : Integer;
-    FMouseY    : Integer;
-    FMouseDown : Boolean;
-    FCurColor  : TColor;
-    FPenWidth  : Integer;
-    FW, FH     : Integer;
+    FPanel     : TGfxPanel;     // superfície de desenho
+    FKeyQueue  : TStringList;   // fila de teclas pressionadas
+    FRunning   : Boolean;       // janela ainda aberta?
+    FMouseX    : Integer;       // posição X do mouse
+    FMouseY    : Integer;       // posição Y do mouse
+    FMouseDown : Boolean;       // botão do mouse pressionado?
+    FCurColor  : TColor;        // cor atual de desenho
+    FPenWidth  : Integer;       // largura da caneta
+    FW, FH     : Integer;       // largura e altura em pixels
 
     procedure OnClose2(Sender: TObject; var Action: TCloseAction);
     procedure OnMMove (Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure OnMDown (Sender: TObject; Button: TMouseButton;
-                       Shift: TShiftState; X, Y: Integer);
-    procedure OnMUp   (Sender: TObject; Button: TMouseButton;
-                       Shift: TShiftState; X, Y: Integer);
+    procedure OnMDown (Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure OnMUp   (Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure OnKDown (Sender: TObject; var Key: Word; Shift: TShiftState);
 
     function  NameToColor(const N: string): TColor;
@@ -114,7 +102,7 @@ implementation
 // =============================================================================
 
 // ---------------------------------------------------------------------------
-//  TGfxPanel — owns the bitmap, handles WM_PAINT by BitBlt-ing the bitmap
+//  TGfxPanel — painel de desenho com bitmap duplo-buffer
 // ---------------------------------------------------------------------------
 constructor TGfxPanel.Create(AOwner: TComponent);
 begin
@@ -128,12 +116,13 @@ begin
   inherited;
 end;
 
+// Suprime o apagamento do fundo para evitar piscar
 procedure TGfxPanel.WMEraseBkgnd(var Msg: TWMEraseBkgnd);
 begin
-  // Suppress background erase to prevent flicker
   Msg.Result := 1;
 end;
 
+// Pinta o painel copiando o bitmap via BitBlt
 procedure TGfxPanel.WMPaint(var Msg: TWMPaint);
 var
   PS : TPaintStruct;
@@ -146,7 +135,7 @@ begin
         BitBlt(DC, 0, 0, FBitmap.Width, FBitmap.Height,
                FBitmap.Canvas.Handle, 0, 0, SRCCOPY);
     except
-      // Suppress paint errors after window teardown
+      // Ignora erros de pintura após destruição da janela
     end;
   finally
     EndPaint(Handle, PS);
@@ -154,7 +143,7 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Colour table
+//  Tabela de cores nomeadas
 // ---------------------------------------------------------------------------
 function TGfxWindow.NameToColor(const N: string): TColor;
 var
@@ -191,23 +180,27 @@ begin
   else if S = 'skyblue'   then Result := RGB(135, 206, 235)
   else
   begin
+    // Tenta interpretar como cor hexadecimal #RRGGBB
     if (Length(S) = 7) and (S[1] = '#') then
     try
-      R := StrToInt('$' + Copy(S,2,2));
-      G := StrToInt('$' + Copy(S,4,2));
-      B := StrToInt('$' + Copy(S,6,2));
+      R := StrToInt('$' + Copy(S, 2, 2));
+      G := StrToInt('$' + Copy(S, 4, 2));
+      B := StrToInt('$' + Copy(S, 6, 2));
       Result := RGB(R, G, B);
       Exit;
     except end;
-    Result := clWhite;
+    Result := clWhite;  // cor padrão se não reconhecida
   end;
 end;
 
+// Atalho para o canvas do bitmap
 function TGfxWindow.C: TCanvas;
 begin
   Result := FPanel.Bitmap.Canvas;
 end;
 
+// ---------------------------------------------------------------------------
+//  Construtor da janela gráfica
 // ---------------------------------------------------------------------------
 constructor TGfxWindow.CreateGfx(W, H: Integer; const Title: string);
 var
@@ -217,6 +210,7 @@ begin
 
   FW := W;  FH := H;
 
+  // Ajusta tamanho considerando bordas e barra de título
   ExW    := Width  - ClientWidth;
   ExH    := Height - ClientHeight;
   Width  := W + ExW;
@@ -225,22 +219,29 @@ begin
   Caption     := Title;
   BorderStyle := bsSingle;
   Position    := poScreenCenter;
-  KeyPreview  := True;
+  KeyPreview  := True;   // o formulário recebe teclas antes dos filhos
   Color       := clBlack;
 
+  // Eventos do formulário
   OnClose    := OnClose2;
   OnMouseMove:= OnMMove;
   OnMouseDown:= OnMDown;
   OnMouseUp  := OnMUp;
   OnKeyDown  := OnKDown;
 
-  // The panel is our drawing surface
-  FPanel              := TGfxPanel.Create(Self);
-  FPanel.Parent       := Self;
+  // Cria o painel de desenho
+  FPanel             := TGfxPanel.Create(Self);
+  FPanel.Parent      := Self;
   FPanel.SetBounds(0, 0, W, H);
-  FPanel.Align        := alClient;
+  FPanel.Align       := alClient;
 
-  // Set up the bitmap
+  // Registra eventos de mouse no painel também
+  // (cliques no painel não sobem automaticamente para o formulário)
+  FPanel.OnMouseMove := OnMMove;
+  FPanel.OnMouseDown := OnMDown;
+  FPanel.OnMouseUp   := OnMUp;
+
+  // Configura o bitmap de desenho
   FPanel.Bitmap.PixelFormat := pf32bit;
   FPanel.Bitmap.Width       := W;
   FPanel.Bitmap.Height      := H;
@@ -252,6 +253,7 @@ begin
   FPenWidth  := 1;
   FCurColor  := clWhite;
 
+  // Configurações iniciais do canvas
   C.Pen.Color   := clWhite;
   C.Pen.Width   := 1;
   C.Brush.Style := bsClear;
@@ -260,6 +262,7 @@ begin
   C.Font.Name   := 'Segoe UI';
 
   Show;
+  SetFocus;   // captura foco do teclado imediatamente
   Application.ProcessMessages;
 end;
 
@@ -269,6 +272,10 @@ begin
   inherited;
 end;
 
+// ---------------------------------------------------------------------------
+//  Tratadores de eventos
+// ---------------------------------------------------------------------------
+
 procedure TGfxWindow.OnClose2(Sender: TObject; var Action: TCloseAction);
 begin
   FRunning := False;
@@ -277,13 +284,18 @@ end;
 
 procedure TGfxWindow.OnMMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
-  FMouseX := X;  FMouseY := Y;
+  FMouseX := X;
+  FMouseY := Y;
 end;
 
 procedure TGfxWindow.OnMDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  FMouseDown := True;  FMouseX := X;  FMouseY := Y;
+  FMouseDown := True;
+  FMouseX    := X;
+  FMouseY    := Y;
+  // Recupera o foco ao clicar (outra janela pode ter roubado)
+  if not Self.Focused then SetFocus;
 end;
 
 procedure TGfxWindow.OnMUp(Sender: TObject; Button: TMouseButton;
@@ -293,13 +305,20 @@ begin
 end;
 
 procedure TGfxWindow.OnKDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-var S : string;
+var
+  S : string;
 begin
+  S := '';
   case Key of
-    VK_LEFT  : S := 'LEFT';   VK_RIGHT : S := 'RIGHT';
-    VK_UP    : S := 'UP';     VK_DOWN  : S := 'DOWN';
-    VK_ESCAPE: S := 'ESC';    VK_SPACE : S := 'SPACE';
-    VK_RETURN: S := 'ENTER';
+    VK_LEFT  : S := 'LEFT';    // seta esquerda
+    VK_RIGHT : S := 'RIGHT';   // seta direita
+    VK_UP    : S := 'UP';      // seta cima
+    VK_DOWN  : S := 'DOWN';    // seta baixo
+    VK_ESCAPE: S := 'ESC';     // escape
+    VK_SPACE : S := 'SPACE';   // espaço
+    VK_RETURN: S := 'ENTER';   // enter
+    VK_BACK  : S := 'BACK';    // retrocesso (backspace)
+    VK_DELETE: S := 'DEL';     // delete
   else
     if (Key >= Ord('A')) and (Key <= Ord('Z')) then S := Chr(Key)
     else if (Key >= Ord('0')) and (Key <= Ord('9')) then S := Chr(Key)
@@ -309,7 +328,7 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Drawing — all go directly to FPanel.Bitmap.Canvas
+//  Primitivas de desenho
 // ---------------------------------------------------------------------------
 
 procedure TGfxWindow.GfxClear(const ColorName: string);
@@ -406,6 +425,7 @@ end;
 
 procedure TGfxWindow.GfxSetFont(Size: Integer; Bold: Boolean);
 begin
+  C.Font.Name := 'Segoe UI';
   C.Font.Size := Size;
   if Bold then C.Font.Style := [fsBold]
   else         C.Font.Style := [];
@@ -416,21 +436,19 @@ begin
   FPanel.Bitmap.Canvas.Pixels[X, Y] := FCurColor;
 end;
 
-// ---------------------------------------------------------------------------
-//  GfxShow — force immediate repaint of the panel
-//  InvalidateRect + UpdateWindow bypasses the message queue and paints NOW
-// ---------------------------------------------------------------------------
+// Força repintura imediata do painel sem passar pela fila de mensagens
 procedure TGfxWindow.GfxShow;
 begin
   if not FRunning then Exit;
-  // Force the panel to repaint synchronously right now
   InvalidateRect(FPanel.Handle, nil, False);
   UpdateWindow(FPanel.Handle);
-  // Also pump messages so the window stays alive
   Application.ProcessMessages;
 end;
 
 // ---------------------------------------------------------------------------
+//  Teclado
+// ---------------------------------------------------------------------------
+
 function TGfxWindow.GfxKeyPressed: Boolean;
 begin
   Application.ProcessMessages;
@@ -450,6 +468,9 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+//  Funções globais de abertura/fechamento
+// ---------------------------------------------------------------------------
+
 procedure GfxOpenWindow(W, H: Integer; const Title: string);
 begin
   GfxCloseWindow;
@@ -462,8 +483,8 @@ var
 begin
   if Assigned(GfxWin) then
   begin
-    W        := GfxWin;
-    GfxWin   := nil;
+    W          := GfxWin;
+    GfxWin     := nil;
     W.FRunning := False;
     W.Hide;
     W.Free;

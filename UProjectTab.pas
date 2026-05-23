@@ -1,4 +1,4 @@
-unit UProjectTab;
+﻿unit UProjectTab;
 
 // =============================================================================
 // Pythia — A Pascal Learning Environment
@@ -1316,6 +1316,7 @@ begin
         Prog := Par.Parse;
         try
           FInterp := TInterpreter.Create(Prog, FOutput.Lines);
+          FInterp.MaxSteps := 100000000;   // Graphics programs need more steps
           try
             FOutput.Lines.Clear;
             FInterp.SourceText := FEditor.Lines.Text;
@@ -1383,6 +1384,7 @@ begin
         Prog := Par.Parse;
         try
           FInterp := TInterpreter.Create(Prog, FOutput.Lines);
+          FInterp.MaxSteps := 100000000;   // Graphics programs need more steps
           try
             FOutput.Lines.Clear;
             FInterp.SourceText := Src;

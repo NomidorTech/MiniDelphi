@@ -1,4 +1,4 @@
-program Pythia;
+﻿program Pythia;
 // =============================================================================
 // Pythia — A Pascal Learning Environment
 // Copyright (C) 2026 Nomidor Software, LLC.

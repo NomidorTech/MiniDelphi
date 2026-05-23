@@ -1,50 +1,31 @@
-unit UValidator;
+﻿unit UValidator;
 
 // =============================================================================
-// Pythia -- a Pascal learning environment
+// Pythia -- ambiente de aprendizado Pascal
 // Copyright (C) 2026 Nomidor Software, LLC.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// See the LICENSE file or https://www.gnu.org/licenses/gpl-3.0.html
+// GPL v3 — veja https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
-
-// =============================================================================
-//  UValidator.pas  -  Pre-run validation pass for Pythia
 //
-//  Called between parsing and execution.  Walks the AST and source text to
-//  catch common mistakes early, before the interpreter touches them.
+//  UValidator.pas  -  Passagem de validação pré-execução para o Pythia
 //
-//  Checks performed:
-//    1.  Parse errors (line / col already known from EParseError)
-//    2.  Missing begin..end main block
-//    3.  Empty program body
-//    4.  Undeclared variable usage (best-effort — builtins are whitelisted)
-//    5.  Undeclared routine calls
-//    6.  Function missing Result assignment (best-effort)
-//    7.  Infinite loop risk — while true do without break/exit
-//    8.  Division by zero literal  (x / 0  or  x div 0)
-//    9.  String used where number expected in obvious arithmetic
-//   10.  begin without matching end (caught by parser, re-reported clearly)
-//   11.  Mismatched parentheses (caught by parser, re-reported clearly)
-//   12.  Assignments to undefined variables at global scope
-//   13.  Procedure called with wrong number of arguments (known routines)
-//   14.  Empty procedure/function body
+//  Chamado entre o parsing e a execução. Percorre a AST e o texto fonte
+//  para detectar erros comuns antes que o interpretador os encontre.
 //
-//  Each issue produces a TValidationIssue:
-//    Severity — vsError (blocks run) / vsWarning (runs with caution)
-//    Line, Col — 1-based position in source
-//    Message   — human-friendly explanation
-//    Hint      — suggested fix (shown below the error)
-// =============================================================================
-
-// =============================================================================
-// [PT-BR] UValidator.pas  -  Passo de validação pré-execução do Pythia
-//  Chamado entre o parse e a execução. Percorre a AST e o texto-fonte
-//  para capturar erros comuns antes que o interpretador os toque.
+//  Verificações realizadas:
+//    1.  Erros de parsing (linha/coluna já conhecidos do EParseError)
+//    2.  Bloco begin..end principal ausente
+//    3.  Corpo do programa vazio
+//    4.  Uso de variáveis não declaradas (melhor esforço — builtins na whitelist)
+//    5.  Chamadas a rotinas não declaradas
+//    6.  Função sem atribuição de Result (melhor esforço)
+//    7.  Risco de loop infinito — while true do sem break/exit
+//    8.  Divisão por zero literal (x / 0 ou x div 0)
+//    9.  String usada onde número era esperado em aritmética óbvia
+//   10.  begin sem end correspondente (detectado pelo parser)
+//   11.  Parênteses não balanceados (detectado pelo parser)
+//   12.  Atribuições a variáveis não definidas no escopo global
+//   13.  Procedimento chamado com número errado de argumentos
+//   14.  Corpo de procedimento/função vazio
 // =============================================================================
 
 interface
@@ -67,19 +48,15 @@ type
   TValidator = class
   private
     FProgram  : TProgramNode;
-    FSource   : string;        // raw source text (for line inspection)
+    FSource   : string;
     FIssues   : TList<TValidationIssue>;
-    FKnownVars: TDictionary<string, Boolean>;   // declared names
-    FKnownRout: TDictionary<string, Integer>;   // name -> param count
+    FKnownVars: TDictionary<string, Boolean>;
+    FKnownRout: TDictionary<string, Integer>;
 
     procedure AddIssue(Sev: TIssueSeverity; Line, Col: Integer;
                        const Msg, Hint: string);
-
-    // Source helpers
     function  GetLine(LineNo: Integer): string;
     function  TrimmedLine(LineNo: Integer): string;
-
-    // Validation passes
     procedure CheckMainBlock;
     procedure CollectDeclarations;
     procedure CheckRoutines;
@@ -87,23 +64,16 @@ type
     procedure CheckBlock(Block: TBlockStmt; Scope: TDictionary<string,Boolean>);
     procedure CheckStatement(Stmt: TStmtNode; Scope: TDictionary<string,Boolean>);
     procedure CheckExpr(Expr: TExprNode; Scope: TDictionary<string,Boolean>);
-    procedure CheckCallArgs(const Name: string; Args: TExprList;
-                            Line, Col: Integer);
+    procedure CheckCallArgs(const Name: string; Args: TExprList; Line, Col: Integer);
     procedure CheckForDivByZero(Node: TBinOpExpr);
-
     function  IsBuiltin(const Name: string): Boolean;
     function  BuiltinArgCount(const Name: string): Integer;
 
   public
     constructor Create(AProgram: TProgramNode; const ASource: string);
     destructor  Destroy; override;
-
-    // Run all checks.  Returns True if there are no blocking errors.
     function  Validate: Boolean;
-
-    property Issues : TList<TValidationIssue> read FIssues;
-
-    // Convenience: formatted summary string
+    property  Issues : TList<TValidationIssue> read FIssues;
     function  Summary: string;
     function  HasErrors: Boolean;
     function  HasWarnings: Boolean;
@@ -114,30 +84,41 @@ implementation
 // =============================================================================
 
 // ---------------------------------------------------------------------------
-//  Built-in name registry  (so we don't flag built-ins as undeclared)
+//  Registro de nomes de builtins (para não sinalizar como não declarados)
 // ---------------------------------------------------------------------------
 const
-  BUILTINS : array[0..86] of string = (
-    // Math
+  BUILTINS : array[0..102] of string = (
+    // Matemática
     'abs','sqr','sqrt','round','trunc','int','frac',
     'sin','cos','ln','exp','pi','power','max','min','odd',
     'succ','pred','inc','dec','random','randomize',
-    // String
+    // Strings
     'length','copy','pos','uppercase','lowercase','trim',
-    'inttostr','strtoint','strtofloat','floattostr','str','val',
-    'chr','ord',
-    // UI
+    'inttostr','strtoint','strtointdef','strtofloat','floattostr',
+    'str','val','chr','ord',
+    // Interface com o usuário
     'showmessage','inputbox','confirm','showinfobox',
     'showwarningbox','showerrorbox',
-    // File dialogs
+    // Diálogos de arquivo
     'openfiledialog','savefiledialog','selectdirectorydialog',
-    // File I/O
+    // Entrada e saída de arquivo
     'writefile','appendfile','readfile','fileexists',
     'deletefile','getapppath','getdesktoppath',
-    // Database
+    'extractfilename','extractfilepath',
+    // Banco de dados SQLite
     'dbopen','dbclose','dbexec','dbquery','dbqueryvalue',
     'dblasterror','dbisopen','dbfilename',
-    // Graphics
+    // Arquivos INI
+    'inireadstr','iniwritestr','inireadint','iniwriteint',
+    // Data, hora e ambiente
+    'datestr','timestr','getenvvar','urlencode',
+    // Shell — execução de programas externos
+    'shell','shellwait','shellhidden',
+    // Arrays dinâmicos
+    'setlength',
+    // Pausa
+    'sleep',
+    // Gráficos 2D
     'gfxopen','gfxclose','gfxclear','gfxshow','gfxdelay','gfxrunning',
     'gfxcolor','gfxpenwidth',
     'gfxdrawline','gfxdrawrect','gfxfillrect',
@@ -146,42 +127,44 @@ const
     'gfxdrawtext','gfxsetfont','gfxdrawpixel',
     'gfxkeypressed','gfxreadkey',
     'gfxmousex','gfxmousey','gfxmousedown',
-    // Special
+    // Especiais
     'writeln','write','readln','result'
   );
 
-// Approximate expected argument counts for builtins (0 = any / don't check)
+// Contagens esperadas de argumentos para builtins conhecidos
 type
   TArgSpec = record Name: string; Min, Max: Integer; end;
 
 const
-  ARG_SPECS : array[0..25] of TArgSpec = (
-    (Name:'abs';       Min:1; Max:1),
-    (Name:'sqr';       Min:1; Max:1),
-    (Name:'sqrt';      Min:1; Max:1),
-    (Name:'round';     Min:1; Max:1),
-    (Name:'trunc';     Min:1; Max:1),
-    (Name:'sin';       Min:1; Max:1),
-    (Name:'cos';       Min:1; Max:1),
-    (Name:'ln';        Min:1; Max:1),
-    (Name:'exp';       Min:1; Max:1),
-    (Name:'power';     Min:2; Max:2),
-    (Name:'max';       Min:2; Max:2),
-    (Name:'min';       Min:2; Max:2),
-    (Name:'length';    Min:1; Max:1),
-    (Name:'copy';      Min:3; Max:3),
-    (Name:'pos';       Min:2; Max:2),
-    (Name:'inttostr';  Min:1; Max:1),
-    (Name:'strtoint';  Min:1; Max:1),
-    (Name:'strtofloat';Min:1; Max:1),
-    (Name:'floattostr';Min:1; Max:1),
-    (Name:'chr';       Min:1; Max:1),
-    (Name:'ord';       Min:1; Max:1),
-    (Name:'inputbox';  Min:3; Max:3),
-    (Name:'confirm';   Min:1; Max:1),
-    (Name:'showmessage';Min:1;Max:1),
-    (Name:'gfxopen';   Min:2; Max:3),
-    (Name:'gfxdelay';  Min:1; Max:1)
+  ARG_SPECS : array[0..27] of TArgSpec = (
+    (Name:'abs';        Min:1; Max:1),
+    (Name:'sqr';        Min:1; Max:1),
+    (Name:'sqrt';       Min:1; Max:1),
+    (Name:'round';      Min:1; Max:1),
+    (Name:'trunc';      Min:1; Max:1),
+    (Name:'sin';        Min:1; Max:1),
+    (Name:'cos';        Min:1; Max:1),
+    (Name:'ln';         Min:1; Max:1),
+    (Name:'exp';        Min:1; Max:1),
+    (Name:'power';      Min:2; Max:2),
+    (Name:'max';        Min:2; Max:2),
+    (Name:'min';        Min:2; Max:2),
+    (Name:'length';     Min:1; Max:1),
+    (Name:'copy';       Min:3; Max:3),
+    (Name:'pos';        Min:2; Max:2),
+    (Name:'inttostr';   Min:1; Max:1),
+    (Name:'strtoint';   Min:1; Max:1),
+    (Name:'strtointdef';Min:2; Max:2),
+    (Name:'strtofloat'; Min:1; Max:1),
+    (Name:'floattostr'; Min:1; Max:1),
+    (Name:'chr';        Min:1; Max:1),
+    (Name:'ord';        Min:1; Max:1),
+    (Name:'inputbox';   Min:3; Max:3),
+    (Name:'confirm';    Min:1; Max:1),
+    (Name:'showmessage';Min:1; Max:1),
+    (Name:'setlength';  Min:2; Max:2),
+    (Name:'gfxopen';    Min:2; Max:3),
+    (Name:'gfxdelay';   Min:1; Max:1)
   );
 
 // =============================================================================
@@ -206,8 +189,7 @@ end;
 
 procedure TValidator.AddIssue(Sev: TIssueSeverity; Line, Col: Integer;
   const Msg, Hint: string);
-var
-  Issue : TValidationIssue;
+var Issue : TValidationIssue;
 begin
   Issue.Severity := Sev;
   Issue.Line     := Line;
@@ -218,8 +200,7 @@ begin
 end;
 
 function TValidator.GetLine(LineNo: Integer): string;
-var
-  Lines : TStringList;
+var Lines : TStringList;
 begin
   Result := '';
   Lines := TStringList.Create;
@@ -227,9 +208,7 @@ begin
     Lines.Text := FSource;
     if (LineNo >= 1) and (LineNo <= Lines.Count) then
       Result := Lines[LineNo - 1];
-  finally
-    Lines.Free;
-  end;
+  finally Lines.Free; end;
 end;
 
 function TValidator.TrimmedLine(LineNo: Integer): string;
@@ -238,32 +217,30 @@ begin
 end;
 
 function TValidator.IsBuiltin(const Name: string): Boolean;
-var
-  LN : string;
-  I  : Integer;
+var LN : string; I : Integer;
 begin
   LN := LowerCase(Name);
   for I := Low(BUILTINS) to High(BUILTINS) do
-    if BUILTINS[I] = LN then Exit(True);
+    if BUILTINS[I] = LN then begin Result := True; Exit; end;
   Result := False;
 end;
 
 function TValidator.BuiltinArgCount(const Name: string): Integer;
 begin
-  Result := -1;  // -1 = not found / don't check
+  Result := -1;
 end;
 
-// =============================================================================
-//  Main validation entry point
-// =============================================================================
+// ---------------------------------------------------------------------------
+//  Ponto de entrada da validação
+// ---------------------------------------------------------------------------
 function TValidator.Validate: Boolean;
 begin
   if not Assigned(FProgram) then
   begin
     AddIssue(vsError, 1, 1,
-      'The program could not be parsed.',
-      'Check for syntax errors -- missing begin/end, mismatched ' +
-      'parentheses, or stray punctuation.');
+      'O programa não pôde ser analisado.',
+      'Verifique erros de sintaxe — begin/end ausente, parênteses ' +
+      'não balanceados ou pontuação incorreta.');
     Exit(False);
   end;
 
@@ -276,11 +253,8 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Pass 1: collect all declared names so later passes can spot undeclared ones
+//  Passo 1: coleta todos os nomes declarados
 // ---------------------------------------------------------------------------
-// -------------------------------------------------------------------
-// [PT-BR] Passo 1: coletar todos os nomes declarados para que passos posteriores detectem nomes não declarados
-// -------------------------------------------------------------------
 procedure TValidator.CollectDeclarations;
 var
   V  : TVarDecl;
@@ -289,289 +263,196 @@ var
   CD : TClassDecl;
   MD : TMethodDecl;
 begin
-  // Global variables
   for VI := 0 to FProgram.Globals.Count - 1 do
   begin
     V := FProgram.Globals[VI];
     FKnownVars.AddOrSetValue(LowerCase(V.Name), True);
   end;
-
-  // Routines
   for RI := 0 to FProgram.Routines.Count - 1 do
   begin
     R := FProgram.Routines[RI];
-    if Assigned(R.Params) then
-      FKnownRout.AddOrSetValue(LowerCase(R.Name), R.Params.Count)
-    else
-      FKnownRout.AddOrSetValue(LowerCase(R.Name), 0);
-    // Also register params as local vars (approx)
+    if Assigned(R.Params) then FKnownRout.AddOrSetValue(LowerCase(R.Name), R.Params.Count)
+    else FKnownRout.AddOrSetValue(LowerCase(R.Name), 0);
     if Assigned(R.Params) then
       for VI := 0 to R.Params.Count - 1 do
         FKnownVars.AddOrSetValue(LowerCase(R.Params[VI].Name), True);
   end;
-
-  // Classes
   for CI := 0 to FProgram.Classes.Count - 1 do
   begin
     CD := FProgram.Classes[CI];
-    FKnownVars.AddOrSetValue(LowerCase(CD.Name), True);  // class name = type
+    FKnownVars.AddOrSetValue(LowerCase(CD.Name), True);
     for MI := 0 to CD.Methods.Count - 1 do
     begin
       MD := CD.Methods[MI];
-      FKnownRout.AddOrSetValue(
-        LowerCase(CD.Name + '.' + MD.Name),
-        MD.Params.Count);
+      FKnownRout.AddOrSetValue(LowerCase(CD.Name + '.' + MD.Name), MD.Params.Count);
     end;
   end;
 end;
 
 // ---------------------------------------------------------------------------
-//  Pass 2: check the main block exists and is not empty
+//  Passo 2: verifica se o bloco principal existe e não está vazio
 // ---------------------------------------------------------------------------
-// -------------------------------------------------------------------
-// [PT-BR] Passo 2: verificar se o bloco principal existe e não está vazio
-// -------------------------------------------------------------------
 procedure TValidator.CheckMainBlock;
 begin
   if not Assigned(FProgram.MainBlock) then
   begin
     AddIssue(vsError, 1, 1,
-      'This program has no main "begin..end." block.',
-      'Every Pythia program needs a main block that runs when ' +
-      'the program starts:' + sLineBreak +
+      'Este programa não tem um bloco principal "begin..end.".',
+      'Todo programa Pythia precisa de um bloco principal:' + sLineBreak +
       '    begin' + sLineBreak +
-      '      // your code here' + sLineBreak +
+      '      // seu código aqui' + sLineBreak +
       '    end.');
     Exit;
   end;
-
   if FProgram.MainBlock.Stmts.Count = 0 then
     AddIssue(vsWarning, 1, 1,
-      'The main program block is empty.',
-      'Add at least one statement between "begin" and "end." -- ' +
-      'otherwise the program does nothing.');
+      'O bloco principal do programa está vazio.',
+      'Adicione pelo menos um comando entre "begin" e "end."');
 end;
 
 // ---------------------------------------------------------------------------
-//  Pass 3: check each routine
+//  Passo 3: verifica rotinas do usuário
 // ---------------------------------------------------------------------------
-// -------------------------------------------------------------------
-// [PT-BR] Passo 3: verificar cada rotina
-// -------------------------------------------------------------------
 procedure TValidator.CheckRoutines;
 var
   R          : TRoutineDecl;
-  RI, VI     : Integer;
   LocalScope : TDictionary<string, Boolean>;
-  HasResult  : Boolean;
   V          : TVarDecl;
+  VI, RI     : Integer;
+  KLocal     : string;
 begin
   for RI := 0 to FProgram.Routines.Count - 1 do
   begin
     R := FProgram.Routines[RI];
-
-    // Empty body
     if not Assigned(R.Body) or (R.Body.Stmts.Count = 0) then
     begin
-      AddIssue(vsWarning, 1, 1,
-        Format('The procedure or function "%s" has an empty body.', [R.Name]),
-        'Add statements inside its begin..end block, or remove the ' +
-        'declaration if it isn''t needed yet.');
+      AddIssue(vsHint, 0, 0,
+        Format('"%s" está declarado mas seu corpo está vazio.', [R.Name]),
+        'Adicione comandos dentro do bloco begin..end, ou remova a ' +
+        'declaração se não for necessária.');
       Continue;
     end;
 
-    // Build local scope for this routine
     LocalScope := TDictionary<string, Boolean>.Create;
     try
-      // Inherit globals
-      var KLocal : string;
-      for KLocal in FKnownVars.Keys do
-        LocalScope.AddOrSetValue(KLocal, True);
-
-      // Add params
+      for KLocal in FKnownVars.Keys do LocalScope.AddOrSetValue(KLocal, True);
       if Assigned(R.Params) then
         for VI := 0 to R.Params.Count - 1 do
           LocalScope.AddOrSetValue(LowerCase(R.Params[VI].Name), True);
-
-      // Add locals
       if Assigned(R.Locals) then
         for VI := 0 to R.Locals.Count - 1 do
         begin
           V := R.Locals[VI];
           LocalScope.AddOrSetValue(LowerCase(V.Name), True);
         end;
-
-      // Result variable for functions
-      if R.ReturnType <> '' then
-        LocalScope.AddOrSetValue('result', True);
-
+      if R.ReturnType <> '' then LocalScope.AddOrSetValue('result', True);
       CheckBlock(R.Body, LocalScope);
-
-    finally
-      LocalScope.Free;
-    end;
+    finally LocalScope.Free; end;
   end;
 end;
 
 // ---------------------------------------------------------------------------
-//  Pass 4: check main block statements
+//  Passo 4: verifica comandos do bloco principal
 // ---------------------------------------------------------------------------
-// -------------------------------------------------------------------
-// [PT-BR] Passo 4: verificar as instruções do bloco principal
-// -------------------------------------------------------------------
 procedure TValidator.CheckMainStatements;
-var
-  Scope : TDictionary<string, Boolean>;
+var Scope : TDictionary<string, Boolean>; KMain : string;
 begin
   if not Assigned(FProgram.MainBlock) then Exit;
-
   Scope := TDictionary<string, Boolean>.Create;
   try
-    var KMain : string;
-  for KMain in FKnownVars.Keys do
-    Scope.AddOrSetValue(KMain, True);
+    for KMain in FKnownVars.Keys do Scope.AddOrSetValue(KMain, True);
     CheckBlock(FProgram.MainBlock, Scope);
-  finally
-    Scope.Free;
-  end;
+  finally Scope.Free; end;
 end;
 
 // ---------------------------------------------------------------------------
-//  Statement and expression walkers
+//  Percurso de bloco e comandos
 // ---------------------------------------------------------------------------
-// -------------------------------------------------------------------
-// [PT-BR] Percorrentes de instruções e expressões
-// -------------------------------------------------------------------
 
-procedure TValidator.CheckBlock(Block: TBlockStmt;
-  Scope: TDictionary<string, Boolean>);
-var
-  SI : Integer;
+procedure TValidator.CheckBlock(Block: TBlockStmt; Scope: TDictionary<string, Boolean>);
+var SI : Integer;
 begin
   if not Assigned(Block) then Exit;
-  for SI := 0 to Block.Stmts.Count - 1 do
-    CheckStatement(Block.Stmts[SI], Scope);
+  for SI := 0 to Block.Stmts.Count - 1 do CheckStatement(Block.Stmts[SI], Scope);
 end;
 
-procedure TValidator.CheckStatement(Stmt: TStmtNode;
-  Scope: TDictionary<string, Boolean>);
+procedure TValidator.CheckStatement(Stmt: TStmtNode; Scope: TDictionary<string, Boolean>);
 var
-  A  : TAssignStmt;
-  C  : TCallStmt;
-  W  : TWritelnStmt;
-  If1: TIfStmt;
-  Wh : TWhileStmt;
-  Fo : TForStmt;
-  Re : TRepeatStmt;
-  B  : TBlockStmt;
-  VI : Integer;
-  AI : Integer;
+  A  : TAssignStmt;  C  : TCallStmt;   W  : TWritelnStmt;
+  If1: TIfStmt;      Wh : TWhileStmt;  Fo : TForStmt;
+  Re : TRepeatStmt;  B  : TBlockStmt;
+  VI, AI : Integer;
 begin
   if not Assigned(Stmt) then Exit;
 
-  // Assignment:  x := expr
   if Stmt is TAssignStmt then
   begin
     A := TAssignStmt(Stmt);
-    // Register the variable as declared (inline declaration style)
     Scope.AddOrSetValue(LowerCase(A.VarName), True);
-    if Assigned(A.Expr) then
-      CheckExpr(A.Expr, Scope);
+    if Assigned(A.Expr) then CheckExpr(A.Expr, Scope);
   end
-
-  // Procedure call
   else if Stmt is TCallStmt then
   begin
     C := TCallStmt(Stmt);
     if not IsBuiltin(C.Name) and
        not FKnownRout.ContainsKey(LowerCase(C.Name)) and
        not Scope.ContainsKey(LowerCase(C.Name)) then
-    begin
       AddIssue(vsWarning, 0, 0,
-        Format('I don''t know a procedure called "%s".', [C.Name]),
-        'Check the spelling, or declare it earlier in the program. ' +
-        'If it lives in a library file, add a "uses" clause for that file.');
-    end
-    else
-      CheckCallArgs(C.Name, C.Args, 0, 0);
-
-    for AI := 0 to C.Args.Count - 1 do
-      CheckExpr(C.Args[AI], Scope);
+        Format('Não conheço um procedimento chamado "%s".', [C.Name]),
+        'Verifique a ortografia, declare antes no programa ou ' +
+        'adicione uma cláusula "uses".')
+    else CheckCallArgs(C.Name, C.Args, 0, 0);
+    for AI := 0 to C.Args.Count - 1 do CheckExpr(C.Args[AI], Scope);
   end
-
-  // writeln / write
   else if Stmt is TWritelnStmt then
   begin
     W := TWritelnStmt(Stmt);
-    for AI := 0 to W.Args.Count - 1 do
-      CheckExpr(W.Args[AI], Scope);
+    for AI := 0 to W.Args.Count - 1 do CheckExpr(W.Args[AI], Scope);
   end
-
-  // if..then..else
   else if Stmt is TIfStmt then
   begin
     If1 := TIfStmt(Stmt);
     CheckExpr(If1.Condition, Scope);
     CheckStatement(If1.ThenBranch, Scope);
-    if Assigned(If1.ElseBranch) then
-      CheckStatement(If1.ElseBranch, Scope);
+    if Assigned(If1.ElseBranch) then CheckStatement(If1.ElseBranch, Scope);
   end
-
-  // while..do
   else if Stmt is TWhileStmt then
   begin
     Wh := TWhileStmt(Stmt);
-    // Check for  while true do  without obvious break — warn about infinite loop
     if (Wh.Condition is TBoolLitExpr) and TBoolLitExpr(Wh.Condition).Value then
       AddIssue(vsWarning, 0, 0,
-        'A "while true do" loop will run forever unless something inside it stops it.',
-        'Make sure there is a "break" or "exit" inside this loop, or ' +
-        'change the condition to something that eventually becomes false.');
+        'Um loop "while true do" roda para sempre a menos que algo dentro dele o pare.',
+        'Certifique-se de ter um "break" ou "exit" dentro deste loop.');
     CheckExpr(Wh.Condition, Scope);
     CheckStatement(Wh.Body, Scope);
   end
-
-  // for..to/downto
   else if Stmt is TForStmt then
   begin
     Fo := TForStmt(Stmt);
     Scope.AddOrSetValue(LowerCase(Fo.VarName), True);
-    CheckExpr(Fo.StartVal, Scope);
-    CheckExpr(Fo.EndVal, Scope);
+    CheckExpr(Fo.StartVal, Scope); CheckExpr(Fo.EndVal, Scope);
     CheckStatement(Fo.Body, Scope);
   end
-
-  // repeat..until
   else if Stmt is TRepeatStmt then
   begin
     Re := TRepeatStmt(Stmt);
-    for VI := 0 to Re.Body.Count - 1 do
-      CheckStatement(Re.Body[VI], Scope);
+    for VI := 0 to Re.Body.Count - 1 do CheckStatement(Re.Body[VI], Scope);
     CheckExpr(Re.Condition, Scope);
   end
-
-  // begin..end block
   else if Stmt is TBlockStmt then
   begin
-    B := TBlockStmt(Stmt);
-    CheckBlock(B, Scope);
+    B := TBlockStmt(Stmt); CheckBlock(B, Scope);
   end;
 end;
 
-procedure TValidator.CheckExpr(Expr: TExprNode;
-  Scope: TDictionary<string, Boolean>);
+procedure TValidator.CheckExpr(Expr: TExprNode; Scope: TDictionary<string, Boolean>);
 var
-  VE  : TVarExpr;
-  CE  : TCallExpr;
-  BO  : TBinOpExpr;
-  UE  : TUnaryExpr;
-  FE  : TFieldExpr;
-  MCE : TMethodCallExpr;
+  VE  : TVarExpr;   CE  : TCallExpr;  BO  : TBinOpExpr;
+  UE  : TUnaryExpr; FE  : TFieldExpr; MCE : TMethodCallExpr;
   AI  : Integer;
 begin
   if not Assigned(Expr) then Exit;
 
-  // Variable reference — check it was declared
   if Expr is TVarExpr then
   begin
     VE := TVarExpr(Expr);
@@ -579,78 +460,48 @@ begin
        not Scope.ContainsKey(LowerCase(VE.Name)) and
        not FKnownRout.ContainsKey(LowerCase(VE.Name)) and
        not FKnownVars.ContainsKey(LowerCase(VE.Name)) then
-    begin
       AddIssue(vsWarning, 0, 0,
-        Format('The name "%s" has not been declared.', [VE.Name]),
-        'Check the spelling, or add it to a var block:' + sLineBreak +
+        Format('O nome "%s" não foi declarado.', [VE.Name]),
+        'Verifique a ortografia ou adicione em um bloco var:' + sLineBreak +
         '    var ' + VE.Name + ' : Integer;');
-    end;
   end
-
-  // Function call expression
   else if Expr is TCallExpr then
   begin
     CE := TCallExpr(Expr);
-    if not IsBuiltin(CE.Name) and
-       not FKnownRout.ContainsKey(LowerCase(CE.Name)) then
-    begin
+    if not IsBuiltin(CE.Name) and not FKnownRout.ContainsKey(LowerCase(CE.Name)) then
       AddIssue(vsWarning, 0, 0,
-        Format('I don''t know a function called "%s".', [CE.Name]),
-        'Check the spelling, or declare it earlier in the program. ' +
-        'If it lives in a library file, add a "uses" clause.');
-    end
-    else
-      CheckCallArgs(CE.Name, CE.Args, 0, 0);
-
-    for AI := 0 to CE.Args.Count - 1 do
-      CheckExpr(CE.Args[AI], Scope);
+        Format('Não conheço uma função chamada "%s".', [CE.Name]),
+        'Verifique a ortografia ou declare antes no programa.')
+    else CheckCallArgs(CE.Name, CE.Args, 0, 0);
+    for AI := 0 to CE.Args.Count - 1 do CheckExpr(CE.Args[AI], Scope);
   end
-
-  // Binary operator — check for division by zero
   else if Expr is TBinOpExpr then
   begin
     BO := TBinOpExpr(Expr);
     CheckForDivByZero(BO);
-    CheckExpr(BO.Left, Scope);
-    CheckExpr(BO.Right, Scope);
+    CheckExpr(BO.Left, Scope); CheckExpr(BO.Right, Scope);
   end
-
-  // Unary
   else if Expr is TUnaryExpr then
   begin
-    UE := TUnaryExpr(Expr);
-    CheckExpr(UE.Operand, Scope);
+    UE := TUnaryExpr(Expr); CheckExpr(UE.Operand, Scope);
   end
-
-  // Field access  obj.Field — just check obj
   else if Expr is TFieldExpr then
   begin
-    FE := TFieldExpr(Expr);
-    CheckExpr(FE.Obj, Scope);
+    FE := TFieldExpr(Expr); CheckExpr(FE.Obj, Scope);
   end
-
-  // Method call  obj.Method(args)
   else if Expr is TMethodCallExpr then
   begin
     MCE := TMethodCallExpr(Expr);
     CheckExpr(MCE.Obj, Scope);
-    for AI := 0 to MCE.Args.Count - 1 do
-      CheckExpr(MCE.Args[AI], Scope);
+    for AI := 0 to MCE.Args.Count - 1 do CheckExpr(MCE.Args[AI], Scope);
   end;
 end;
 
-procedure TValidator.CheckCallArgs(const Name: string; Args: TExprList;
-  Line, Col: Integer);
-var
-  LN      : string;
-  I       : Integer;
-  Expected: Integer;
-  Got     : Integer;
+procedure TValidator.CheckCallArgs(const Name: string; Args: TExprList; Line, Col: Integer);
+var LN: string; I, Expected, Got: Integer;
 begin
   LN  := LowerCase(Name);
   Got := Args.Count;
-
-  // Check against ARG_SPECS
   for I := Low(ARG_SPECS) to High(ARG_SPECS) do
   begin
     if ARG_SPECS[I].Name = LN then
@@ -659,96 +510,73 @@ begin
       begin
         if ARG_SPECS[I].Min = ARG_SPECS[I].Max then
           AddIssue(vsError, Line, Col,
-            Format('"%s" needs %d argument(s), but you gave it %d.',
-              [Name, ARG_SPECS[I].Min, Got]),
-            Format('Check the number of values inside the parentheses ' +
-              'after "%s".', [Name]))
+            Format('"%s" precisa de %d argumento(s), mas recebeu %d.', [Name, ARG_SPECS[I].Min, Got]),
+            Format('Verifique o número de valores entre parênteses após "%s".', [Name]))
         else
           AddIssue(vsError, Line, Col,
-            Format('"%s" needs between %d and %d argument(s), but you gave it %d.',
+            Format('"%s" precisa de %d a %d argumento(s), mas recebeu %d.',
               [Name, ARG_SPECS[I].Min, ARG_SPECS[I].Max, Got]),
-            Format('Check the number of values inside the parentheses ' +
-              'after "%s".', [Name]));
+            Format('Verifique o número de valores entre parênteses após "%s".', [Name]));
       end;
       Exit;
     end;
   end;
-
-  // Check against known user routines
   if FKnownRout.TryGetValue(LN, Expected) then
   begin
     if Got <> Expected then
       AddIssue(vsWarning, Line, Col,
-        Format('"%s" was declared to take %d argument(s), but here ' +
-          'it is called with %d.',
+        Format('"%s" foi declarado com %d argumento(s), mas aqui é chamado com %d.',
           [Name, Expected, Got]),
-        'Either fix the number of arguments here, or update the ' +
-        'declaration to match.');
+        'Corrija o número de argumentos ou atualize a declaração.');
   end;
 end;
 
 procedure TValidator.CheckForDivByZero(Node: TBinOpExpr);
 begin
-  if not Assigned(Node.Right) then Exit;
-  if not (Node.Op = '/' ) and not (Node.Op = 'div') and not (Node.Op = 'mod') then
-    Exit;
-
-  // Right side is an integer literal zero
-  if (Node.Right is TIntLitExpr) and (TIntLitExpr(Node.Right).Value = 0) then
-    AddIssue(vsError, 0, 0,
-      Format('This will divide by zero ("%s 0").', [Node.Op]),
-      'Anything divided by zero is undefined.  Either remove this ' +
-      'expression, or guard it with an "if" check on the divisor.')
-
-  // Right side is a float literal zero
-  else if (Node.Right is TFloatLitExpr) and (TFloatLitExpr(Node.Right).Value = 0) then
-    AddIssue(vsError, 0, 0,
-      'This will divide by zero (the right side is 0.0).',
-      'Anything divided by zero is undefined.  Use an "if" check ' +
-      'on the divisor before dividing.');
+  if (Node.Op = '/') or (Node.Op = 'div') or (Node.Op = 'mod') then
+  begin
+    if (Node.Right is TIntLitExpr) and (TIntLitExpr(Node.Right).Value = 0) then
+      AddIssue(vsError, 0, 0,
+        Format('Divisão por zero literal com "%s".', [Node.Op]),
+        'O lado direito de "' + Node.Op + '" não pode ser zero.');
+    if (Node.Right is TFloatLitExpr) and (TFloatLitExpr(Node.Right).Value = 0) then
+      AddIssue(vsError, 0, 0,
+        'Divisão por zero literal.',
+        'O lado direito da divisão não pode ser zero.');
+  end;
 end;
 
-// =============================================================================
-//  Results
-// =============================================================================
+// ---------------------------------------------------------------------------
+//  Resultados da validação
+// ---------------------------------------------------------------------------
 
 function TValidator.HasErrors: Boolean;
-var
-  I : TValidationIssue;
+var I : Integer;
 begin
-  for I in FIssues do
-    if I.Severity = vsError then begin Result := True; Exit; end;
   Result := False;
+  for I := 0 to FIssues.Count - 1 do
+    if FIssues[I].Severity = vsError then begin Result := True; Exit; end;
 end;
 
 function TValidator.HasWarnings: Boolean;
-var
-  I : TValidationIssue;
+var I : Integer;
 begin
-  for I in FIssues do
-    if I.Severity = vsWarning then begin Result := True; Exit; end;
   Result := False;
+  for I := 0 to FIssues.Count - 1 do
+    if FIssues[I].Severity = vsWarning then begin Result := True; Exit; end;
 end;
 
 function TValidator.Summary: string;
 var
-  Errors, Warnings, Hints : Integer;
-  I : TValidationIssue;
+  Errors, Warnings : Integer;
+  I : Integer;
 begin
-  Errors := 0; Warnings := 0; Hints := 0;
-  for I in FIssues do
-  begin
-    case I.Severity of
-      vsError   : Inc(Errors);
-      vsWarning : Inc(Warnings);
-      vsHint    : Inc(Hints);
-    end;
-  end;
-
-  if Errors = 0 then
-    Result := Format('Validation OK -- %d warning(s)', [Warnings])
-  else
-    Result := Format('%d error(s), %d warning(s)', [Errors, Warnings]);
+  Errors := 0; Warnings := 0;
+  for I := 0 to FIssues.Count - 1 do
+    if FIssues[I].Severity = vsError then Inc(Errors)
+    else if FIssues[I].Severity = vsWarning then Inc(Warnings);
+  if (Errors = 0) and (Warnings = 0) then Result := 'Nenhum problema encontrado.'
+  else Result := Format('%d erro(s), %d aviso(s).', [Errors, Warnings]);
 end;
 
 end.
