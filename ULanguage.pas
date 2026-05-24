@@ -193,7 +193,9 @@ const EN : TStrTable = (
   'About Pythia',
   'Language Pack Editor','New Pack','Save Pack','Test Pack',
   'Language Name','Language Code','Author','Version',
-  'Pack installed successfully.','Restart to apply.'
+  'Pack installed successfully.','Restart to apply.',
+  'Your program ran for too many steps. This usually means an infinite loop -- check loop conditions.',
+  'Execution stopped by the Stop button.'
 );
 
 const PT : TStrTable = (
@@ -223,7 +225,9 @@ const PT : TStrTable = (
   'Sobre o Pythia',
   'Editor de Pacotes de Idioma','Novo Pacote','Salvar Pacote','Testar Pacote',
   'Nome do Idioma','Código do Idioma','Autor','Versão',
-  'Pacote instalado com sucesso.','Reinicie para aplicar.'
+  'Pacote instalado com sucesso.','Reinicie para aplicar.',
+  'O programa executou passos demais. Isso geralmente indica um loop infinito. Verifique as condições dos loops.',
+  'Execução interrompida pelo botão Parar.'
 );
 
 const FR : TStrTable = (
@@ -253,7 +257,9 @@ const FR : TStrTable = (
   'À propos de Pythia',
   'Éditeur de packs de langue','Nouveau pack','Enregistrer le pack','Tester le pack',
   'Nom de la langue','Code de la langue','Auteur','Version',
-  'Pack installé avec succès.','Redémarrez pour appliquer.'
+  'Pack installé avec succès.','Redémarrez pour appliquer.',
+  'Votre programme a effectué trop d''étapes. Cela indique une boucle infinie.',
+  'Exécution arrêtée par le bouton Arrêter.'
 );
 
 const ES : TStrTable = (
@@ -283,7 +289,9 @@ const ES : TStrTable = (
   'Acerca de Pythia',
   'Editor de paquetes de idioma','Nuevo paquete','Guardar paquete','Probar paquete',
   'Nombre del idioma','Código del idioma','Autor','Versión',
-  'Paquete instalado correctamente.','Reinicie para aplicar.'
+  'Paquete instalado correctamente.','Reinicie para aplicar.',
+  'Su programa ejecutó demasiados pasos. Esto indica un bucle infinito.',
+  'Ejecución detenida por el botón Detener.'
 );
 
 const UK : TStrTable = (
@@ -313,7 +321,9 @@ const UK : TStrTable = (
   'Про Pythia',
   'Редактор мовних пакетів','Новий пакет','Зберегти пакет','Тестувати пакет',
   'Назва мови','Код мови','Автор','Версія',
-  'Пакет встановлено успішно.','Перезапустіть для застосування.'
+  'Пакет встановлено успішно.','Перезапустіть для застосування.',
+  'Програма виконала забагато кроків. Це означає нескінченний цикл.',
+  'Виконання зупинено кнопкою Зупинити.'
 );
 
 const DE : TStrTable = (
@@ -343,7 +353,9 @@ const DE : TStrTable = (
   'Über Pythia',
   'Sprachpaket-Editor','Neues Paket','Paket speichern','Paket testen',
   'Sprachname','Sprachcode','Autor','Version',
-  'Paket erfolgreich installiert.','Neustart zum Anwenden.'
+  'Paket erfolgreich installiert.','Neustart zum Anwenden.',
+  'Ihr Programm hat zu viele Schritte ausgeführt. Dies weist auf eine Endlosschleife hin.',
+  'Ausführung durch Stopp-Schaltfläche beendet.'
 );
 
 const IT : TStrTable = (
@@ -373,7 +385,9 @@ const IT : TStrTable = (
   'Informazioni su Pythia',
   'Editor pacchetti lingua','Nuovo pacchetto','Salva pacchetto','Testa pacchetto',
   'Nome lingua','Codice lingua','Autore','Versione',
-  'Pacchetto installato con successo.','Riavvia per applicare.'
+  'Pacchetto installato con successo.','Riavvia per applicare.',
+  'Il programma ha eseguito troppi passi. Questo indica un ciclo infinito.',
+  'Esecuzione interrotta dal pulsante Stop.'
 );
 
 const JA : TStrTable = (
@@ -403,7 +417,9 @@ const JA : TStrTable = (
   'Pythiaについて',
   '言語パックエディタ','新しいパック','パックを保存','パックをテスト',
   '言語名','言語コード','著者','バージョン',
-  'パックが正常にインストールされました.','適用するには再起動してください.'
+  'パックが正常にインストールされました.','適用するには再起動してください.',
+  'プログラムが終了せずに多くのステップを実行しました。無限ループを確認してください。',
+  '停止ボタンによって実行が中止されました.'
 );
 
 const ZH : TStrTable = (
@@ -433,7 +449,9 @@ const ZH : TStrTable = (
   '关于 Pythia',
   '语言包编辑器','新建包','保存包','测试包',
   '语言名称','语言代码','作者','版本',
-  '包安装成功.','重启以应用.'
+  '包安装成功.','重启以应用.',
+  '程序运行步骤过多未能完成。通常表示无限循环。',
+  '执行已被停止按钮中断.'
 );
 
 const KO : TStrTable = (
@@ -463,7 +481,9 @@ const KO : TStrTable = (
   'Pythia 정보',
   '언어 팩 편집기','새 팩','팩 저장','팩 테스트',
   '언어 이름','언어 코드','작성자','버전',
-  '팩이 성공적으로 설치되었습니다.','적용하려면 다시 시작하세요.'
+  '팩이 성공적으로 설치되었습니다.','적용하려면 다시 시작하세요.',
+  '프로그램이 너무 많은 단계를 실행했습니다. 무한 루프를 나타냅니다.',
+  '실행이 중지 버튼에 의해 중단되었습니다.'
 );
 
 const HI : TStrTable = (
@@ -493,7 +513,9 @@ const HI : TStrTable = (
   'Pythia के बारे में',
   'भाषा पैक संपादक','नया पैक','पैक सहेजें','पैक परीक्षण करें',
   'भाषा का नाम','भाषा कोड','लेखक','संस्करण',
-  'पैक सफलतापूर्वक स्थापित हुआ.','लागू करने के लिए पुनः आरंभ करें.'
+  'पैक सफलतापूर्वक स्थापित हुआ.','लागू करने के लिए पुनः आरंभ करें.',
+  'आपका प्रोग्राम बहुत अधिक चरणों तक चला। यह अनंत लूप को इंगित करता है।',
+  'निष्पादन रोकें बटन द्वारा रोका गया.'
 );
 
 const AR : TStrTable = (
@@ -523,7 +545,9 @@ const AR : TStrTable = (
   'حول Pythia',
   'محرر حزم اللغة','حزمة جديدة','حفظ الحزمة','اختبار الحزمة',
   'اسم اللغة','رمز اللغة','المؤلف','الإصدار',
-  'تم تثبيت الحزمة بنجاح.','أعد التشغيل للتطبيق.'
+  'تم تثبيت الحزمة بنجاح.','أعد التشغيل للتطبيق.',
+  'نفّذ البرنامج خطوات كثيرة جداً. يشير هذا إلى حلقة لا نهاية لها.',
+  'تم إيقاف التنفيذ بواسطة زر الإيقاف.'
 );
 
 const ES_LATAM : TStrTable = (
@@ -553,7 +577,9 @@ const ES_LATAM : TStrTable = (
   'Acerca de Pythia',
   'Editor de paquetes de idioma','Nuevo paquete','Guardar paquete','Probar paquete',
   'Nombre del idioma','Código del idioma','Autor','Versión',
-  'Paquete instalado correctamente.','Reinicie para aplicar.'
+  'Paquete instalado correctamente.','Reinicie para aplicar.',
+  'Su programa ejecutó demasiados pasos. Esto indica un bucle infinito.',
+  'Ejecución detenida por el botón Detener.'
 );
 
 // ---------------------------------------------------------------------------

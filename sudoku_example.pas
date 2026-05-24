@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-Add('Sudoku', 'Games & Fun', 'Sudoku gráfico completo com gerador, desafio diário e salvamento INI',
+Add('Sudoku', 'Games & Fun', 'Full graphical Sudoku with iterative generator, daily challenge and SQLite saves',
   '// ============================================================' + #13#10 +
   '// SUDOKU  —  Pythia Pascal  —  Nomidor Software' + #13#10 +
   '// No Exit statements — all control flow uses boolean flags' + #13#10 +
@@ -26,7 +26,7 @@ Add('Sudoku', 'Games & Fun', 'Sudoku gráfico completo com gerador, desafio diá
   '  elapsed   : Integer;' + #13#10 +
   '  lastSec   : Integer;' + #13#10 +
   '  wasDown   : Boolean;' + #13#10 +
-  '  iniPath   : String;' + #13#10 +
+  '  dbPath    : String;' + #13#10 +
   '  tickCount : Integer;' + #13#10 +
   '  hintsUsed : Integer;' + #13#10 +
   '' + #13#10 +
@@ -220,33 +220,65 @@ Add('Sudoku', 'Games & Fun', 'Sudoku gráfico completo com gerador, desafio diá
   'end;' + #13#10 +
   '' + #13#10 +
   '// ===========================================================================' + #13#10 +
-  '//  INI PERSISTENCE — no Exit' + #13#10 +
+  '//  PERSISTÊNCIA SQLite / SQLite PERSISTENCE' + #13#10 +
+  '//  Banco de dados: pythia.db / Database: pythia.db' + #13#10 +
+  '//  Tabelas / Tables:' + #13#10 +
+  '//    sudoku_state      — jogo atual / current game' + #13#10 +
+  '//    sudoku_best_times — melhores tempos / best times' + #13#10 +
   '// ===========================================================================' + #13#10 +
+  '' + #13#10 +
+  'procedure InitDB;' + #13#10 +
+  'begin' + #13#10 +
+  '  DbOpen(dbPath);' + #13#10 +
+  '  // Cria tabelas se não existirem / Create tables if they don''t exist' + #13#10 +
+  '  DbExec(''CREATE TABLE IF NOT EXISTS sudoku_state ('' +' + #13#10 +
+  '    ''id INTEGER PRIMARY KEY,'' +' + #13#10 +
+  '    ''board TEXT,'' +' + #13#10 +
+  '    ''given TEXT,'' +' + #13#10 +
+  '    ''solution TEXT,'' +' + #13#10 +
+  '    ''mode INTEGER,'' +' + #13#10 +
+  '    ''elapsed INTEGER,'' +' + #13#10 +
+  '    ''saved_at TEXT'' +' + #13#10 +
+  '  '')'');' + #13#10 +
+  '  DbExec(''CREATE TABLE IF NOT EXISTS sudoku_best_times ('' +' + #13#10 +
+  '    ''mode INTEGER PRIMARY KEY,'' +' + #13#10 +
+  '    ''best_seconds INTEGER,'' +' + #13#10 +
+  '    ''achieved_at TEXT'' +' + #13#10 +
+  '  '')'');' + #13#10 +
+  'end;' + #13#10 +
   '' + #13#10 +
   'procedure SaveBestTime(diff, secs: Integer);' + #13#10 +
   'var' + #13#10 +
-  '  key : String;' + #13#10 +
-  '  old : Integer;' + #13#10 +
+  '  existing : Integer;' + #13#10 +
+  '  row      : String;' + #13#10 +
   'begin' + #13#10 +
-  '  if diff = 1 then key := ''Easy''' + #13#10 +
-  '  else if diff = 2 then key := ''Medium''' + #13#10 +
-  '  else if diff = 3 then key := ''Hard''' + #13#10 +
-  '  else key := ''Daily'';' + #13#10 +
-  '' + #13#10 +
-  '  old := IniReadInt(iniPath, ''BestTimes'', key, 99999);' + #13#10 +
-  '  if secs < old then' + #13#10 +
-  '    IniWriteInt(iniPath, ''BestTimes'', key, secs);' + #13#10 +
+  '  InitDB;' + #13#10 +
+  '  row := DbQueryValue(''SELECT best_seconds FROM sudoku_best_times WHERE mode = '' + IntToStr(diff));' + #13#10 +
+  '  if row = '''' then' + #13#10 +
+  '  begin' + #13#10 +
+  '    DbExec(''INSERT INTO sudoku_best_times (mode, best_seconds, achieved_at) VALUES ('' +' + #13#10 +
+  '      IntToStr(diff) + '', '' + IntToStr(secs) + '', '''''' + DateStr + '''''')'');' + #13#10 +
+  '  end' + #13#10 +
+  '  else' + #13#10 +
+  '  begin' + #13#10 +
+  '    existing := StrToInt(row);' + #13#10 +
+  '    if secs < existing then' + #13#10 +
+  '      DbExec(''UPDATE sudoku_best_times SET best_seconds = '' + IntToStr(secs) +' + #13#10 +
+  '        '', achieved_at = '''''' + DateStr + '''''''' +' + #13#10 +
+  '        '' WHERE mode = '' + IntToStr(diff));' + #13#10 +
+  '  end;' + #13#10 +
+  '  DbClose;' + #13#10 +
   'end;' + #13#10 +
   '' + #13#10 +
   'function LoadBestTime(diff: Integer): Integer;' + #13#10 +
   'var' + #13#10 +
-  '  key : String;' + #13#10 +
+  '  row : String;' + #13#10 +
   'begin' + #13#10 +
-  '  if diff = 1 then key := ''Easy''' + #13#10 +
-  '  else if diff = 2 then key := ''Medium''' + #13#10 +
-  '  else if diff = 3 then key := ''Hard''' + #13#10 +
-  '  else key := ''Daily'';' + #13#10 +
-  '  Result := IniReadInt(iniPath, ''BestTimes'', key, 0);' + #13#10 +
+  '  InitDB;' + #13#10 +
+  '  row := DbQueryValue(''SELECT best_seconds FROM sudoku_best_times WHERE mode = '' + IntToStr(diff));' + #13#10 +
+  '  DbClose;' + #13#10 +
+  '  if row = '''' then Result := 0' + #13#10 +
+  '  else              Result := StrToInt(row);' + #13#10 +
   'end;' + #13#10 +
   '' + #13#10 +
   'procedure SaveState;' + #13#10 +
@@ -263,21 +295,32 @@ Add('Sudoku', 'Games & Fun', 'Sudoku gráfico completo com gerador, desafio diá
   '    gline := gline + IntToStr(given[i]);' + #13#10 +
   '    sline := sline + IntToStr(solution[i]);' + #13#10 +
   '  end;' + #13#10 +
-  '  IniWriteStr(iniPath, ''LastGame'', ''Board'',    bline);' + #13#10 +
-  '  IniWriteStr(iniPath, ''LastGame'', ''Given'',    gline);' + #13#10 +
-  '  IniWriteStr(iniPath, ''LastGame'', ''Solution'', sline);' + #13#10 +
-  '  IniWriteInt(iniPath, ''LastGame'', ''Mode'',     gameMode);' + #13#10 +
-  '  IniWriteInt(iniPath, ''LastGame'', ''Elapsed'',  elapsed);' + #13#10 +
+  '' + #13#10 +
+  '  InitDB;' + #13#10 +
+  '  DbExec(''DELETE FROM sudoku_state'');' + #13#10 +
+  '  DbExec(''INSERT INTO sudoku_state (board, given, solution, mode, elapsed, saved_at) VALUES ('''''' +' + #13#10 +
+  '    bline + '''''','''''' +' + #13#10 +
+  '    gline + '''''','''''' +' + #13#10 +
+  '    sline + '''''','' +' + #13#10 +
+  '    IntToStr(gameMode) + '','' +' + #13#10 +
+  '    IntToStr(elapsed) + '','''''' +' + #13#10 +
+  '    DateStr + '' '' + TimeStr + '''''')'');' + #13#10 +
+  '  DbClose;' + #13#10 +
   'end;' + #13#10 +
   '' + #13#10 +
   'function LoadState: Boolean;' + #13#10 +
   'var' + #13#10 +
-  '  bstr, gstr, sstr : String;' + #13#10 +
-  '  i                : Integer;' + #13#10 +
+  '  bstr, gstr, sstr, mstr, estr : String;' + #13#10 +
+  '  i                             : Integer;' + #13#10 +
   'begin' + #13#10 +
-  '  bstr := IniReadStr(iniPath, ''LastGame'', ''Board'',    '''');' + #13#10 +
-  '  gstr := IniReadStr(iniPath, ''LastGame'', ''Given'',    '''');' + #13#10 +
-  '  sstr := IniReadStr(iniPath, ''LastGame'', ''Solution'', '''');' + #13#10 +
+  '  Result := False;' + #13#10 +
+  '  InitDB;' + #13#10 +
+  '  bstr := DbQueryValue(''SELECT board     FROM sudoku_state LIMIT 1'');' + #13#10 +
+  '  gstr := DbQueryValue(''SELECT given     FROM sudoku_state LIMIT 1'');' + #13#10 +
+  '  sstr := DbQueryValue(''SELECT solution  FROM sudoku_state LIMIT 1'');' + #13#10 +
+  '  mstr := DbQueryValue(''SELECT mode      FROM sudoku_state LIMIT 1'');' + #13#10 +
+  '  estr := DbQueryValue(''SELECT elapsed   FROM sudoku_state LIMIT 1'');' + #13#10 +
+  '  DbClose;' + #13#10 +
   '' + #13#10 +
   '  if (Length(bstr) = 81) and (Length(gstr) = 81) and (Length(sstr) = 81) then' + #13#10 +
   '  begin' + #13#10 +
@@ -287,12 +330,10 @@ Add('Sudoku', 'Games & Fun', 'Sudoku gráfico completo com gerador, desafio diá
   '      given[i]    := StrToInt(Copy(gstr, i + 1, 1));' + #13#10 +
   '      solution[i] := StrToInt(Copy(sstr, i + 1, 1));' + #13#10 +
   '    end;' + #13#10 +
-  '    gameMode := IniReadInt(iniPath, ''LastGame'', ''Mode'',    1);' + #13#10 +
-  '    elapsed  := IniReadInt(iniPath, ''LastGame'', ''Elapsed'', 0);' + #13#10 +
-  '    Result   := True;' + #13#10 +
-  '  end' + #13#10 +
-  '  else' + #13#10 +
-  '    Result := False;' + #13#10 +
+  '    if mstr <> '''' then gameMode := StrToInt(mstr);' + #13#10 +
+  '    if estr <> '''' then elapsed  := StrToInt(estr);' + #13#10 +
+  '    Result := True;' + #13#10 +
+  '  end;' + #13#10 +
   'end;' + #13#10 +
   '' + #13#10 +
   '// ===========================================================================' + #13#10 +
@@ -603,7 +644,7 @@ Add('Sudoku', 'Games & Fun', 'Sudoku gráfico completo com gerador, desafio diá
   '  GRID_Y := 40;' + #13#10 +
   '  GRID_W := 9 * CELL;' + #13#10 +
   '' + #13#10 +
-  '  iniPath := GetAppPath + ''sudoku.ini'';' + #13#10 +
+  '  dbPath  := GetAppPath + ''pythia.db'';' + #13#10 +
   '' + #13#10 +
   '  SetLength(board,    81);' + #13#10 +
   '  SetLength(given,    81);' + #13#10 +
@@ -616,9 +657,24 @@ Add('Sudoku', 'Games & Fun', 'Sudoku gráfico completo com gerador, desafio diá
   '    solution[i] := 0;' + #13#10 +
   '  end;' + #13#10 +
   '' + #13#10 +
-  '  GfxOpen(WIN_W, WIN_H, ''Sudoku  —  Pythia'');' + #13#10 +
+  '  GfxOpen(WIN_W, WIN_H, ''Sudoku  —  Pythia  v1.0'');' + #13#10 +
   '' + #13#10 +
-  '  if not LoadState then' + #13#10 +
+  '  if LoadState then' + #13#10 +
+  '  begin' + #13#10 +
+  '    // Pergunta se quer retomar ou novo jogo' + #13#10 +
+  '    // Ask if user wants to resume or start new' + #13#10 +
+  '    if Confirm(''Jogo salvo encontrado. Retomar?'' + chr(10) + ''Saved game found. Resume?'') then' + #13#10 +
+  '    begin' + #13#10 +
+  '      // Retoma o jogo salvo / Resume saved game' + #13#10 +
+  '      gameWon := CheckWin;' + #13#10 +
+  '    end' + #13#10 +
+  '    else' + #13#10 +
+  '    begin' + #13#10 +
+  '      // Começa novo jogo fácil / Start new easy game' + #13#10 +
+  '      StartGame(1);' + #13#10 +
+  '    end;' + #13#10 +
+  '  end' + #13#10 +
+  '  else' + #13#10 +
   '    StartGame(1);' + #13#10 +
   '' + #13#10 +
   '  gameWon   := CheckWin;' + #13#10 +
@@ -711,7 +767,10 @@ Add('Sudoku', 'Games & Fun', 'Sudoku gráfico completo com gerador, desafio diá
   '          begin' + #13#10 +
   '            gameWon := True;' + #13#10 +
   '            SaveBestTime(gameMode, elapsed);' + #13#10 +
-  '            IniWriteStr(iniPath, ''LastGame'', ''Board'', '''');' + #13#10 +
+  '            // Limpa estado salvo ao vencer / Clear saved state on win' + #13#10 +
+  '            InitDB;' + #13#10 +
+  '            DbExec(''DELETE FROM sudoku_state'');' + #13#10 +
+  '            DbClose;' + #13#10 +
   '          end;' + #13#10 +
   '        end' + #13#10 +
   '        else if (key = ''BACK'') or (key = ''DEL'') or (key = ''0'') then' + #13#10 +

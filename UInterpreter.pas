@@ -209,7 +209,7 @@ type
 
 // =============================================================================
 implementation
-uses IniFiles;
+uses IniFiles, ULanguage;
 // =============================================================================
 
 function IfThenInt(B: Boolean; T, F: Integer): Integer; forward;
@@ -423,13 +423,11 @@ end;
 
 procedure TInterpreter.Tick;
 begin
-  if FStop then raise Exception.Create('Execução interrompida pelo botão Parar.');
+  if FStop then
+    raise Exception.Create(Lang.S(lsErrStopped));
   Inc(FSteps);
   if FSteps > FMaxSteps then
-    raise Exception.Create(
-      'O programa executou passos demais sem terminar.' + sLineBreak +
-      'Isso geralmente indica um loop infinito. Verifique as condições ' +
-      'dos loops e se os contadores estão sendo atualizados.');
+    raise Exception.Create(Lang.S(lsErrStepLimit));
 end;
 
 constructor TInterpreter.Create(AProgram: TProgramNode; AOutput: TStrings);

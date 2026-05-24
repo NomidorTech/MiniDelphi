@@ -1651,14 +1651,14 @@ begin
 
   FBtnHint                 := TButton.Create(FHintPanel);
   FBtnHint.Parent          := FHintPanel;
-  FBtnHint.Caption         := '💡 Hint';
+  FBtnHint.Caption         := '[?] Hint';
   FBtnHint.Left            := PAD;  FBtnHint.Top := PAD;
   FBtnHint.Width           := 90;   FBtnHint.Height := BTN_H;
   FBtnHint.OnClick         := OnHint;
 
   FBtnCheck                := TButton.Create(FHintPanel);
   FBtnCheck.Parent         := FHintPanel;
-  FBtnCheck.Caption        := '▶ Run & Check';
+  FBtnCheck.Caption        := 'Run & Check';
   FBtnCheck.Left           := PAD + 96;  FBtnCheck.Top := PAD;
   FBtnCheck.Width          := 120;       FBtnCheck.Height := BTN_H;
   FBtnCheck.Font.Style     := [fsBold];
@@ -1666,21 +1666,21 @@ begin
 
   FBtnSolution             := TButton.Create(FHintPanel);
   FBtnSolution.Parent      := FHintPanel;
-  FBtnSolution.Caption     := '👁 Solution';
+  FBtnSolution.Caption     := 'Solution';
   FBtnSolution.Left        := PAD + 222; FBtnSolution.Top := PAD;
   FBtnSolution.Width       := 100;       FBtnSolution.Height := BTN_H;
   FBtnSolution.OnClick     := OnSolution;
 
   FBtnPrev                 := TButton.Create(FHintPanel);
   FBtnPrev.Parent          := FHintPanel;
-  FBtnPrev.Caption         := '◀ Prev';
+  FBtnPrev.Caption         := '< Prev';
   FBtnPrev.Left            := PAD + 330; FBtnPrev.Top := PAD;
   FBtnPrev.Width           := 80;        FBtnPrev.Height := BTN_H;
   FBtnPrev.OnClick         := OnPrev;
 
   FBtnNext                 := TButton.Create(FHintPanel);
   FBtnNext.Parent          := FHintPanel;
-  FBtnNext.Caption         := 'Next ▶';
+  FBtnNext.Caption         := 'Next >';
   FBtnNext.Left            := PAD + 416; FBtnNext.Top := PAD;
   FBtnNext.Width           := 80;        FBtnNext.Height := BTN_H;
   FBtnNext.OnClick         := OnNext;
@@ -1744,8 +1744,8 @@ begin
     for J := 0 to High(Lesson.Challenges) do
     begin
       Ch   := Lesson.Challenges[J];
-      if FProgress.IsComplete(Ch.ID) then Done := '✓ '
-      else Done := '○ ';
+      if FProgress.IsComplete(Ch.ID) then Done := '[x] '
+      else Done := '[ ] ';
       CNode := FNavTree.Items.AddChild(LNode,
         Done + Ch.Title);
       CNode.Data := Pointer(I * 1000 + J);  // encoded lesson+challenge
@@ -1766,7 +1766,7 @@ begin
   Ch     := CurrentChallenge;
 
   // Header
-  FLabelLesson.Caption := Format('Lesson %d  —  %s   |   Challenge %d of %d: %s',
+  FLabelLesson.Caption := Format('Lesson %d  --  %s   |   Challenge %d of %d: %s',
     [Lesson.Number, Lesson.Title,
      FCurChallenge + 1, Length(Lesson.Challenges), Ch.Title]);
   UpdateStars;
@@ -1774,9 +1774,9 @@ begin
   // Intro = lesson intro + blank line + this challenge's instruction
   FIntroMemo.Lines.Text :=
     Lesson.Intro + #13#10 + #13#10 +
-    '──────────────────────────────────────────────────────' + #13#10 +
-    '📝  CHALLENGE ' + IntToStr(FCurChallenge + 1) + ': ' + Ch.Title + #13#10 +
-    '──────────────────────────────────────────────────────' + #13#10 +
+    '------------------------------------------------------' + #13#10 +
+    'CHALLENGE ' + IntToStr(FCurChallenge + 1) + ': ' + Ch.Title + #13#10 +
+    '------------------------------------------------------' + #13#10 +
     Ch.Instruction;
 
   // Code editor — only prefill if currently empty or switching challenges
@@ -1850,8 +1850,8 @@ begin
       Inc(Done);
   Stars := '';
   for I := 1 to Length(Lesson.Challenges) do
-    if I <= Done then Stars := Stars + '★'
-    else Stars := Stars + '☆';
+    if I <= Done then Stars := Stars + '*'
+    else Stars := Stars + '.';
   FLabelStars.Caption := Stars;
 end;
 
@@ -1984,7 +1984,7 @@ begin
     // Check if all done
     if FProgress.CompletedCount = FCurriculum.TotalChallenges then
     begin
-      ShowResult('🎉  ALL CHALLENGES COMPLETE!  Click to claim your certificate!', True);
+      ShowResult('*** ALL CHALLENGES COMPLETE! Click to claim your certificate!', True);
       ShowCertificate;
     end;
   end;
@@ -1995,7 +1995,7 @@ var
   Ch : TChallenge;
 begin
   Ch := CurrentChallenge;
-  ShowResult('💡 Hint: ' + Ch.Hint, True);
+  ShowResult('Hint: ' + Ch.Hint, True);
 end;
 
 procedure TLearnTab.OnSolution(Sender: TObject);

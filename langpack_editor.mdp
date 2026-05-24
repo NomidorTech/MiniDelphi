@@ -1,0 +1,309 @@
+// ============================================================
+// Editor de Pacotes de Idioma — Pythia
+// Language Pack Editor — Pythia
+// Nomidor Software, LLC
+//
+// Crie ou edite pacotes de idioma personalizados para o Pythia.
+// Create or edit custom language packs for Pythia.
+//
+// O arquivo é salvo em:
+// The file is saved to:
+//   <pastaDoExe>\LangPacks\<codigo>.ini
+//
+// Formato / Format:
+//   [Meta]
+//   Name=Meu Idioma
+//   Code=xx
+//   Author=Seu Nome
+//   Version=1.0
+//   [Strings]
+//   TabCompiler=...
+//   BtnRun=...
+//   ...
+// ============================================================
+
+var
+  packPath  : String;
+  packName  : String;
+  packCode  : String;
+  packAuthor: String;
+  packVer   : String;
+
+// Todas as chaves que precisam ser traduzidas
+// All keys that need to be translated
+var
+  keys : array of String;
+  vals : array of String;
+
+procedure InitKeys;
+begin
+  SetLength(keys, 76);
+  SetLength(vals, 76);
+
+  keys[0]  := 'TabCompiler';     keys[1]  := 'TabCalculator';
+  keys[2]  := 'TabLearn';        keys[3]  := 'TabProjects';
+  keys[4]  := 'TabForms';        keys[5]  := 'TabMacros';
+  keys[6]  := 'BtnRun';          keys[7]  := 'BtnStop';
+  keys[8]  := 'BtnClear';        keys[9]  := 'BtnNew';
+  keys[10] := 'BtnOpen';         keys[11] := 'BtnSave';
+  keys[12] := 'BtnSaveAs';       keys[13] := 'BtnDelete';
+  keys[14] := 'MenuFile';        keys[15] := 'MenuView';
+  keys[16] := 'MenuHelp';        keys[17] := 'MenuNewFile';
+  keys[18] := 'MenuOpenFile';    keys[19] := 'MenuSave';
+  keys[20] := 'MenuSaveAs';      keys[21] := 'MenuExit';
+  keys[22] := 'MenuPreferences'; keys[23] := 'MenuAbout';
+  keys[24] := 'MenuExamples';    keys[25] := 'MenuTokens';
+  keys[26] := 'MenuAST';         keys[27] := 'MenuProjectSrc';
+  keys[28] := 'StatusReady';     keys[29] := 'StatusCleared';
+  keys[30] := 'StatusRunning';   keys[31] := 'StatusDone';
+  keys[32] := 'StatusError';     keys[33] := 'StatusExLoaded';
+  keys[34] := 'StatusSaved';     keys[35] := 'StatusOpened';
+  keys[36] := 'CalcPrompt';      keys[37] := 'CalcBtn';
+  keys[38] := 'CalcHint';
+  keys[39] := 'ProjectAndExamples'; keys[40] := 'ExampleProjects';
+  keys[41] := 'SourceEditor';    keys[42] := 'Output';
+  keys[43] := 'PrefsTitle';      keys[44] := 'PrefsAppearance';
+  keys[45] := 'PrefsLanguage';   keys[46] := 'PrefsTheme';
+  keys[47] := 'PrefsLangNote';
+  keys[48] := 'PrefsThemeDark';  keys[49] := 'PrefsThemeLight';
+  keys[50] := 'PrefsThemeSys';   keys[51] := 'PrefsThemeNote';
+  keys[52] := 'PrefsBtnOK';      keys[53] := 'PrefsBtnCancel';
+  keys[54] := 'DlgOpenFilter';   keys[55] := 'DlgSaveFilter';
+  keys[56] := 'DlgConfirmDelete'; keys[57] := 'DlgUnsaved';
+  keys[58] := 'MacroTrusted';    keys[59] := 'MacroRun';
+  keys[60] := 'MacroNew';
+  keys[61] := 'FormNew';         keys[62] := 'FormPalette';
+  keys[63] := 'FormInspector';   keys[64] := 'FormPreview';
+  keys[65] := 'LearnTitle';      keys[66] := 'LearnNext';
+  keys[67] := 'LearnPrev';       keys[68] := 'LearnCheck';
+  keys[69] := 'LearnHint';
+  keys[70] := 'AboutTitle';
+  keys[71] := 'LangPackEditor';  keys[72] := 'LangPackNew';
+  keys[73] := 'LangPackSave';    keys[74] := 'LangPackTest';
+  keys[75] := 'LangPackName';
+end;
+
+procedure LoadExistingPack(filename: String);
+var
+  content, line, key, val : String;
+  i, eqpos               : Integer;
+  inStrings              : Boolean;
+begin
+  if not FileExists(filename) then
+  begin
+    writeln('Arquivo não encontrado: ' + filename);
+    writeln('File not found: ' + filename);
+    writeln('Iniciando pacote em branco / Starting blank pack.');
+    exit;
+  end;
+
+  content   := ReadFile(filename);
+  inStrings := False;
+
+  // Processa linha por linha
+  var lines : array of String;
+  SetLength(lines, 0);
+
+  // Divide em linhas manualmente
+  var pos1, pos2 : Integer;
+  pos1 := 1;
+  pos2 := Pos(chr(10), content);
+  while pos2 > 0 do
+  begin
+    SetLength(lines, Length(lines) + 1);
+    lines[Length(lines) - 1] := Copy(content, pos1, pos2 - pos1);
+    pos1 := pos2 + 1;
+    pos2 := Pos(chr(10), Copy(content, pos1, Length(content)));
+    if pos2 > 0 then pos2 := pos2 + pos1 - 1;
+  end;
+  if pos1 <= Length(content) then
+  begin
+    SetLength(lines, Length(lines) + 1);
+    lines[Length(lines) - 1] := Copy(content, pos1, Length(content));
+  end;
+
+  for i := 0 to Length(lines) - 1 do
+  begin
+    line := Trim(lines[i]);
+    if line = '[Meta]' then inStrings := False
+    else if line = '[Strings]' then inStrings := True
+    else if (not inStrings) and (Pos('=', line) > 0) then
+    begin
+      eqpos := Pos('=', line);
+      key   := Trim(Copy(line, 1, eqpos - 1));
+      val   := Trim(Copy(line, eqpos + 1, Length(line)));
+      if key = 'Name'    then packName   := val
+      else if key = 'Code'    then packCode   := val
+      else if key = 'Author'  then packAuthor := val
+      else if key = 'Version' then packVer    := val;
+    end
+    else if inStrings and (Pos('=', line) > 0) then
+    begin
+      eqpos := Pos('=', line);
+      key   := Trim(Copy(line, 1, eqpos - 1));
+      val   := Trim(Copy(line, eqpos + 1, Length(line)));
+      var ki : Integer;
+      for ki := 0 to Length(keys) - 1 do
+        if keys[ki] = key then vals[ki] := val;
+    end;
+  end;
+  writeln('Pacote carregado / Pack loaded: ' + packName + '  [' + packCode + ']');
+end;
+
+procedure SavePack;
+var
+  content : String;
+  i       : Integer;
+begin
+  if packCode = '' then
+  begin
+    writeln('Erro: código do idioma não definido / Error: language code not set.');
+    exit;
+  end;
+
+  content := '[Meta]' + chr(13) + chr(10);
+  content := content + 'Name='    + packName   + chr(13) + chr(10);
+  content := content + 'Code='    + packCode   + chr(13) + chr(10);
+  content := content + 'Author='  + packAuthor + chr(13) + chr(10);
+  content := content + 'Version=' + packVer    + chr(13) + chr(10);
+  content := content + chr(13) + chr(10);
+  content := content + '[Strings]' + chr(13) + chr(10);
+
+  for i := 0 to Length(keys) - 1 do
+    if vals[i] <> '' then
+      content := content + keys[i] + '=' + vals[i] + chr(13) + chr(10);
+
+  packPath := GetAppPath + 'LangPacks\' + packCode + '.ini';
+  WriteFile(packPath, content);
+  writeln('');
+  writeln('Pacote salvo em / Pack saved to:');
+  writeln('  ' + packPath);
+  writeln('');
+  writeln('Reinicie o Pythia para carregar o novo idioma.');
+  writeln('Restart Pythia to load the new language.');
+end;
+
+procedure ShowMenu;
+begin
+  writeln('');
+  writeln('======================================');
+  writeln('  Editor de Pacotes de Idioma / Language Pack Editor');
+  writeln('======================================');
+  writeln('  Idioma / Language: ' + packName + '  [' + packCode + ']');
+  writeln('  Autor / Author:    ' + packAuthor);
+  writeln('  Versão / Version:  ' + packVer);
+  writeln('--------------------------------------');
+  writeln('  1. Definir metadados / Set metadata');
+  writeln('  2. Traduzir strings / Translate strings');
+  writeln('  3. Ver strings atuais / View current strings');
+  writeln('  4. Salvar pacote / Save pack');
+  writeln('  5. Carregar pacote existente / Load existing pack');
+  writeln('  0. Sair / Exit');
+  writeln('======================================');
+end;
+
+procedure SetMetadata;
+begin
+  writeln('');
+  writeln('--- Metadados / Metadata ---');
+  writeln('Nome do idioma (ex: Español): ');
+  packName   := InputBox('Metadados', 'Nome do idioma / Language name:', packName);
+  packCode   := InputBox('Metadados', 'Código (ex: es, de, ja):', packCode);
+  packAuthor := InputBox('Metadados', 'Autor / Author:', packAuthor);
+  packVer    := InputBox('Metadados', 'Versão / Version:', packVer);
+  writeln('Metadados definidos / Metadata set.');
+end;
+
+procedure TranslateStrings;
+var
+  i   : Integer;
+  val : String;
+begin
+  writeln('');
+  writeln('--- Tradução / Translation ---');
+  writeln('Pressione Enter para manter o valor atual.');
+  writeln('Press Enter to keep the current value.');
+  writeln('');
+
+  for i := 0 to Length(keys) - 1 do
+  begin
+    writeln('[' + IntToStr(i + 1) + '/' + IntToStr(Length(keys)) + '] ' + keys[i]);
+    if vals[i] <> '' then
+      writeln('  Atual / Current: ' + vals[i]);
+    val := InputBox('Tradução', keys[i] + ':', vals[i]);
+    if val <> '' then vals[i] := val;
+  end;
+  writeln('');
+  writeln('Tradução concluída / Translation complete.');
+end;
+
+procedure ViewStrings;
+var i : Integer;
+begin
+  writeln('');
+  writeln('--- Strings Atuais / Current Strings ---');
+  for i := 0 to Length(keys) - 1 do
+  begin
+    if vals[i] <> '' then
+      writeln('  ' + keys[i] + ' = ' + vals[i])
+    else
+      writeln('  ' + keys[i] + ' = (não traduzido / not translated)');
+  end;
+end;
+
+// ===========================================================================
+//  MAIN
+// ===========================================================================
+
+var
+  choice : String;
+  running: Boolean;
+  i      : Integer;
+
+begin
+  InitKeys;
+
+  // Inicializa valores com strings em branco
+  for i := 0 to Length(vals) - 1 do vals[i] := '';
+
+  // Metadados padrão / Default metadata
+  packName   := '';
+  packCode   := '';
+  packAuthor := '';
+  packVer    := '1.0';
+
+  writeln('Editor de Pacotes de Idioma do Pythia');
+  writeln('Pythia Language Pack Editor');
+  writeln('');
+  writeln('Para carregar um pacote existente, informe o caminho.');
+  writeln('To load an existing pack, enter the path.');
+  writeln('(Deixe em branco para criar novo / Leave blank to create new)');
+  writeln('');
+
+  var existingPath : String;
+  existingPath := InputBox('Carregar Pacote', 'Caminho do arquivo .ini (ou deixe em branco):', '');
+  if existingPath <> '' then
+    LoadExistingPack(existingPath);
+
+  running := True;
+  while running do
+  begin
+    ShowMenu;
+    choice := InputBox('Menu', 'Escolha / Choose (0-5):', '');
+
+    if choice = '1' then SetMetadata
+    else if choice = '2' then TranslateStrings
+    else if choice = '3' then ViewStrings
+    else if choice = '4' then SavePack
+    else if choice = '5' then
+    begin
+      var path2 : String;
+      path2 := InputBox('Carregar', 'Caminho do .ini:', '');
+      if path2 <> '' then LoadExistingPack(path2);
+    end
+    else if choice = '0' then running := False;
+  end;
+
+  writeln('');
+  writeln('Até logo! / Goodbye!');
+end.

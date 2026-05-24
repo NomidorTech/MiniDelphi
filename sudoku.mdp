@@ -24,7 +24,7 @@ var
   elapsed   : Integer;
   lastSec   : Integer;
   wasDown   : Boolean;
-  iniPath   : String;
+  dbPath    : String;
   tickCount : Integer;
   hintsUsed : Integer;
 
@@ -218,33 +218,65 @@ begin
 end;
 
 // ===========================================================================
-//  INI PERSISTENCE — no Exit
+//  PERSISTÊNCIA SQLite / SQLite PERSISTENCE
+//  Banco de dados: pythia.db / Database: pythia.db
+//  Tabelas / Tables:
+//    sudoku_state      — jogo atual / current game
+//    sudoku_best_times — melhores tempos / best times
 // ===========================================================================
+
+procedure InitDB;
+begin
+  DbOpen(dbPath);
+  // Cria tabelas se não existirem / Create tables if they don't exist
+  DbExec('CREATE TABLE IF NOT EXISTS sudoku_state (' +
+    'id INTEGER PRIMARY KEY,' +
+    'board TEXT,' +
+    'given TEXT,' +
+    'solution TEXT,' +
+    'mode INTEGER,' +
+    'elapsed INTEGER,' +
+    'saved_at TEXT' +
+  ')');
+  DbExec('CREATE TABLE IF NOT EXISTS sudoku_best_times (' +
+    'mode INTEGER PRIMARY KEY,' +
+    'best_seconds INTEGER,' +
+    'achieved_at TEXT' +
+  ')');
+end;
 
 procedure SaveBestTime(diff, secs: Integer);
 var
-  key : String;
-  old : Integer;
+  existing : Integer;
+  row      : String;
 begin
-  if diff = 1 then key := 'Easy'
-  else if diff = 2 then key := 'Medium'
-  else if diff = 3 then key := 'Hard'
-  else key := 'Daily';
-
-  old := IniReadInt(iniPath, 'BestTimes', key, 99999);
-  if secs < old then
-    IniWriteInt(iniPath, 'BestTimes', key, secs);
+  InitDB;
+  row := DbQueryValue('SELECT best_seconds FROM sudoku_best_times WHERE mode = ' + IntToStr(diff));
+  if row = '' then
+  begin
+    DbExec('INSERT INTO sudoku_best_times (mode, best_seconds, achieved_at) VALUES (' +
+      IntToStr(diff) + ', ' + IntToStr(secs) + ', ''' + DateStr + ''')');
+  end
+  else
+  begin
+    existing := StrToInt(row);
+    if secs < existing then
+      DbExec('UPDATE sudoku_best_times SET best_seconds = ' + IntToStr(secs) +
+        ', achieved_at = ''' + DateStr + '''' +
+        ' WHERE mode = ' + IntToStr(diff));
+  end;
+  DbClose;
 end;
 
 function LoadBestTime(diff: Integer): Integer;
 var
-  key : String;
+  row : String;
 begin
-  if diff = 1 then key := 'Easy'
-  else if diff = 2 then key := 'Medium'
-  else if diff = 3 then key := 'Hard'
-  else key := 'Daily';
-  Result := IniReadInt(iniPath, 'BestTimes', key, 0);
+  InitDB;
+  row := DbQueryValue('SELECT best_seconds FROM sudoku_best_times WHERE mode = ' + IntToStr(diff));
+  DbClose;
+  if row = '' then Result := 0
+  else              Result := StrToInt(row);
 end;
 
 procedure SaveState;
@@ -261,21 +293,32 @@ begin
     gline := gline + IntToStr(given[i]);
     sline := sline + IntToStr(solution[i]);
   end;
-  IniWriteStr(iniPath, 'LastGame', 'Board',    bline);
-  IniWriteStr(iniPath, 'LastGame', 'Given',    gline);
-  IniWriteStr(iniPath, 'LastGame', 'Solution', sline);
-  IniWriteInt(iniPath, 'LastGame', 'Mode',     gameMode);
-  IniWriteInt(iniPath, 'LastGame', 'Elapsed',  elapsed);
+
+  InitDB;
+  DbExec('DELETE FROM sudoku_state');
+  DbExec('INSERT INTO sudoku_state (board, given, solution, mode, elapsed, saved_at) VALUES (''' +
+    bline + ''',''' +
+    gline + ''',''' +
+    sline + ''',' +
+    IntToStr(gameMode) + ',' +
+    IntToStr(elapsed) + ',''' +
+    DateStr + ' ' + TimeStr + ''')');
+  DbClose;
 end;
 
 function LoadState: Boolean;
 var
-  bstr, gstr, sstr : String;
-  i                : Integer;
+  bstr, gstr, sstr, mstr, estr : String;
+  i                             : Integer;
 begin
-  bstr := IniReadStr(iniPath, 'LastGame', 'Board',    '');
-  gstr := IniReadStr(iniPath, 'LastGame', 'Given',    '');
-  sstr := IniReadStr(iniPath, 'LastGame', 'Solution', '');
+  Result := False;
+  InitDB;
+  bstr := DbQueryValue('SELECT board     FROM sudoku_state LIMIT 1');
+  gstr := DbQueryValue('SELECT given     FROM sudoku_state LIMIT 1');
+  sstr := DbQueryValue('SELECT solution  FROM sudoku_state LIMIT 1');
+  mstr := DbQueryValue('SELECT mode      FROM sudoku_state LIMIT 1');
+  estr := DbQueryValue('SELECT elapsed   FROM sudoku_state LIMIT 1');
+  DbClose;
 
   if (Length(bstr) = 81) and (Length(gstr) = 81) and (Length(sstr) = 81) then
   begin
@@ -285,12 +328,10 @@ begin
       given[i]    := StrToInt(Copy(gstr, i + 1, 1));
       solution[i] := StrToInt(Copy(sstr, i + 1, 1));
     end;
-    gameMode := IniReadInt(iniPath, 'LastGame', 'Mode',    1);
-    elapsed  := IniReadInt(iniPath, 'LastGame', 'Elapsed', 0);
-    Result   := True;
-  end
-  else
-    Result := False;
+    if mstr <> '' then gameMode := StrToInt(mstr);
+    if estr <> '' then elapsed  := StrToInt(estr);
+    Result := True;
+  end;
 end;
 
 // ===========================================================================
@@ -601,7 +642,7 @@ begin
   GRID_Y := 40;
   GRID_W := 9 * CELL;
 
-  iniPath := GetAppPath + 'sudoku.ini';
+  dbPath  := GetAppPath + 'pythia.db';
 
   SetLength(board,    81);
   SetLength(given,    81);
@@ -614,9 +655,24 @@ begin
     solution[i] := 0;
   end;
 
-  GfxOpen(WIN_W, WIN_H, 'Sudoku  —  Pythia');
+  GfxOpen(WIN_W, WIN_H, 'Sudoku  —  Pythia  v1.0');
 
-  if not LoadState then
+  if LoadState then
+  begin
+    // Pergunta se quer retomar ou novo jogo
+    // Ask if user wants to resume or start new
+    if Confirm('Jogo salvo encontrado. Retomar?' + chr(10) + 'Saved game found. Resume?') then
+    begin
+      // Retoma o jogo salvo / Resume saved game
+      gameWon := CheckWin;
+    end
+    else
+    begin
+      // Começa novo jogo fácil / Start new easy game
+      StartGame(1);
+    end;
+  end
+  else
     StartGame(1);
 
   gameWon   := CheckWin;
@@ -709,7 +765,10 @@ begin
           begin
             gameWon := True;
             SaveBestTime(gameMode, elapsed);
-            IniWriteStr(iniPath, 'LastGame', 'Board', '');
+            // Limpa estado salvo ao vencer / Clear saved state on win
+            InitDB;
+            DbExec('DELETE FROM sudoku_state');
+            DbClose;
           end;
         end
         else if (key = 'BACK') or (key = 'DEL') or (key = '0') then
