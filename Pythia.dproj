@@ -140,6 +140,7 @@
         </DelphiCompile>
         <DCCReference Include="UTheme.pas"/>
         <DCCReference Include="UPreferencesDialog.pas"/>
+        <DCCReference Include="ULanguage.pas"/>
         <DCCReference Include="UMainForm.pas">
             <Form>FormMain</Form>
         </DCCReference>

@@ -591,6 +591,7 @@ var
   i, mx, my, btn, hr, hc : Integer;
   isDown, needDrw         : Boolean;
   key                     : String;
+  fi2                     : Integer;
 
 begin
   WIN_W  := 560;
@@ -626,7 +627,6 @@ begin
   // Se o jogo foi carregado (não gerado), seleciona a primeira célula vazia
   if (selRow < 0) and (not gameWon) then
   begin
-    var fi2 : Integer;
     fi2 := 0;
     while (fi2 < 81) and (selRow < 0) do
     begin

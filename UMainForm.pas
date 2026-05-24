@@ -27,7 +27,7 @@ uses
   Vcl.Menus, Vcl.ComCtrls, Vcl.Buttons, Vcl.Graphics,
   ULexer, UParser, UAST, UInterpreter, UValidator,
   ULearnTab, UProjectTab, UFormBuilderTab,
-  UExampleProjects, UAboutDialog, UTheme, UPreferencesDialog;
+  UExampleProjects, UAboutDialog, UTheme, ULanguage, UPreferencesDialog;
 
 type
   TSnippet = record
@@ -433,23 +433,23 @@ begin
 
   FTabCompiler             := TTabSheet.Create(FPages);
   FTabCompiler.PageControl := FPages;
-  FTabCompiler.Caption     := '  Compiler  ';
+  FTabCompiler.Caption     := '  ' + Lang.S(lsTabCompiler) + '  ';
 
   FTabCalc                 := TTabSheet.Create(FPages);
   FTabCalc.PageControl     := FPages;
-  FTabCalc.Caption         := '  Calculator  ';
+  FTabCalc.Caption         := '  ' + Lang.S(lsTabCalculator) + '  ';
 
   FTabLearn                := TTabSheet.Create(FPages);
   FTabLearn.PageControl    := FPages;
-  FTabLearn.Caption        := '  Learn Delphi  ';
+  FTabLearn.Caption        := '  ' + Lang.S(lsTabLearn) + '  ';
 
   FTabProject              := TTabSheet.Create(FPages);
   FTabProject.PageControl  := FPages;
-  FTabProject.Caption      := '  Projects  ';
+  FTabProject.Caption      := '  ' + Lang.S(lsTabProjects) + '  ';
 
   FTabForms                := TTabSheet.Create(FPages);
   FTabForms.PageControl    := FPages;
-  FTabForms.Caption        := '  Forms  ';
+  FTabForms.Caption        := '  ' + Lang.S(lsTabForms) + '  ';
 
   BuildCompilerTab;
   BuildCalcTab;
@@ -463,7 +463,7 @@ begin
   Theme.Subscribe(ApplyTheme);
 
   FMemoSrc.Lines.Text := EXAMPLE_CODE[0];
-  SetStatus('Ready -- right-click in the editor for snippets, or pick Help > Examples.');
+  SetStatus(Lang.S(lsStatusReady));
 end;
 
 destructor TFormMain.Destroy;
@@ -531,16 +531,16 @@ begin
   MM := TMainMenu.Create(Self);
 
   MIFile := TMenuItem.Create(MM);
-  MIFile.Caption := '&File';
+  MIFile.Caption := '&' + Lang.S(lsMenuFile);
   MM.Items.Add(MIFile);
 
-  MakeItem(MIFile, '&New File',         OnMenuNewFile,
+  MakeItem(MIFile, '&' + Lang.S(lsMenuNewFile),  OnMenuNewFile,
            ShortCut(Ord('N'), [ssCtrl]));
-  MakeItem(MIFile, '&Open File...',     OnMenuOpenFile,
+  MakeItem(MIFile, '&' + Lang.S(lsMenuOpenFile), OnMenuOpenFile,
            ShortCut(Ord('O'), [ssCtrl]));
-  MakeItem(MIFile, '&Save',             OnMenuSave,
+  MakeItem(MIFile, '&' + Lang.S(lsMenuSave),     OnMenuSave,
            ShortCut(Ord('S'), [ssCtrl]));
-  MakeItem(MIFile, 'Save &As...',       OnMenuSaveAs);
+  MakeItem(MIFile, Lang.S(lsMenuSaveAs),          OnMenuSaveAs);
   MakeSep (MIFile);
   MakeItem(MIFile, 'New &Project...',   OnMenuNewProject);
   MakeItem(MIFile, 'Open Pr&oject...',  OnMenuOpenProject);
@@ -549,27 +549,27 @@ begin
   MakeItem(MIFile, 'N&ew Form...',      OnMenuNewForm);
   MakeItem(MIFile, 'Op&en Form...',     OnMenuOpenForm);
   MakeSep (MIFile);
-  MakeItem(MIFile, 'E&xit',             OnFileExit,
+  MakeItem(MIFile, '&' + Lang.S(lsMenuExit),     OnFileExit,
            ShortCut(VK_F4, [ssAlt]));
 
   MIView := TMenuItem.Create(MM);
-  MIView.Caption := '&View';
+  MIView.Caption := '&' + Lang.S(lsMenuView);
   MM.Items.Add(MIView);
 
-  MakeItem(MIView, 'View &Project Source', OnViewProjectSource,
+  MakeItem(MIView, Lang.S(lsMenuProjectSrc),     OnViewProjectSource,
            ShortCut(VK_F11, [ssCtrl]));
   MakeSep (MIView);
-  MakeItem(MIView, 'Show &Tokens',         OnViewShowTokens);
-  MakeItem(MIView, 'Show &AST',            OnViewShowAST);
+  MakeItem(MIView, Lang.S(lsMenuTokens),         OnViewShowTokens);
+  MakeItem(MIView, Lang.S(lsMenuAST),            OnViewShowAST);
   MakeSep (MIView);
-  MakeItem(MIView, 'P&references...',      OnViewPreferences);
+  MakeItem(MIView, Lang.S(lsMenuPreferences),    OnViewPreferences);
 
   MIHelp := TMenuItem.Create(MM);
-  MIHelp.Caption := '&Help';
+  MIHelp.Caption := '&' + Lang.S(lsMenuHelp);
   MM.Items.Add(MIHelp);
 
   MIExSub := TMenuItem.Create(MIHelp);
-  MIExSub.Caption := '&Examples';
+  MIExSub.Caption := '&' + Lang.S(lsMenuExamples);
   MIHelp.Add(MIExSub);
 
   for I := 0 to EXAMPLE_COUNT - 1 do
@@ -582,7 +582,7 @@ begin
   end;
 
   MakeSep (MIHelp);
-  MakeItem(MIHelp, '&About Pythia...', OnAbout);
+  MakeItem(MIHelp, Lang.S(lsMenuAbout), OnAbout);
 
   Self.Menu := MM;
 end;
@@ -725,21 +725,21 @@ begin
 
   FBtnRun          := TButton.Create(FToolPanel);
   FBtnRun.Parent   := FToolPanel;
-  FBtnRun.Caption  := 'Run';
+  FBtnRun.Caption  := Lang.S(lsBtnRun);
   FBtnRun.Left     := X;  FBtnRun.Top := PAD;
   FBtnRun.Width    := BTN_W;  FBtnRun.Height := BTN_H;
   FBtnRun.OnClick  := OnRun;
-  FBtnRun.Hint     := 'Run the source above (F5)';
+  FBtnRun.Hint     := Lang.S(lsBtnRun);
   FBtnRun.ShowHint := True;
   Inc(X, BTN_W + PAD);
 
   FBtnClear          := TButton.Create(FToolPanel);
   FBtnClear.Parent   := FToolPanel;
-  FBtnClear.Caption  := 'Clear';
+  FBtnClear.Caption  := Lang.S(lsBtnClear);
   FBtnClear.Left     := X;  FBtnClear.Top := PAD;
   FBtnClear.Width    := BTN_W;  FBtnClear.Height := BTN_H;
   FBtnClear.OnClick  := OnClear;
-  FBtnClear.Hint     := 'Clear source, output, and tokens';
+  FBtnClear.Hint     := Lang.S(lsBtnClear);
   FBtnClear.ShowHint := True;
   Inc(X, BTN_W + PAD * 3);
 
@@ -786,7 +786,7 @@ begin
   FLabelSrc                 := TLabel.Create(FLeftPanel);
   FLabelSrc.Parent          := FLeftPanel;
   FLabelSrc.Align           := alTop;
-  FLabelSrc.Caption         := '   Source   (right-click for snippets,  F5 to run)';
+  FLabelSrc.Caption         := '   ' + Lang.S(lsSourceEditor);
   FLabelSrc.Font.Style      := [fsBold];
   FLabelSrc.Height          := 24;
 
@@ -811,7 +811,7 @@ begin
   FLabelOut                 := TLabel.Create(FRightPanel);
   FLabelOut.Parent          := FRightPanel;
   FLabelOut.Align           := alTop;
-  FLabelOut.Caption         := '   Output';
+  FLabelOut.Caption         := '   ' + Lang.S(lsOutput);
   FLabelOut.Font.Style      := [fsBold];
   FLabelOut.Height          := 24;
 
@@ -1374,7 +1374,7 @@ begin
         Interp.Free;
       end;
       ClearHighlight;
-      SetStatus(Format('--- Done  (%d ms) ---', [GetTickCount - T0]));
+      SetStatus(Format(Lang.S(lsStatusDone) + '  (%d ms)', [GetTickCount - T0]));
     except
       on E: Exception do
       begin
@@ -1389,7 +1389,7 @@ begin
             FMemoOut.Lines.Add('|     ' + ErrParts[EI]);
         end;
         FMemoOut.Lines.Add('+===============================================');
-        SetStatus('Runtime error.', True);
+        SetStatus(Lang.S(lsStatusError), True);
       end;
     end;
   finally
@@ -1405,13 +1405,13 @@ begin
   FMemoSrc.Lines.Text := EXAMPLE_CODE[(Sender as TMenuItem).Tag];
   FMemoOut.Clear;
   FMemoTok.Clear;
-  SetStatus('Example loaded -- click Run to execute.');
+  SetStatus(Lang.S(lsStatusExLoaded));
 end;
 
 procedure TFormMain.OnClear(Sender: TObject);
 begin
   FMemoSrc.Clear;  FMemoOut.Clear;  FMemoTok.Clear;
-  SetStatus('Cleared.');
+  SetStatus(Lang.S(lsStatusCleared));
 end;
 
 end.

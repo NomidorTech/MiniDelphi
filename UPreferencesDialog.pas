@@ -1,30 +1,21 @@
-unit UPreferencesDialog;
+﻿unit UPreferencesDialog;
 
 // =============================================================================
-// Pythia — A Pascal Learning Environment
+// Pythia -- ambiente de aprendizado Pascal / Pascal learning environment
 // Copyright (C) 2026 Nomidor Software, LLC.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// See the LICENSE file or https://www.gnu.org/licenses/gpl-3.0.html
+// GPL v3 — veja/see https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
-
-// =============================================================================
-//  UPreferencesDialog.pas  —  modal Preferences dialog
 //
-//  Phase 1: Appearance / Theme only.
+//  UPreferencesDialog.pas  —  Diálogo modal de Preferências
+//                              Modal Preferences dialog
 //
-//  Three options: Dark / Light / Follow Windows.
-//  Live preview as you click each radio.  OK commits, Cancel reverts.
-// =============================================================================
-
-// =============================================================================
-// [PT-BR] UPreferencesDialog.pas  —  Diálogo de Preferências (View → Preferences)
-//  Permite ao usuário escolher entre os modos de tema:
-//  Escuro (Carbon), Claro (Iceberg Classico) ou Seguir o Windows.
+//  Aba Aparência / Appearance tab  — tema escuro / claro / sistema
+//  Aba Idioma / Language tab       — dropdown com todos os idiomas instalados
+//
+//  Idiomas embutidos: en pt fr es es-419 uk de it ja zh ko hi ar
+//  External packs:    <exedir>\LangPacks\*.ini  (carregados automaticamente)
+//
+//  Persistência / Persistence: pythia.ini
 // =============================================================================
 
 interface
@@ -34,30 +25,46 @@ procedure ShowPreferencesDialog;
 implementation
 
 uses
-  Winapi.Windows, Winapi.Messages,
+  Winapi.Windows,
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.ComCtrls, Vcl.Buttons, Vcl.Graphics, System.UITypes, Vcl.Dialogs,
-  UTheme;
+  Vcl.ComCtrls, Vcl.Graphics, System.UITypes, Vcl.Dialogs,
+  UTheme, ULanguage;
 
 type
   TPrefsForm = class(TForm)
   private
-    FPages    : TPageControl;
-    FTabAppr  : TTabSheet;
-    FGrp      : TGroupBox;
-    FRBDark   : TRadioButton;
-    FRBLight  : TRadioButton;
-    FRBSys    : TRadioButton;
-    FLblSys   : TLabel;
-    FLblNote  : TLabel;
-    FBtnOK    : TButton;
-    FBtnCancel: TButton;
-    FOrigMode : TThemeMode;
+    FPages      : TPageControl;
+    FTabAppr    : TTabSheet;
+    FTabLang    : TTabSheet;
+
+    // Aparência / Appearance
+    FGrpTheme   : TGroupBox;
+    FRBDark     : TRadioButton;
+    FRBLight    : TRadioButton;
+    FRBSys      : TRadioButton;
+    FLblSys     : TLabel;
+    FLblThNote  : TLabel;
+
+    // Idioma / Language
+    FGrpLang    : TGroupBox;
+    FLblLang    : TLabel;
+    FComboLang  : TComboBox;   // dropdown com todos os idiomas / all languages
+    FLblLangNote: TLabel;
+    FLblPacksDir: TLabel;      // mostra onde ficam os packs / shows pack folder
+
+    // Botões / Buttons
+    FBtnOK      : TButton;
+    FBtnCancel  : TButton;
+
+    FOrigMode   : TThemeMode;
+    FOrigCode   : string;      // código do idioma original / original language code
+
     procedure Build;
-    procedure OnRadioChange(Sender: TObject);
-    procedure OnOK(Sender: TObject);
-    procedure OnCancel(Sender: TObject);
+    procedure PopulateLanguageCombo;
+    procedure OnThemeChange(Sender: TObject);
+    procedure OnOK         (Sender: TObject);
+    procedure OnCancel     (Sender: TObject);
   public
     constructor CreatePrefs(AOwner: TComponent);
   end;
@@ -66,138 +73,200 @@ procedure ShowPreferencesDialog;
 var Dlg : TPrefsForm;
 begin
   Dlg := TPrefsForm.CreatePrefs(Application);
-  try
-    Dlg.ShowModal;
-  finally
-    Dlg.Free;
-  end;
+  try Dlg.ShowModal;
+  finally Dlg.Free; end;
 end;
 
 constructor TPrefsForm.CreatePrefs(AOwner: TComponent);
 begin
   inherited CreateNew(AOwner);
-  Caption     := 'Preferences';
+  Caption     := Lang.S(lsPrefsTitle);
   Position    := poScreenCenter;
-  Width       := 480;
-  Height      := 400;
+  Width       := 500;
+  Height      := 460;
   BorderStyle := bsDialog;
   Font.Name   := 'Segoe UI';
   Font.Size   := 10;
   FOrigMode   := Theme.Mode;
+  FOrigCode   := Lang.ActiveCode;
   Build;
 end;
 
 procedure TPrefsForm.Build;
-var
-  SysLabel : string;
+var SysLabel : string;
 begin
   FPages              := TPageControl.Create(Self);
   FPages.Parent       := Self;
   FPages.Align        := alClient;
 
+  // ── Aba Aparência / Appearance Tab ───────────────────────────────────────
   FTabAppr             := TTabSheet.Create(FPages);
   FTabAppr.PageControl := FPages;
-  FTabAppr.Caption     := '  Appearance  ';
+  FTabAppr.Caption     := '  ' + Lang.S(lsPrefsAppearance) + '  ';
 
-  FGrp         := TGroupBox.Create(FTabAppr);
-  FGrp.Parent  := FTabAppr;
-  FGrp.Caption := ' Theme ';
-  FGrp.Left    := 16;
-  FGrp.Top     := 16;
-  FGrp.Width   := 430;
-  FGrp.Height  := 200;
+  FGrpTheme         := TGroupBox.Create(FTabAppr);
+  FGrpTheme.Parent  := FTabAppr;
+  FGrpTheme.Caption := ' ' + Lang.S(lsPrefsTheme) + ' ';
+  FGrpTheme.SetBounds(16, 16, 450, 220);
 
-  FRBDark         := TRadioButton.Create(FGrp);
-  FRBDark.Parent  := FGrp;
-  FRBDark.Caption := 'Dark  (Carbon)';
-  FRBDark.Left    := 20;
-  FRBDark.Top     := 32;
-  FRBDark.Width   := 380;
-  FRBDark.OnClick := OnRadioChange;
+  FRBDark         := TRadioButton.Create(FGrpTheme);
+  FRBDark.Parent  := FGrpTheme;
+  FRBDark.Caption := Lang.S(lsPrefsThemeDark);
+  FRBDark.SetBounds(20, 32, 400, 24);
 
-  FRBLight        := TRadioButton.Create(FGrp);
-  FRBLight.Parent := FGrp;
-  FRBLight.Caption := 'Light  (Iceberg Classico)';
-  FRBLight.Left   := 20;
-  FRBLight.Top    := 60;
-  FRBLight.Width  := 380;
-  FRBLight.OnClick := OnRadioChange;
+  FRBLight         := TRadioButton.Create(FGrpTheme);
+  FRBLight.Parent  := FGrpTheme;
+  FRBLight.Caption := Lang.S(lsPrefsThemeLight);
+  FRBLight.SetBounds(20, 60, 400, 24);
 
-  FRBSys          := TRadioButton.Create(FGrp);
-  FRBSys.Parent   := FGrp;
-  FRBSys.Caption  := 'Follow Windows setting';
-  FRBSys.Left     := 20;
-  FRBSys.Top      := 88;
-  FRBSys.Width    := 380;
-  FRBSys.OnClick  := OnRadioChange;
+  FRBSys         := TRadioButton.Create(FGrpTheme);
+  FRBSys.Parent  := FGrpTheme;
+  FRBSys.Caption := Lang.S(lsPrefsThemeSys);
+  FRBSys.SetBounds(20, 88, 400, 24);
 
-  if Theme.Current = tkLight then
-    SysLabel := '(Windows is currently: Light)'
-  else
-    SysLabel := '(Windows is currently: Dark)';
-  FLblSys             := TLabel.Create(FGrp);
-  FLblSys.Parent      := FGrp;
-  FLblSys.Caption     := SysLabel;
-  FLblSys.Left        := 40;
-  FLblSys.Top         := 112;
-  FLblSys.Font.Color  := clGrayText;
+  if Theme.Current = tkLight then SysLabel := '(Windows: Light)'
+  else                            SysLabel := '(Windows: Dark)';
+  FLblSys            := TLabel.Create(FGrpTheme);
+  FLblSys.Parent     := FGrpTheme;
+  FLblSys.Caption    := SysLabel;
+  FLblSys.SetBounds(40, 116, 380, 20);
+  FLblSys.Font.Color := clGrayText;
 
-  FLblNote             := TLabel.Create(FGrp);
-  FLblNote.Parent      := FGrp;
-  FLblNote.Caption     := 'Click an option to preview it. OK commits, Cancel reverts.';
-  FLblNote.Left        := 20;
-  FLblNote.Top         := 160;
-  FLblNote.Font.Color  := clGrayText;
-  FLblNote.Font.Style  := [];
+  FLblThNote            := TLabel.Create(FGrpTheme);
+  FLblThNote.Parent     := FGrpTheme;
+  FLblThNote.Caption    := Lang.S(lsPrefsThemeNote);
+  FLblThNote.SetBounds(20, 172, 410, 36);
+  FLblThNote.WordWrap   := True;
+  FLblThNote.Font.Color := clGrayText;
 
   case Theme.Mode of
     tmDark          : FRBDark.Checked  := True;
     tmLight         : FRBLight.Checked := True;
     tmFollowWindows : FRBSys.Checked   := True;
   end;
+  // Wire OnClick AFTER setting Checked to avoid nil-pointer during init
+  FRBDark.OnClick  := OnThemeChange;
+  FRBLight.OnClick := OnThemeChange;
+  FRBSys.OnClick   := OnThemeChange;
 
+  // ── Aba Idioma / Language Tab ─────────────────────────────────────────────
+  FTabLang             := TTabSheet.Create(FPages);
+  FTabLang.PageControl := FPages;
+  FTabLang.Caption     := '  ' + Lang.S(lsPrefsLanguage) + '  ';
+
+  FGrpLang         := TGroupBox.Create(FTabLang);
+  FGrpLang.Parent  := FTabLang;
+  FGrpLang.Caption := ' ' + Lang.S(lsPrefsLanguage) + ' ';
+  FGrpLang.SetBounds(16, 16, 450, 280);
+
+  // Label + Dropdown
+  FLblLang         := TLabel.Create(FGrpLang);
+  FLblLang.Parent  := FGrpLang;
+  FLblLang.Caption := Lang.S(lsPrefsLanguage) + ':';
+  FLblLang.SetBounds(20, 32, 200, 20);
+
+  FComboLang             := TComboBox.Create(FGrpLang);
+  FComboLang.Parent      := FGrpLang;
+  FComboLang.Style       := csDropDownList;  // só leitura / read-only
+  FComboLang.SetBounds(20, 54, 400, 28);
+  PopulateLanguageCombo;
+
+  // Nota de reinício / Restart note
+  FLblLangNote            := TLabel.Create(FGrpLang);
+  FLblLangNote.Parent     := FGrpLang;
+  FLblLangNote.Caption    := Lang.S(lsPrefsLangNote);
+  FLblLangNote.SetBounds(20, 100, 410, 40);
+  FLblLangNote.WordWrap   := True;
+  FLblLangNote.Font.Color := clGrayText;
+
+  // Mostra a pasta dos packs externos / Show external packs folder
+  FLblPacksDir            := TLabel.Create(FGrpLang);
+  FLblPacksDir.Parent     := FGrpLang;
+  FLblPacksDir.Caption    :=
+    Lang.S(lsLangPackInstalled) + sLineBreak +
+    Lang.PacksDir;
+  FLblPacksDir.SetBounds(20, 156, 410, 50);
+  FLblPacksDir.WordWrap   := True;
+  FLblPacksDir.Font.Color := clGrayText;
+  FLblPacksDir.Font.Size  := 8;
+
+  // ── Botões / Buttons ──────────────────────────────────────────────────────
   FBtnOK         := TButton.Create(Self);
   FBtnOK.Parent  := Self;
-  FBtnOK.Caption := 'OK';
-  FBtnOK.Width   := 96;
-  FBtnOK.Height  := 30;
+  FBtnOK.Caption := Lang.S(lsPrefsBtnOK);
+  FBtnOK.Width   := 96;  FBtnOK.Height := 30;
   FBtnOK.Anchors := [akRight, akBottom];
   FBtnOK.Left    := Self.ClientWidth - 210;
-  FBtnOK.Top     := Self.ClientHeight - 42;
+  FBtnOK.Top     := Self.ClientHeight - 46;
   FBtnOK.OnClick := OnOK;
   FBtnOK.Default := True;
 
   FBtnCancel         := TButton.Create(Self);
   FBtnCancel.Parent  := Self;
-  FBtnCancel.Caption := 'Cancel';
-  FBtnCancel.Width   := 96;
-  FBtnCancel.Height  := 30;
+  FBtnCancel.Caption := Lang.S(lsPrefsBtnCancel);
+  FBtnCancel.Width   := 96;  FBtnCancel.Height := 30;
   FBtnCancel.Anchors := [akRight, akBottom];
   FBtnCancel.Left    := Self.ClientWidth - 108;
-  FBtnCancel.Top     := Self.ClientHeight - 42;
+  FBtnCancel.Top     := Self.ClientHeight - 46;
   FBtnCancel.OnClick := OnCancel;
   FBtnCancel.Cancel  := True;
 end;
 
-procedure TPrefsForm.OnRadioChange(Sender: TObject);
+procedure TPrefsForm.PopulateLanguageCombo;
+var
+  P    : TLangPack;
+  I    : Integer;
+  Item : string;
 begin
-  if FRBDark.Checked then
-    Theme.SetMode(tmDark)
-  else if FRBLight.Checked then
-    Theme.SetMode(tmLight)
-  else if FRBSys.Checked then
-    Theme.SetMode(tmFollowWindows);
+  FComboLang.Items.BeginUpdate;
+  try
+    FComboLang.Items.Clear;
+    for I := 0 to Lang.AllPacks.Count - 1 do
+    begin
+      P    := Lang.AllPacks[I];
+      // Mostra nome nativo + código / Show native name + code
+      Item := P.Name + '  [' + P.Code + ']';
+      if not P.IsBuiltIn then Item := Item + '  ✦';  // marca packs externos
+      FComboLang.Items.AddObject(Item, P);
+    end;
+    // Seleciona o idioma ativo / Select the active language
+    for I := 0 to FComboLang.Items.Count - 1 do
+      if TLangPack(FComboLang.Items.Objects[I]).Code = Lang.ActiveCode then
+      begin
+        FComboLang.ItemIndex := I;
+        Break;
+      end;
+    if FComboLang.ItemIndex < 0 then FComboLang.ItemIndex := 0;
+  finally
+    FComboLang.Items.EndUpdate;
+  end;
+end;
+
+procedure TPrefsForm.OnThemeChange(Sender: TObject);
+begin
+  if      FRBDark.Checked  then Theme.SetMode(tmDark)
+  else if FRBLight.Checked then Theme.SetMode(tmLight)
+  else if FRBSys.Checked   then Theme.SetMode(tmFollowWindows);
 end;
 
 procedure TPrefsForm.OnOK(Sender: TObject);
+var P : TLangPack;
 begin
+  // Aplica seleção de idioma / Apply language selection
+  if FComboLang.ItemIndex >= 0 then
+  begin
+    P := TLangPack(FComboLang.Items.Objects[FComboLang.ItemIndex]);
+    if Assigned(P) then Lang.SetLanguage(P.Code);
+  end;
   ModalResult := mrOk;
 end;
 
 procedure TPrefsForm.OnCancel(Sender: TObject);
 begin
-  if Theme.Mode <> FOrigMode then
-    Theme.SetMode(FOrigMode);
+  // Reverte tema / Revert theme
+  if Theme.Mode <> FOrigMode then Theme.SetMode(FOrigMode);
+  // Reverte idioma / Revert language
+  if Lang.ActiveCode <> FOrigCode then Lang.SetLanguage(FOrigCode);
   ModalResult := mrCancel;
 end;
 

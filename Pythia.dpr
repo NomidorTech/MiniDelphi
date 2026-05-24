@@ -27,6 +27,7 @@ uses
   Vcl.Forms,
   UTheme in 'UTheme.pas',
   UPreferencesDialog in 'UPreferencesDialog.pas',
+  ULanguage in 'ULanguage.pas',
   UMainForm in 'UMainForm.pas' {FormMain},
   ULexer in 'ULexer.pas',
   UAST in 'UAST.pas',
@@ -57,7 +58,7 @@ begin
 
   // Apply theme BEFORE creating any forms so VCL Styles paints correctly.
   Theme.Load;
-
+  InitLanguage;   // deve ser chamado antes de CreateForm / must be before CreateForm
   Application.CreateForm(TFormMain, FormMain);
   Application.Run;
 end.
