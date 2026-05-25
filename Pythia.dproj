@@ -162,6 +162,10 @@
         <DCCReference Include="UFormBuilderTab.pas"/>
         <DCCReference Include="UFormDef.pas"/>
         <DCCReference Include="UMacroTab.pas"/>
+        <DCCReference Include="ULearnTabBase.pas"/>
+        <DCCReference Include="UPythonCurriculum.pas"/>
+        <DCCReference Include="URunnerManager.pas"/>
+        <DCCReference Include="UPascalCurriculum.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -190,7 +194,7 @@
                 <Platform value="Win64">True</Platform>
             </Platforms>
             <Deployment Version="5">
-                <DeployFile LocalName="Pythia.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win64\Debug\Pythia.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>Pythia.exe</RemoteName>
                         <Overwrite>true</Overwrite>

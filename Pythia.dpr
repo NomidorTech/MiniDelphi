@@ -47,7 +47,11 @@ uses
   UFormDef in 'UFormDef.pas',
   UMacroTab in 'UMacroTab.pas',
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  ULearnTabBase in 'ULearnTabBase.pas',
+  UPythonCurriculum in 'UPythonCurriculum.pas',
+  URunnerManager in 'URunnerManager.pas',
+  UPascalCurriculum in 'UPascalCurriculum.pas';
 
 {$R *.res}
 begin

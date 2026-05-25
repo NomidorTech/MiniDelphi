@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{F53E49E2-4F31-4655-AAB1-8F9F9774121F}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Pythia.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Pyrun\PyRun.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Pythia">
+        <MSBuild Projects="Pythia.dproj"/>
+    </Target>
+    <Target Name="Pythia:Clean">
+        <MSBuild Projects="Pythia.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Pythia:Make">
+        <MSBuild Projects="Pythia.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="PyRun">
+        <MSBuild Projects="Pyrun\PyRun.dproj"/>
+    </Target>
+    <Target Name="PyRun:Clean">
+        <MSBuild Projects="Pyrun\PyRun.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PyRun:Make">
+        <MSBuild Projects="Pyrun\PyRun.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Pythia;PyRun"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Pythia:Clean;PyRun:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Pythia:Make;PyRun:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

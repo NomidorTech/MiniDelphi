@@ -1,4 +1,4 @@
-unit UMainForm;
+﻿unit UMainForm;
 
 // =============================================================================
 // Pythia -- a Pascal learning environment
@@ -26,8 +26,9 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Menus, Vcl.ComCtrls, Vcl.Buttons, Vcl.Graphics,
   ULexer, UParser, UAST, UInterpreter, UValidator,
-  ULearnTab, UProjectTab, UFormBuilderTab,
-  UExampleProjects, UAboutDialog, UTheme, ULanguage, UPreferencesDialog;
+  ULearnTabBase, UPythonCurriculum, UProjectTab, UFormBuilderTab,
+  UExampleProjects, UAboutDialog, UTheme, ULanguage, UPreferencesDialog, URunnerManager,
+  UPascalCurriculum;
 
 type
   TSnippet = record
@@ -42,8 +43,8 @@ type
     FPages          : TPageControl;
     FTabCompiler    : TTabSheet;
     FTabCalc        : TTabSheet;
-    FTabLearn       : TTabSheet;
-    FLearnTab       : TLearnTab;
+    FLearnTabs      : TList<TLearnTabBase>; // dynamic per-runner tabs
+    FLearnTabSheets : TList<TTabSheet>;     // corresponding tab sheets
     FTabProject     : TTabSheet;
     FProjectTab     : TProjectTab;
     FTabForms       : TTabSheet;
@@ -84,6 +85,7 @@ type
     FCalcHintLabel  : TLabel;
 
     procedure BuildMainMenu;
+    procedure BuildLearnTabs;
     procedure BuildCompilerTab;
     procedure BuildCalcTab;
     procedure BuildSnippetMenu;
@@ -425,6 +427,9 @@ begin
   Font.Name := 'Segoe UI';
   Font.Size := 10;
 
+  FLearnTabs      := TList<TLearnTabBase>.Create;
+  FLearnTabSheets := TList<TTabSheet>.Create;
+  InitRunners;
   BuildMainMenu;
 
   FPages                   := TPageControl.Create(Self);
@@ -439,9 +444,6 @@ begin
   FTabCalc.PageControl     := FPages;
   FTabCalc.Caption         := '  ' + Lang.S(lsTabCalculator) + '  ';
 
-  FTabLearn                := TTabSheet.Create(FPages);
-  FTabLearn.PageControl    := FPages;
-  FTabLearn.Caption        := '  ' + Lang.S(lsTabLearn) + '  ';
 
   FTabProject              := TTabSheet.Create(FPages);
   FTabProject.PageControl  := FPages;
@@ -453,8 +455,8 @@ begin
 
   BuildCompilerTab;
   BuildCalcTab;
+  BuildLearnTabs;
   BuildSnippetMenu;
-  FLearnTab       := TLearnTab.Create(FTabLearn);
   FProjectTab     := TProjectTab.Create(FTabProject);
   FFormBuilderTab := TFormBuilderTab.Create(FTabForms);
 
@@ -469,6 +471,8 @@ end;
 destructor TFormMain.Destroy;
 begin
   Theme.Unsubscribe(ApplyTheme);
+  FLearnTabs.Free;
+  FLearnTabSheets.Free;
   inherited;
 end;
 
@@ -707,6 +711,50 @@ end;
 //  COMPILER TAB
 // =============================================================================
 
+
+procedure TFormMain.BuildLearnTabs;
+// Dynamically creates one Learn tab per installed runner with a curriculum.
+// Cria dinamicamente uma aba Learn por runner instalado com curriculo.
+var
+  R       : TRunner;
+  TabSheet: TTabSheet;
+  LearnTab: TLearnTabBase;
+  Cur     : TLearnCurriculumBase;
+  I       : Integer;
+begin
+  for I := 0 to Runners.AllRunners.Count - 1 do
+  begin
+    R   := Runners.AllRunners[I];
+    Cur := nil;
+
+    // Map runner code to curriculum class
+    // Mapeia codigo do runner para classe de curriculo
+    if SameText(R.Code, 'pascal') then
+  Cur := TPascalCurriculum.Create
+    else if SameText(R.Code, 'py') then
+  Cur := TPythonCurriculum.Create;
+    // Add more here as curricula are written:
+    // Adicione mais aqui conforme os curriculos forem escritos:
+    // else if SameText(R.Code, 'lua') then
+    //   Cur := TLuaCurriculum.Create
+    ;
+
+    if not Assigned(Cur) then Continue; // no curriculum for this runner yet
+    if not R.IsAvailable then
+    begin
+      Cur.Free;
+      Continue; // runner not installed -- skip tab
+    end;
+
+    TabSheet             := TTabSheet.Create(FPages);
+    TabSheet.PageControl := FPages;
+    TabSheet.Caption     := '  Learn ' + R.Name + '  ';
+
+    LearnTab := TLearnTabBase.Create(TabSheet, R, Cur);
+    FLearnTabs.Add(LearnTab);
+    FLearnTabSheets.Add(TabSheet);
+  end;
+end;
 procedure TFormMain.BuildCompilerTab;
 const
   BTN_W = 90;

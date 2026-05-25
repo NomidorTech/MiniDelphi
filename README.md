@@ -1,208 +1,142 @@
-# Pythia
+# Pythia — Multi-Language Learning IDE
+**Nomidor Software, LLC**
 
-**Where Pascal begins.**
-
-Pythia is a Pascal learning environment for Windows. It pairs a real interpreted Pascal — with classes, recursion, file I/O, graphics, and SQLite — to an IDE built around teaching the language rather than hiding it.
-
-Built in Delphi 13 (Athens). Win64.
-
-<img width="1167" height="785" alt="image" src="https://github.com/user-attachments/assets/38c4d875-edc4-4456-beb7-aa91eab98630" />
-
+> **"Py" in Pythia stands for Python.**
+> Pythia started as a Pascal learning tool and grew into a multi-language
+> programming environment. The name now reflects its Python heart as much
+> as its Delphi roots.
 
 ---
 
-## Why Pythia?
+## What is Pythia?
 
-Pascal is a beautiful language with a steep first hour. A new programmer opening the real Delphi IDE meets an overwhelming wall of menus, components, properties, and tooling that has nothing to do with learning the language itself. Pythia is what happens when you strip all of that away and keep only the parts that help a person actually learn Pascal: a place to type code, a button to run it, examples that don't assume prior knowledge, friendly errors, and a built-in reference for every feature.
+Pythia is a lightweight, self-contained programming IDE designed for learning
+and rapid scripting. It ships with a built-in Pascal interpreter and connects
+to any external language via a snap-in runner pack system.
 
-It's also a clean scratchpad for experienced Pascal programmers who want to experiment without spinning up the full Delphi IDE.
-
-The name comes from the Pythia — the priestess at the Oracle of Delphi. Where the Oracle spoke through her, Pascal speaks through Pythia.
-
----
-
-## Features
-
-### Language
-
-- Pascal-like syntax: `program`, `uses`, `var`, `procedure`, `function`, `begin..end`
-- Types: `Integer`, `Real`, `String`, `Boolean`, plus objects via `class`
-- Control flow: `if..then..else`, `while..do`, `repeat..until`, `for..to..do`, `for..downto..do`
-- `case..of` for integers with multi-value labels and `else` branch
-- `caseof..of` extension for switching on strings
-- Classes: fields, methods, constructors, `Self`, inheritance, virtual methods
-- Recursion, mutual recursion, nested calls
-- `Result` return convention for functions
-
-### Built-in routines
-
-- Output: `writeln`, `write`
-- Input: `readln`, `InputBox`
-- Dialogs: `ShowMessage`, `Confirm`
-- Math: `abs`, `sqr`, `sqrt`, `power`, `round`, `trunc`, `sin`, `cos`, `tan`, `ln`, `exp`, `pi`, `max`, `min`, `random`, `randomize`
-- Strings: `length`, `uppercase`, `lowercase`, `copy`, `pos`, `trim`, `inttostr`, `strtoint`, `strtointdef`, `floattostr`, `strtofloat`
-- Files: `fileexists`, `readfile`, `writefile`, `appendfile`, `deletefile`
-- Graphics: `GfxOpen`, `GfxClose`, `GfxLine`, `GfxRect`, `GfxCircle`, `GfxText`, `GfxColor`, `GfxClear`, `GfxUpdate`
-- Database: `DbOpen`, `DbClose`, `DbExec`, `DbQuery`, `DbNext`, `DbField` (requires sqlite3.dll alongside the exe)
-- Timing: `Sleep`
-
-### IDE
-
-- **Compiler tab** — source editor on the left, output on the right, token stream at the bottom. Right-click for code snippets, F5 to run.
-- **Calculator tab** — type any expression and press Enter. `2 + 3 * sqrt(16)` works as expected.
-- **Learn Delphi tab** — 13 lessons covering language fundamentals, plus 45 graded challenges with hints and a completion certificate.
-- **Projects tab** — multi-file projects with a `.mdproj` project file, library `.mdp` files, and an internal `[Source]` section for the main program.
-- **Forms tab** — a Phase 1 visual form builder with palette (Pointer / Label / Button / Edit), drag-and-drop placement, an object inspector, and modal preview at runtime.
-- **Macros tab** — small scripts that run against the project, with a trusted-flag system for shell-using macros.
-
-### IDE niceties
-
-- Themes: Dark (Carbon), Light (Iceberg Classico), or Follow Windows setting — set under View → Preferences
-- Three menus: File, View, Help. Help → Examples loads any of 8 built-in programs into the Compiler tab.
-- Right-click in any code editor for a snippet menu (`if..then`, `for`, `while`, class skeleton, etc.)
+**No installation of external tools required to get started** — Pascal runs
+natively inside the exe. Python, Lua, Node.js and others activate by dropping
+a `.runner.ini` file into the `Runners\` folder.
 
 ---
 
-## Quick build
+## Supported Languages / Linguagens Suportadas
 
-### Prerequisites
-
-- **Embarcadero Delphi 13 (Athens)** with VCL Styles support
-- **Windows 10 or 11** (the app is Win64-only)
-- Optional: `sqlite3.dll` placed next to the exe if you want to use the `Db*` builtins
-
-### Building
-
-1. Clone this repository
-2. Open `Pythia.dpr` in Delphi
-3. **Project → Options → Application → Appearance** — tick the boxes for `Carbon`, `Iceberg Classico`, and (optionally) `Windows10 SlateGray` and `Glossy` as fallbacks
-4. **Project → Build** (Shift+F9)
-5. Run with **F9** or launch the produced `Pythia.exe`
-
-### Running
-
-The IDE opens on the Compiler tab with a Hello World example pre-loaded. Click **Run** to execute it. Try **Help → Examples → FizzBuzz** for a slightly more interesting first program.
+| Language | Mode | Requires |
+|---|---|---|
+| **Pascal** | Built-in interpreter | Nothing — works out of the box |
+| **Python** | Shell to `python.exe` | Python 3.x on PATH |
+| **Lua** | Shell to `lua.exe` | Lua 5.x on PATH |
+| **JavaScript** | Shell to `node.exe` | Node.js on PATH |
+| *Any language* | Shell to any exe | Drop a `.runner.ini` in `Runners\` |
 
 ---
 
-## Hello, Pythia
+## Tabs / Abas
 
-```pascal
-program HelloWorld;
-begin
-  writeln('Hello, World!');
-  writeln('Welcome to Pythia!');
-end.
-```
+| Tab | Purpose |
+|---|---|
+| **Compiler** | Quick Pascal scratchpad — write, run, see output instantly |
+| **Calculator** | Expression evaluator for any numeric expression |
+| **Learn Pascal** | 10 real-world Pascal lessons, 30 challenges — OOP, algorithms, patterns |
+| **Learn Python** | 10 real-world Python lessons, 30 challenges — comprehensions, JSON, APIs |
+| **Projects** | Full project IDE with file tree, runner dropdown, recent files |
+| **Forms** | Visual form designer for `.mdfrm` files |
 
-A slightly bigger taste — `caseof` switching on a string:
-
-```pascal
-program AnimalSounds;
-
-procedure Describe(animal: String);
-begin
-  write(animal, ' -> ');
-  caseof animal of
-    'cat'           : writeln('Meow!');
-    'dog', 'hound'  : writeln('Woof!');
-    'cow'           : writeln('Moo!');
-  else
-    writeln('Unknown!');
-  end;
-end;
-
-begin
-  Describe('cat');
-  Describe('dog');
-  Describe('unicorn');
-end.
-```
-
-Recursion works as you'd expect:
-
-```pascal
-function Fact(n: Integer): Integer;
-begin
-  if n <= 1 then Result := 1
-  else Result := n * Fact(n - 1);
-end;
-
-var i : Integer;
-begin
-  for i := 0 to 10 do writeln(i, '! = ', Fact(i));
-end.
-```
+Learn tabs appear **dynamically** — install a runner pack and the matching
+Learn tab appears on next startup. Remove it and the tab disappears.
 
 ---
 
-## Project structure
+## Runner Pack System
 
-A Pythia project lives in a folder with one `.mdproj` file and any number of `.mdp` library files and `.mdfrm` form definition files.
-
-The `.mdproj` is an INI-style file with three sections:
+Pythia's language support is fully pluggable. A runner pack is a single
+`.ini` file in the `Runners\` folder:
 
 ```ini
-[Project]
-Name=MyApp
+[Meta]
+Name=Python
+Code=py
+Extension=.py
 
-[Files]
-0=MathLib.mdp
-1=Strings.mdp
+[Runtime]
+Mode=shell
+Command=python
+Args={file}
 
-[Source]
-program MyApp;
-uses
-  'MathLib.mdp',
-  'Strings.mdp';
-begin
-  writeln(Add(2, 3));
-end.
+[Detect]
+TestCommand=python --version
 ```
 
-The main program lives in `[Source]`, exactly like a real Delphi `.dpr`. Library `.mdp` files contain declarations only (no `begin..end`).
+Drop it in, restart Pythia, done. The new language appears in:
+- The runner dropdown in the Projects toolbar
+- The Learn tab (if a curriculum exists for that language)
+
+See `Runners\README.md` for the full format reference.
+
+---
+
+## Language Pack System
+
+The UI is fully translated into 13 languages. Select your language in
+**View → Preferences → Language**.
+
+| Built-in languages |
+|---|
+| English · Português · العربية · Deutsch · Español · Español Latinoamérica |
+| Français · हिन्दी · Italiano · 日本語 · 한국어 · Українська · 简体中文 |
+
+External language packs: drop a `.ini` file in `LangPacks\` and restart.
+Use the **Language Pack Editor** in the Projects tab → Tools to create your own.
+
+---
+
+## File Types
+
+| Extension | Description |
+|---|---|
+| `.mdp` | Pythia Pascal source file |
+| `.mdproj` | Pythia project file (contains source + file list) |
+| `.mdfrm` | Pythia form definition |
+| `.runner.ini` | Runner pack (language plugin) |
+| `.ini` in `LangPacks\` | Language pack (UI translation) |
 
 ---
 
 ## Architecture
 
 ```
-Pythia/
-├── Pythia.dpr            # project entry point
-├── UMainForm.pas             # main VCL form with the tab pages
-├── ULexer.pas                # source → tokens
-├── UParser.pas                # tokens → AST (recursive descent)
-├── UAST.pas                  # AST node definitions
-├── UValidator.pas            # post-parse semantic checks
-├── UInterpreter.pas          # tree-walking interpreter
-├── UObjectRuntime.pas        # class/object runtime support
-├── UUnitLoader.pas           # uses clause / .mdp import
-├── UGraphics.pas             # Gfx* builtins
-├── USQLite.pas               # Db* builtins (via sqlite3.dll)
-├── UProjectTab.pas           # Projects tab
-├── UFormBuilderTab.pas       # Forms tab
-├── UFormDef.pas              # .mdfrm form definition model
-├── UMacroTab.pas             # Macros tab
-├── UMacroLibrary.pas         # macro storage
-├── ULearnTab.pas             # Learn Delphi tab
-├── UExampleProjects.pas      # built-in example projects
-├── UAboutDialog.pas          # About + Programmer's Guide
-├── UTheme.pas                # VCL Styles wrapper
-└── UPreferencesDialog.pas    # View → Preferences
+Pythia.exe
+├── UMainForm         — VCL shell, dynamic tab creation
+├── UInterpreter      — Tree-walking Pascal interpreter
+├── ULexer / UParser / UAST — Pascal front-end
+├── URunnerManager    — Pluggable language runner system
+├── ULanguage         — i18n system (13 languages + external packs)
+├── ULearnTabBase     — Runner-aware learn tab engine
+├── UPascalCurriculum — 10 Pascal lessons, 30 real-world challenges
+├── UPythonCurriculum — 10 Python lessons, 30 real-world challenges
+├── UProjectTab       — Project IDE with runner dropdown
+├── UGraphics         — GfxOpen window (Pascal graphics programs)
+├── USQLite           — SQLite builtins (DbOpen, DbExec, DbQuery)
+└── UTheme            — VCL Styles dark/light/system theme
 ```
 
 ---
 
-## License
+## Português / Portuguese
 
-GPL-3.0. See [LICENSE](LICENSE) for the full text.
+Pythia é um IDE leve para aprender e criar scripts em múltiplas linguagens.
+O interpretador Pascal está embutido no executável. Python, Lua e outras
+linguagens se conectam via o sistema de runner packs — basta colocar um
+arquivo `.runner.ini` na pasta `Runners\` e reiniciar.
 
-This means: you can use, modify, and distribute Pythia freely, as long as derivative works remain GPL-3.0 licensed and their source is made available.
+**"Py" em Pythia representa Python** — o nome reflete tanto as raízes em
+Delphi/Pascal quanto o suporte crescente ao Python.
 
 ---
 
-## Author
+## License / Licença
 
-Pythia is developed by **Nomidor Software, LLC.**
+GPL v3 — see [LICENSE](LICENSE) or https://www.gnu.org/licenses/gpl-3.0.html
 
-For bugs, suggestions, or contributions, open an issue or pull request on GitHub.
+Copyright © 2026 Nomidor Software, LLC

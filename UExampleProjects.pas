@@ -1,37 +1,23 @@
 ﻿unit UExampleProjects;
 
 // =============================================================================
-// Pythia — A Pascal Learning Environment
+// Pythia -- Multi-Language Learning IDE
 // Copyright (C) 2026 Nomidor Software, LLC.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// See the LICENSE file or https://www.gnu.org/licenses/gpl-3.0.html
+// GPL v3 -- see/veja https://www.gnu.org/licenses/gpl-3.0.html
 // =============================================================================
-
-// =============================================================================
-//  UExampleProjects.pas  —  30 fully-documented Pythia example projects
 //
-//  Every example is a self-contained .mdp source string with:
-//    • A header block explaining what the program does and what it teaches
-//    • Comments on every non-trivial line
-//    • Deliberate teaching moments called out with  // *** NOTE: ...
+//  UExampleProjects.pas  --  Real-world Pythia example projects
+//                            Projetos de exemplo do mundo real para o Pythia
 //
-//  Used by UProjectTab to populate the Examples panel.
-// =============================================================================
-
-// =============================================================================
-// [PT-BR] UExampleProjects.pas  —  30 projetos de exemplo do Pythia totalmente documentados
+//  English:
+//    Each example is a self-contained .mdp program demonstrating a real
+//    programming technique used in professional software development.
+//    Categories: Data Processing, Algorithms, Object-Oriented, Systems & Tools,
+//                Games & Fun
 //
-//  Cada exemplo é uma string de código-fonte .mdp autocontida com:
-//    • Um bloco de cabeçalho explicando o que o programa faz e o que ensina
-//    • Comentários em cada linha não trivial
-//    • Momentos de ensino destacados com  // *** NOTA: ...
-//
-//  Usado pelo UProjectTab para popular o painel de Exemplos.
+//  Portugues:
+//    Cada exemplo e um programa .mdp completo demonstrando uma tecnica de
+//    programacao real usada no desenvolvimento profissional de software.
 // =============================================================================
 
 interface
@@ -39,20 +25,19 @@ interface
 uses System.SysUtils, System.Classes, System.Generics.Collections;
 
 type
-  // One file within a multi-file example project
   TExampleFile = record
-    FileName : string;   // e.g. 'Main.mdp' or 'MathLib.mdp'
-    Source   : string;   // file contents
-    IsMain   : Boolean;  // True = open this in the editor on load
+    FileName : string;
+    Source   : string;
+    IsMain   : Boolean;
   end;
 
   TExampleProject = record
-    Name        : string;             // display name
-    Category    : string;             // grouping label
-    Description : string;             // one-line summary shown in the tree
-    Source      : string;             // main source (single-file projects)
-    Files       : TArray<TExampleFile>; // all files (multi-file projects)
-    IsMultiFile : Boolean;            // True = use Files[], False = use Source
+    Name        : string;
+    Category    : string;
+    Description : string;
+    Source      : string;
+    Files       : TArray<TExampleFile>;
+    IsMultiFile : Boolean;
   end;
 
   TExampleLibrary = class
@@ -64,7 +49,7 @@ type
     destructor  Destroy; override;
     function Count : Integer;
     function Items(I: Integer) : TExampleProject;
-    function Categories : TStringList;   // caller frees
+    function Categories : TStringList;
   end;
 
 // =============================================================================
@@ -91,24 +76,16 @@ function TExampleLibrary.Items(I: Integer): TExampleProject;
 begin Result := FList[I]; end;
 
 function TExampleLibrary.Categories: TStringList;
-var
-  I   : Integer;
-  Cat : string;
+var I : Integer;
 begin
   Result := TStringList.Create;
   Result.Duplicates := dupIgnore;
   Result.Sorted     := False;
   for I := 0 to FList.Count - 1 do
-  begin
-    Cat := FList[I].Category;
-    if Result.IndexOf(Cat) < 0 then
-      Result.Add(Cat);
-  end;
+    if Result.IndexOf(FList[I].Category) < 0 then
+      Result.Add(FList[I].Category);
 end;
 
-// ---------------------------------------------------------------------------
-//  Helper to add an example cleanly
-// ---------------------------------------------------------------------------
 procedure TExampleLibrary.Build;
 
   procedure Add(const Name, Cat, Desc, Src: string);
@@ -123,4942 +100,738 @@ procedure TExampleLibrary.Build;
     FList.Add(E);
   end;
 
-  procedure AddMulti(const Name, Cat, Desc: string;
-                     const Files: array of TExampleFile);
-  var
-    E : TExampleProject;
-    I : Integer;
-  begin
-    E.Name        := Name;
-    E.Category    := Cat;
-    E.Description := Desc;
-    E.Source      := '';
-    E.IsMultiFile := True;
-    SetLength(E.Files, Length(Files));
-    for I := 0 to High(Files) do
-      E.Files[I] := Files[I];
-    FList.Add(E);
-  end;
-
-  function F(const FileName, Src: string; IsMain: Boolean = False): TExampleFile;
-  begin
-    Result.FileName := FileName;
-    Result.Source   := Src;
-    Result.IsMain   := IsMain;
-  end;
+const NL = #13#10;
 
 begin
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: Beginners
-// ═══════════════════════════════════════════════════════════════════════════
+// =============================================================================
+//  DATA PROCESSING / PROCESSAMENTO DE DADOS
+// =============================================================================
+
+Add('CSV Analyser', 'Data Processing',
+  'Read a CSV, compute mean and standard deviation, find outliers',
+  '// CSV ANALYSER' + NL +
+  '// Reads comma-separated revenue data, computes statistics,' + NL +
+  '// identifies outliers beyond 2 standard deviations.' + NL +
+  '// Teaches: file I/O, dynamic arrays, statistical formulas' + NL +
+  NL +
+  'var' + NL +
+  '  f           : TextFile;' + NL +
+  '  line, field : String;' + NL +
+  '  values      : array of Double;' + NL +
+  '  n, i, p     : Integer;' + NL +
+  '  v, sum, mean, variance, stddev : Double;' + NL +
+  'begin' + NL +
+  '  // Write sample CSV / Escreve CSV de exemplo' + NL +
+  '  AssignFile(f, ''sales.csv''); Rewrite(f);' + NL +
+  '  writeln(f, ''Month,Revenue'');' + NL +
+  '  writeln(f, ''Jan,45000'');' + NL +
+  '  writeln(f, ''Feb,52000'');' + NL +
+  '  writeln(f, ''Mar,48000'');' + NL +
+  '  writeln(f, ''Apr,51000'');' + NL +
+  '  writeln(f, ''May,120000'');  // outlier' + NL +
+  '  writeln(f, ''Jun,49000'');' + NL +
+  '  writeln(f, ''Jul,53000'');' + NL +
+  '  writeln(f, ''Aug,47000'');' + NL +
+  '  CloseFile(f);' + NL +
+  NL +
+  '  // Parse CSV / Analisa CSV' + NL +
+  '  Reset(f);' + NL +
+  '  readln(f, line);  // skip header' + NL +
+  '  n := 0;' + NL +
+  '  while not Eof(f) do' + NL +
+  '  begin' + NL +
+  '    readln(f, line);' + NL +
+  '    p := Pos('','', line);' + NL +
+  '    if p > 0 then' + NL +
+  '    begin' + NL +
+  '      field := Copy(line, p + 1, Length(line));' + NL +
+  '      v := StrToFloat(Trim(field));' + NL +
+  '      SetLength(values, n + 1);' + NL +
+  '      values[n] := v;' + NL +
+  '      Inc(n);' + NL +
+  '    end;' + NL +
+  '  end;' + NL +
+  '  CloseFile(f);' + NL +
+  NL +
+  '  // Statistics / Estatisticas' + NL +
+  '  sum := 0;' + NL +
+  '  for i := 0 to n - 1 do sum := sum + values[i];' + NL +
+  '  mean := sum / n;' + NL +
+  '  variance := 0;' + NL +
+  '  for i := 0 to n - 1 do' + NL +
+  '    variance := variance + (values[i] - mean) * (values[i] - mean);' + NL +
+  '  stddev := Sqrt(variance / n);' + NL +
+  NL +
+  '  writeln(''=== Revenue Analysis ==='');' + NL +
+  '  writeln(Format(''Mean:   $%10.0f'', [mean]));' + NL +
+  '  writeln(Format(''StdDev: $%10.0f'', [stddev]));' + NL +
+  '  writeln;' + NL +
+  '  writeln(''Outliers (> 2 std deviations):'');' + NL +
+  '  for i := 0 to n - 1 do' + NL +
+  '    if Abs(values[i] - mean) > 2 * stddev then' + NL +
+  '      writeln(Format(''  Month %d: $%.0f *** OUTLIER'', [i + 1, values[i]]));' + NL +
+  'end.'
+);
+
+Add('INI Config Manager', 'Data Processing',
+  'Load, validate and save application settings via INI file',
+  '// INI CONFIG MANAGER' + NL +
+  '// Professional config pattern: write defaults on first run,' + NL +
+  '// validate on load, report problems.' + NL +
+  NL +
+  'var' + NL +
+  '  cfg         : String;' + NL +
+  '  host, theme : String;' + NL +
+  '  port, retry : Integer;' + NL +
+  'begin' + NL +
+  '  cfg := GetAppPath + ''myapp.ini'';' + NL +
+  NL +
+  '  // Write defaults if first run / Padrao na primeira execucao' + NL +
+  '  if not FileExists(cfg) then' + NL +
+  '  begin' + NL +
+  '    writeln(''First run -- writing defaults...'');' + NL +
+  '    IniWriteStr(cfg, ''Server'', ''Host'',       ''api.example.com'');' + NL +
+  '    IniWriteInt(cfg, ''Server'', ''Port'',       8443);' + NL +
+  '    IniWriteInt(cfg, ''Server'', ''RetryCount'', 3);' + NL +
+  '    IniWriteStr(cfg, ''UI'',     ''Theme'',      ''dark'');' + NL +
+  '  end;' + NL +
+  NL +
+  '  // Load / Carrega' + NL +
+  '  host  := IniReadStr(cfg, ''Server'', ''Host'',       ''localhost'');' + NL +
+  '  port  := IniReadInt(cfg, ''Server'', ''Port'',       80);' + NL +
+  '  retry := IniReadInt(cfg, ''Server'', ''RetryCount'', 1);' + NL +
+  '  theme := IniReadStr(cfg, ''UI'',     ''Theme'',      ''light'');' + NL +
+  NL +
+  '  // Validate / Valida' + NL +
+  '  if (port < 1) or (port > 65535) then' + NL +
+  '  begin' + NL +
+  '    writeln(''WARNING: Invalid port -- resetting to 443'');' + NL +
+  '    port := 443;' + NL +
+  '    IniWriteInt(cfg, ''Server'', ''Port'', port);' + NL +
+  '  end;' + NL +
+  NL +
+  '  writeln(''=== Configuration Loaded ==='');' + NL +
+  '  writeln(''Server:  '', host, '':'', port);' + NL +
+  '  writeln(''Retries: '', retry);' + NL +
+  '  writeln(''Theme:   '', theme);' + NL +
+  'end.'
+);
+
+Add('Word Frequency Counter', 'Data Processing',
+  'Tokenise text, count word frequencies, print top results',
+  '// WORD FREQUENCY COUNTER' + NL +
+  '// Real use: log analysis, text mining, keyword extraction.' + NL +
+  '// Demonstrates: string tokenisation, parallel arrays, sort.' + NL +
+  NL +
+  'var' + NL +
+  '  text        : String;' + NL +
+  '  words, keys : array of String;' + NL +
+  '  counts      : array of Integer;' + NL +
+  '  word, cur   : String;' + NL +
+  '  i, j, p     : Integer;' + NL +
+  '  found       : Boolean;' + NL +
+  '  tmpS        : String;' + NL +
+  '  tmpI        : Integer;' + NL +
+  'begin' + NL +
+  '  text := ''to be or not to be that is the question '' +' + NL +
+  '          ''whether tis nobler in the mind to suffer '' +' + NL +
+  '          ''the slings and arrows of outrageous fortune'';' + NL +
+  NL +
+  '  // Tokenise by spaces / Tokeniza por espacos' + NL +
+  '  SetLength(words, 0);' + NL +
+  '  cur := LowerCase(text) + '' '';' + NL +
+  '  p   := Pos('' '', cur);' + NL +
+  '  while p > 0 do' + NL +
+  '  begin' + NL +
+  '    word := Trim(Copy(cur, 1, p - 1));' + NL +
+  '    if word <> '''' then' + NL +
+  '    begin' + NL +
+  '      SetLength(words, Length(words) + 1);' + NL +
+  '      words[High(words)] := word;' + NL +
+  '    end;' + NL +
+  '    cur := Copy(cur, p + 1, Length(cur));' + NL +
+  '    p   := Pos('' '', cur);' + NL +
+  '  end;' + NL +
+  NL +
+  '  // Count frequencies / Conta frequencias' + NL +
+  '  SetLength(keys, 0); SetLength(counts, 0);' + NL +
+  '  for i := 0 to High(words) do' + NL +
+  '  begin' + NL +
+  '    found := False;' + NL +
+  '    for j := 0 to High(keys) do' + NL +
+  '      if keys[j] = words[i] then' + NL +
+  '      begin Inc(counts[j]); found := True; Break; end;' + NL +
+  '    if not found then' + NL +
+  '    begin' + NL +
+  '      SetLength(keys, Length(keys) + 1);' + NL +
+  '      SetLength(counts, Length(counts) + 1);' + NL +
+  '      keys[High(keys)]     := words[i];' + NL +
+  '      counts[High(counts)] := 1;' + NL +
+  '    end;' + NL +
+  '  end;' + NL +
+  NL +
+  '  // Sort by count descending / Ordena por contagem decrescente' + NL +
+  '  for i := 0 to High(keys) - 1 do' + NL +
+  '    for j := 0 to High(keys) - 1 - i do' + NL +
+  '      if counts[j] < counts[j + 1] then' + NL +
+  '      begin' + NL +
+  '        tmpI := counts[j]; counts[j] := counts[j+1]; counts[j+1] := tmpI;' + NL +
+  '        tmpS := keys[j];   keys[j]   := keys[j+1];   keys[j+1]   := tmpS;' + NL +
+  '      end;' + NL +
+  NL +
+  '  writeln(''Top words:'');' + NL +
+  '  for i := 0 to Min(9, High(keys)) do' + NL +
+  '    writeln(Format(''  %-15s %d'', [keys[i], counts[i]]));' + NL +
+  'end.'
+);
+
+// =============================================================================
+//  ALGORITHMS / ALGORITMOS
+// =============================================================================
+
+Add('Binary Search', 'Algorithms',
+  'O(log n) search vs O(n) linear search -- see the difference',
+  '// BINARY SEARCH vs LINEAR SEARCH' + NL +
+  '// Binary search finds in ~10 steps what linear takes ~500 steps.' + NL +
+  '// Requirement: array must be sorted.' + NL +
+  NL +
+  'function LinearSearch(var Arr: array of Integer; N, Target: Integer): Integer;' + NL +
+  'var i : Integer;' + NL +
+  'begin' + NL +
+  '  Result := -1;' + NL +
+  '  for i := 0 to N - 1 do' + NL +
+  '    if Arr[i] = Target then begin Result := i; Exit; end;' + NL +
+  'end;' + NL +
+  NL +
+  'function BinarySearch(var Arr: array of Integer; N, Target: Integer): Integer;' + NL +
+  'var lo, hi, mid : Integer;' + NL +
+  'begin' + NL +
+  '  lo := 0; hi := N - 1; Result := -1;' + NL +
+  '  while lo <= hi do' + NL +
+  '  begin' + NL +
+  '    mid := (lo + hi) div 2;' + NL +
+  '    if    Arr[mid] = Target then begin Result := mid; Exit; end' + NL +
+  '    else if Arr[mid] < Target then lo := mid + 1' + NL +
+  '    else                           hi := mid - 1;' + NL +
+  '  end;' + NL +
+  'end;' + NL +
+  NL +
+  'var' + NL +
+  '  data   : array of Integer;' + NL +
+  '  i, idx : Integer;' + NL +
+  'begin' + NL +
+  '  SetLength(data, 1000);' + NL +
+  '  for i := 0 to 999 do data[i] := i * 2;  // even numbers 0..1998' + NL +
+  NL +
+  '  idx := LinearSearch(data, 1000, 842);' + NL +
+  '  writeln(''Linear search for 842: index = '', idx);' + NL +
+  NL +
+  '  idx := BinarySearch(data, 1000, 842);' + NL +
+  '  writeln(''Binary search for 842: index = '', idx);' + NL +
+  NL +
+  '  writeln(''Linear worst case:  1000 comparisons'');' + NL +
+  '  writeln(''Binary worst case:    10 comparisons (log2 1000 = 10)'');' + NL +
+  'end.'
+);
+
+Add('QuickSort', 'Algorithms',
+  'In-place O(n log n) sort with Lomuto partition',
+  '// QUICKSORT -- O(n log n) average, O(1) extra space' + NL +
+  '// One of the fastest general-purpose sorting algorithms.' + NL +
+  '// Demonstrates: recursion, in-place partitioning, var params.' + NL +
+  NL +
+  'procedure Swap(var A, B: Integer);' + NL +
+  'var T : Integer;' + NL +
+  'begin T := A; A := B; B := T; end;' + NL +
+  NL +
+  'function Partition(var Arr: array of Integer; Lo, Hi: Integer): Integer;' + NL +
+  'var pivot, i, j : Integer;' + NL +
+  'begin' + NL +
+  '  pivot := Arr[Hi]; i := Lo - 1;' + NL +
+  '  for j := Lo to Hi - 1 do' + NL +
+  '    if Arr[j] <= pivot then' + NL +
+  '    begin Inc(i); Swap(Arr[i], Arr[j]); end;' + NL +
+  '  Swap(Arr[i + 1], Arr[Hi]);' + NL +
+  '  Result := i + 1;' + NL +
+  'end;' + NL +
+  NL +
+  'procedure QuickSort(var Arr: array of Integer; Lo, Hi: Integer);' + NL +
+  'var p : Integer;' + NL +
+  'begin' + NL +
+  '  if Lo < Hi then' + NL +
+  '  begin' + NL +
+  '    p := Partition(Arr, Lo, Hi);' + NL +
+  '    QuickSort(Arr, Lo, p - 1);' + NL +
+  '    QuickSort(Arr, p + 1, Hi);' + NL +
+  '  end;' + NL +
+  'end;' + NL +
+  NL +
+  'var data : array[0..11] of Integer; i : Integer;' + NL +
+  'begin' + NL +
+  '  data[0]:=64; data[1]:=25; data[2]:=12; data[3]:=22; data[4]:=11;' + NL +
+  '  data[5]:=90; data[6]:=45; data[7]:=33; data[8]:=7;  data[9]:=88;' + NL +
+  '  data[10]:=55; data[11]:=3;' + NL +
+  '  write(''Before: '');' + NL +
+  '  for i := 0 to 11 do write(data[i], '' ''); writeln;' + NL +
+  '  QuickSort(data, 0, 11);' + NL +
+  '  write(''After:  '');' + NL +
+  '  for i := 0 to 11 do write(data[i], '' ''); writeln;' + NL +
+  'end.'
+);
+
+Add('Memoized Fibonacci', 'Algorithms',
+  'Cache results to turn exponential time into linear',
+  '// MEMOIZED FIBONACCI' + NL +
+  '// Naive Fib(40) makes 300+ million recursive calls.' + NL +
+  '// Memoized version makes exactly 40 calls.' + NL +
+  '// Demonstrates: caching, Int64, performance engineering.' + NL +
+  NL +
+  'var cache : array[0..92] of Int64;' + NL +
+  NL +
+  'function Fib(n: Integer): Int64;' + NL +
+  'begin' + NL +
+  '  if n <= 1 then begin Result := n; Exit; end;' + NL +
+  '  if cache[n] >= 0 then begin Result := cache[n]; Exit; end;' + NL +
+  '  cache[n] := Fib(n - 1) + Fib(n - 2);' + NL +
+  '  Result   := cache[n];' + NL +
+  'end;' + NL +
+  NL +
+  'var i : Integer;' + NL +
+  'begin' + NL +
+  '  for i := 0 to 92 do cache[i] := -1;' + NL +
+  '  for i := 0 to 15 do' + NL +
+  '    writeln(''Fib('', i, '') = '', Fib(i));' + NL +
+  '  writeln;' + NL +
+  '  writeln(''Fib(50) = '', Fib(50));' + NL +
+  '  writeln(''Fib(92) = '', Fib(92), ''  (largest in Int64)'');' + NL +
+  'end.'
+);
+
+Add('Run-Length Encoding', 'Algorithms',
+  'Compress and decompress text using RLE -- used in BMP, fax',
+  '// RUN-LENGTH ENCODING (RLE)' + NL +
+  '// Used in: BMP files, fax compression, simple data streams.' + NL +
+  '// AAABBBCC -> 3A3B2C    then back to AAABBBCC.' + NL +
+  NL +
+  'function RLEncode(s: String): String;' + NL +
+  'var i, count : Integer; cur : Char;' + NL +
+  'begin' + NL +
+  '  Result := ''''; if Length(s) = 0 then Exit;' + NL +
+  '  cur := s[1]; count := 1;' + NL +
+  '  for i := 2 to Length(s) do' + NL +
+  '    if s[i] = cur then Inc(count)' + NL +
+  '    else begin Result := Result + IntToStr(count) + cur; cur := s[i]; count := 1; end;' + NL +
+  '  Result := Result + IntToStr(count) + cur;' + NL +
+  'end;' + NL +
+  NL +
+  'function RLDecode(s: String): String;' + NL +
+  'var i, count : Integer; numStr : String;' + NL +
+  'begin' + NL +
+  '  Result := ''''; i := 1;' + NL +
+  '  while i <= Length(s) do' + NL +
+  '  begin' + NL +
+  '    numStr := '''';' + NL +
+  '    while (i <= Length(s)) and (s[i] >= ''0'') and (s[i] <= ''9'') do' + NL +
+  '    begin numStr := numStr + s[i]; Inc(i); end;' + NL +
+  '    if i <= Length(s) then' + NL +
+  '    begin' + NL +
+  '      count  := StrToIntDef(numStr, 1);' + NL +
+  '      Result := Result + StringOfChar(s[i], count);' + NL +
+  '      Inc(i);' + NL +
+  '    end;' + NL +
+  '  end;' + NL +
+  'end;' + NL +
+  NL +
+  'var original, encoded, decoded : String; ratio : Double;' + NL +
+  'begin' + NL +
+  '  original := ''AAAAABBBCCDDDDDDDDEEEEEEEEEEEEEEEFGGG'';' + NL +
+  '  encoded  := RLEncode(original);' + NL +
+  '  decoded  := RLDecode(encoded);' + NL +
+  '  ratio    := Length(encoded) / Length(original) * 100;' + NL +
+  '  writeln(''Original: '', original);' + NL +
+  '  writeln(''Encoded:  '', encoded);' + NL +
+  '  writeln(''Decoded:  '', decoded);' + NL +
+  '  writeln(Format(''Ratio: %.0f%% of original'', [ratio]));' + NL +
+  '  writeln(''Correct: '', decoded = original);' + NL +
+  'end.'
+);
+
+// =============================================================================
+//  OBJECT-ORIENTED / ORIENTADO A OBJETOS
+// =============================================================================
+
+Add('Bank Account', 'Object-Oriented',
+  'Class with encapsulation, validation and transaction history',
+  '// BANK ACCOUNT' + NL +
+  '// OOP: private fields, exception handling, transaction log.' + NL +
+  '// Pattern used in every financial application.' + NL +
+  NL +
+  'type' + NL +
+  '  TTransaction = record Kind: String; Amount, Balance: Double; end;' + NL +
+  NL +
+  '  TBankAccount = class' + NL +
+  '  private' + NL +
+  '    FOwner   : String;' + NL +
+  '    FBalance : Double;' + NL +
+  '    FLog     : array of TTransaction;' + NL +
+  '    procedure Log(const Kind: String; Amt, Bal: Double);' + NL +
+  '  public' + NL +
+  '    constructor Create(const Owner: String; Initial: Double);' + NL +
+  '    procedure Deposit (Amount: Double);' + NL +
+  '    procedure Withdraw(Amount: Double);' + NL +
+  '    procedure PrintStatement;' + NL +
+  '    property  Balance : Double read FBalance;' + NL +
+  '  end;' + NL +
+  NL +
+  'procedure TBankAccount.Log(const Kind: String; Amt, Bal: Double);' + NL +
+  'var T : TTransaction;' + NL +
+  'begin' + NL +
+  '  T.Kind := Kind; T.Amount := Amt; T.Balance := Bal;' + NL +
+  '  SetLength(FLog, Length(FLog) + 1); FLog[High(FLog)] := T;' + NL +
+  'end;' + NL +
+  NL +
+  'constructor TBankAccount.Create(const Owner: String; Initial: Double);' + NL +
+  'begin FOwner := Owner; FBalance := 0; Deposit(Initial); end;' + NL +
+  NL +
+  'procedure TBankAccount.Deposit(Amount: Double);' + NL +
+  'begin' + NL +
+  '  if Amount <= 0 then raise Exception.Create(''Amount must be positive'');' + NL +
+  '  FBalance := FBalance + Amount;' + NL +
+  '  Log(''DEP'', Amount, FBalance);' + NL +
+  'end;' + NL +
+  NL +
+  'procedure TBankAccount.Withdraw(Amount: Double);' + NL +
+  'begin' + NL +
+  '  if Amount <= 0 then raise Exception.Create(''Amount must be positive'');' + NL +
+  '  if Amount > FBalance then raise Exception.Create(''Insufficient funds'');' + NL +
+  '  FBalance := FBalance - Amount;' + NL +
+  '  Log(''WDR'', Amount, FBalance);' + NL +
+  'end;' + NL +
+  NL +
+  'procedure TBankAccount.PrintStatement;' + NL +
+  'var i : Integer;' + NL +
+  'begin' + NL +
+  '  writeln(''=== Account: '', FOwner, '' ==='');' + NL +
+  '  writeln(Format(''%-4s %12s %12s'', [''Type'', ''Amount'', ''Balance'']));' + NL +
+  '  writeln(StringOfChar(''-'', 32));' + NL +
+  '  for i := 0 to High(FLog) do' + NL +
+  '    writeln(Format(''%-4s %12.2f %12.2f'',' + NL +
+  '      [FLog[i].Kind, FLog[i].Amount, FLog[i].Balance]));' + NL +
+  '  writeln(StringOfChar(''-'', 32));' + NL +
+  '  writeln(Format(''Balance: %25.2f'', [FBalance]));' + NL +
+  'end;' + NL +
+  NL +
+  'var acc : TBankAccount;' + NL +
+  'begin' + NL +
+  '  acc := TBankAccount.Create(''Alice'', 1000.00);' + NL +
+  '  try' + NL +
+  '    acc.Deposit(500.00);' + NL +
+  '    acc.Withdraw(250.00);' + NL +
+  '    acc.Deposit(75.50);' + NL +
+  '    try acc.Withdraw(5000.00);' + NL +
+  '    except on E: Exception do writeln(''Error: '', E.Message); end;' + NL +
+  '    acc.PrintStatement;' + NL +
+  '  finally acc.Free; end;' + NL +
+  'end.'
+);
+
+Add('Polymorphic Shapes', 'Object-Oriented',
+  'Virtual methods, inheritance, heterogeneous collection',
+  '// POLYMORPHIC SHAPES' + NL +
+  '// Iterate an array of different shapes through a base class.' + NL +
+  '// Each shape.Area/Perimeter calls the correct override.' + NL +
+  NL +
+  'type' + NL +
+  '  TShape = class' + NL +
+  '    Name : String;' + NL +
+  '    constructor Create(const AName: String); begin Name := AName; end;' + NL +
+  '    function Area      : Double; virtual; begin Result := 0; end;' + NL +
+  '    function Perimeter : Double; virtual; begin Result := 0; end;' + NL +
+  '    procedure Describe;' + NL +
+  '    begin writeln(Format(''%-12s Area:%8.2f  Peri:%8.2f'',' + NL +
+  '      [Name, Area, Perimeter])); end;' + NL +
+  '  end;' + NL +
+  NL +
+  '  TCircle = class(TShape)' + NL +
+  '    R : Double;' + NL +
+  '    constructor Create(Radius: Double);' + NL +
+  '    begin inherited Create(''Circle''); R := Radius; end;' + NL +
+  '    function Area      : Double; override;' + NL +
+  '    begin Result := 3.14159265 * R * R; end;' + NL +
+  '    function Perimeter : Double; override;' + NL +
+  '    begin Result := 2 * 3.14159265 * R; end;' + NL +
+  '  end;' + NL +
+  NL +
+  '  TRectangle = class(TShape)' + NL +
+  '    W, H : Double;' + NL +
+  '    constructor Create(Width, Height: Double);' + NL +
+  '    begin inherited Create(''Rectangle''); W := Width; H := Height; end;' + NL +
+  '    function Area      : Double; override; begin Result := W * H; end;' + NL +
+  '    function Perimeter : Double; override; begin Result := 2*(W+H); end;' + NL +
+  '  end;' + NL +
+  NL +
+  '  TTriangle = class(TShape)' + NL +
+  '    A, B, C : Double;' + NL +
+  '    constructor Create(SA, SB, SC: Double);' + NL +
+  '    begin inherited Create(''Triangle''); A:=SA; B:=SB; C:=SC; end;' + NL +
+  '    function Perimeter : Double; override; begin Result := A+B+C; end;' + NL +
+  '    function Area : Double; override;' + NL +
+  '    var s : Double;' + NL +
+  '    begin s := Perimeter/2; Result := Sqrt(s*(s-A)*(s-B)*(s-C)); end;' + NL +
+  '  end;' + NL +
+  NL +
+  'var shapes : array of TShape; i : Integer; total : Double;' + NL +
+  'begin' + NL +
+  '  SetLength(shapes, 4);' + NL +
+  '  shapes[0] := TCircle.Create(5);' + NL +
+  '  shapes[1] := TRectangle.Create(8, 6);' + NL +
+  '  shapes[2] := TTriangle.Create(3, 4, 5);' + NL +
+  '  shapes[3] := TCircle.Create(2.5);' + NL +
+  '  try' + NL +
+  '    writeln(''Shape        Area      Perimeter'');' + NL +
+  '    writeln(StringOfChar(''-'', 40));' + NL +
+  '    total := 0;' + NL +
+  '    for i := 0 to High(shapes) do' + NL +
+  '    begin shapes[i].Describe; total := total + shapes[i].Area; end;' + NL +
+  '    writeln(StringOfChar(''-'', 40));' + NL +
+  '    writeln(Format(''Total area: %8.2f'', [total]));' + NL +
+  '  finally' + NL +
+  '    for i := 0 to High(shapes) do shapes[i].Free;' + NL +
+  '  end;' + NL +
+  'end.'
+);
+
+Add('Observer Pattern', 'Object-Oriented',
+  'Event bus with subscribe/publish -- used in every GUI framework',
+  '// OBSERVER PATTERN -- Event Bus' + NL +
+  '// Powers: GUI events, plugin systems, game engines, messaging.' + NL +
+  '// Subscribe handlers to named events; publish fires all of them.' + NL +
+  NL +
+  'type' + NL +
+  '  THandlerProc = procedure;' + NL +
+  '  TEntry = record Name: String; Handler: THandlerProc; end;' + NL +
+  '  TEventBus = class' + NL +
+  '  private' + NL +
+  '    FList : array of TEntry;' + NL +
+  '  public' + NL +
+  '    procedure Subscribe(const Name: String; Handler: THandlerProc);' + NL +
+  '    procedure Publish  (const Name: String);' + NL +
+  '  end;' + NL +
+  NL +
+  'procedure TEventBus.Subscribe(const Name: String; Handler: THandlerProc);' + NL +
+  'begin' + NL +
+  '  SetLength(FList, Length(FList) + 1);' + NL +
+  '  FList[High(FList)].Name    := Name;' + NL +
+  '  FList[High(FList)].Handler := Handler;' + NL +
+  'end;' + NL +
+  NL +
+  'procedure TEventBus.Publish(const Name: String);' + NL +
+  'var i : Integer;' + NL +
+  'begin' + NL +
+  '  for i := 0 to High(FList) do' + NL +
+  '    if FList[i].Name = Name then FList[i].Handler;' + NL +
+  'end;' + NL +
+  NL +
+  'procedure OnLogin_Logger;  begin writeln(''Logger: user logged in''); end;' + NL +
+  'procedure OnLogin_Greeter; begin writeln(''Greeter: Welcome back!''); end;' + NL +
+  'procedure OnLogout_Logger; begin writeln(''Logger: user logged out''); end;' + NL +
+  NL +
+  'var bus : TEventBus;' + NL +
+  'begin' + NL +
+  '  bus := TEventBus.Create;' + NL +
+  '  try' + NL +
+  '    bus.Subscribe(''login'',  OnLogin_Logger);' + NL +
+  '    bus.Subscribe(''login'',  OnLogin_Greeter);' + NL +
+  '    bus.Subscribe(''logout'', OnLogout_Logger);' + NL +
+  '    writeln(''--- Login event ---'');' + NL +
+  '    bus.Publish(''login'');' + NL +
+  '    writeln(''--- Logout event ---'');' + NL +
+  '    bus.Publish(''logout'');' + NL +
+  '  finally bus.Free; end;' + NL +
+  'end.'
+);
+
+// =============================================================================
+//  SYSTEMS & TOOLS / SISTEMAS E FERRAMENTAS
+// =============================================================================
+
+Add('State Machine', 'Systems & Tools',
+  'Traffic light FSM -- foundation of parsers, game AI, protocols',
+  '// FINITE STATE MACHINE -- Traffic Light' + NL +
+  '// FSMs power: parsers, game AI, protocol handlers, UI flow.' + NL +
+  '// Demonstrates: enum types, case dispatch, OOP state pattern.' + NL +
+  NL +
+  'type' + NL +
+  '  TLight = (lsRed, lsRedAmber, lsGreen, lsAmber);' + NL +
+  NL +
+  '  TTrafficLight = class' + NL +
+  '  private' + NL +
+  '    FState : TLight;' + NL +
+  '    FTick  : Integer;' + NL +
+  '    function StateName : String;' + NL +
+  '    function Duration  : Integer;' + NL +
+  '  public' + NL +
+  '    constructor Create;' + NL +
+  '    procedure Advance;' + NL +
+  '    procedure Simulate(Ticks: Integer);' + NL +
+  '  end;' + NL +
+  NL +
+  'function TTrafficLight.StateName: String;' + NL +
+  'begin' + NL +
+  '  case FState of' + NL +
+  '    lsRed      : Result := ''RED      '';' + NL +
+  '    lsRedAmber : Result := ''RED+AMBER'';' + NL +
+  '    lsGreen    : Result := ''GREEN    '';' + NL +
+  '    lsAmber    : Result := ''AMBER    '';' + NL +
+  '  end;' + NL +
+  'end;' + NL +
+  NL +
+  'function TTrafficLight.Duration: Integer;' + NL +
+  'begin' + NL +
+  '  case FState of' + NL +
+  '    lsRed: Result:=4; lsRedAmber: Result:=1;' + NL +
+  '    lsGreen: Result:=4; lsAmber: Result:=2;' + NL +
+  '  end;' + NL +
+  'end;' + NL +
+  NL +
+  'constructor TTrafficLight.Create;' + NL +
+  'begin FState := lsRed; FTick := 0; end;' + NL +
+  NL +
+  'procedure TTrafficLight.Advance;' + NL +
+  'begin' + NL +
+  '  case FState of' + NL +
+  '    lsRed:      FState := lsRedAmber;' + NL +
+  '    lsRedAmber: FState := lsGreen;' + NL +
+  '    lsGreen:    FState := lsAmber;' + NL +
+  '    lsAmber:    FState := lsRed;' + NL +
+  '  end;' + NL +
+  '  FTick := 0;' + NL +
+  'end;' + NL +
+  NL +
+  'procedure TTrafficLight.Simulate(Ticks: Integer);' + NL +
+  'var t : Integer;' + NL +
+  'begin' + NL +
+  '  for t := 1 to Ticks do' + NL +
+  '  begin' + NL +
+  '    writeln(Format(''Tick %2d: [%s]'', [t, StateName]));' + NL +
+  '    Inc(FTick);' + NL +
+  '    if FTick >= Duration then Advance;' + NL +
+  '  end;' + NL +
+  'end;' + NL +
+  NL +
+  'var light : TTrafficLight;' + NL +
+  'begin' + NL +
+  '  light := TTrafficLight.Create;' + NL +
+  '  try light.Simulate(20); finally light.Free; end;' + NL +
+  'end.'
+);
+
+Add('Query Builder', 'Systems & Tools',
+  'Fluent interface pattern -- chained method calls build SQL',
+  '// QUERY BUILDER -- Fluent Interface Pattern' + NL +
+  '// Methods return Self so calls chain together naturally.' + NL +
+  '// Used in: ORMs, test frameworks, config builders, DSLs.' + NL +
+  NL +
+  'type' + NL +
+  '  TQuery = class' + NL +
+  '  private' + NL +
+  '    FSelect, FFrom, FWhere, FOrder : String;' + NL +
+  '  public' + NL +
+  '    function SelectClause(const S: String) : TQuery;' + NL +
+  '    begin FSelect := S; Result := Self; end;' + NL +
+  '    function FromClause(const S: String) : TQuery;' + NL +
+  '    begin FFrom := S; Result := Self; end;' + NL +
+  '    function WhereClause(const S: String) : TQuery;' + NL +
+  '    begin FWhere := S; Result := Self; end;' + NL +
+  '    function OrderByClause(const S: String) : TQuery;' + NL +
+  '    begin FOrder := S; Result := Self; end;' + NL +
+  '    function Build : String;' + NL +
+  '    begin' + NL +
+  '      Result := ''SELECT '' + FSelect + '' FROM '' + FFrom;' + NL +
+  '      if FWhere <> '''' then Result := Result + '' WHERE '' + FWhere;' + NL +
+  '      if FOrder <> '''' then Result := Result + '' ORDER BY '' + FOrder;' + NL +
+  '    end;' + NL +
+  '  end;' + NL +
+  NL +
+  'var q : TQuery;' + NL +
+  'begin' + NL +
+  '  q := TQuery.Create;' + NL +
+  '  try' + NL +
+  '    // Fluent chain / Cadeia fluente' + NL +
+  '    writeln(q.SelectClause(''name, salary'')' + NL +
+  '             .FromClause(''employees'')' + NL +
+  '             .WhereClause(''dept = ''''Eng'''''')' + NL +
+  '             .OrderByClause(''salary DESC'')' + NL +
+  '             .Build);' + NL +
+  NL +
+  '    // Different query, same builder / Outra query, mesmo builder' + NL +
+  '    writeln(TQuery.Create' + NL +
+  '             .SelectClause(''product, revenue'')' + NL +
+  '             .FromClause(''sales'')' + NL +
+  '             .WhereClause(''year = 2026'')' + NL +
+  '             .Build);' + NL +
+  '  finally q.Free; end;' + NL +
+  'end.'
+);
+
+// =============================================================================
+//  GAMES & FUN / JOGOS
+// =============================================================================
+
+Add('Sudoku', 'Games & Fun',
+  'Full graphical Sudoku -- load sudoku.mdp from Recent Files',
+  '// SUDOKU' + NL +
+  '// The full Sudoku game is in sudoku.mdp.' + NL +
+  '// Open it from Recent Files or File > Open File.' + NL +
+  '// Features: iterative backtracking generator, Easy/Medium/Hard/Daily,' + NL +
+  '//           hint system, SQLite save/resume (pythia.db).' + NL +
+  NL +
+  'begin' + NL +
+  '  writeln(''Sudoku is a separate file: sudoku.mdp'');' + NL +
+  '  writeln(''Open it from File > Open File...'');' + NL +
+  '  writeln(''Or load from the Recent Files tree.'');' + NL +
+  'end.'
+);
+
+Add('Number Guessing Game', 'Games & Fun',
+  'Simple game loop with random numbers and input',
+  '// NUMBER GUESSING GAME' + NL +
+  '// Classic first game. Demonstrates: random, loops, comparison.' + NL +
+  NL +
+  'var' + NL +
+  '  secret, guess, attempts : Integer;' + NL +
+  '  input                   : String;' + NL +
+  '  playing                 : Boolean;' + NL +
+  'begin' + NL +
+  '  Randomize;' + NL +
+  '  secret   := Random(100) + 1;  // 1..100' + NL +
+  '  attempts := 0;' + NL +
+  '  playing  := True;' + NL +
+  NL +
+  '  writeln(''I picked a number from 1 to 100. Guess it!'');' + NL +
+  '  writeln;' + NL +
+  NL +
+  '  while playing do' + NL +
+  '  begin' + NL +
+  '    input := InputBox(''Guess'', ''Enter your guess (1-100):'', '''');' + NL +
+  '    if input = '''' then begin playing := False; Continue; end;' + NL +
+  NL +
+  '    guess := StrToIntDef(input, 0);' + NL +
+  '    Inc(attempts);' + NL +
+  NL +
+  '    if guess < secret then writeln(''Too low! Try higher.'')' + NL +
+  '    else if guess > secret then writeln(''Too high! Try lower.'')' + NL +
+  '    else' + NL +
+  '    begin' + NL +
+  '      writeln(''CORRECT! The number was '', secret, ''.'');' + NL +
+  '      writeln(''You got it in '', attempts, '' attempts!'');' + NL +
+  '      playing := False;' + NL +
+  '    end;' + NL +
+  '  end;' + NL +
+  'end.'
+);
+
+end;  // Build
 
-Add('Hello World', 'Beginners', 'The classic first program — print a greeting',
-'// ============================================================' + #13#10 +
-'// HELLO WORLD' + #13#10 +
-'// The very first program every programmer writes.' + #13#10 +
-'// Teaches: writeln, strings, begin/end block' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  // writeln prints a line of text to the output window.' + #13#10 +
-'  // Text must be wrapped in single quotes.' + #13#10 +
-'  writeln(''Hello, World!'');' + #13#10 +
-'' + #13#10 +
-'  // You can call writeln as many times as you like.' + #13#10 +
-'  writeln(''Welcome to MiniDelphi!'');' + #13#10 +
-'  writeln(''Learning Delphi is fun.'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Personal Greeter', 'Beginners', 'Ask your name and greet you personally',
-'// ============================================================' + #13#10 +
-'// PERSONAL GREETER' + #13#10 +
-'// Teaches: InputBox, variables, string concatenation' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  name : String;   // will hold the user''s name' + #13#10 +
-'  age  : String;   // will hold their age as text' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  // InputBox pops up a dialog asking the user to type something.' + #13#10 +
-'  // Parameters: prompt message, title, default value' + #13#10 +
-'  name := InputBox(''What is your name?'', ''Greeter'', ''Friend'');' + #13#10 +
-'' + #13#10 +
-'  age := InputBox(''How old are you?'', ''Greeter'', ''0'');' + #13#10 +
-'' + #13#10 +
-'  // The + operator joins strings together (concatenation)' + #13#10 +
-'  ShowMessage(''Hello, '' + name + ''! Happy birthday year '' + age + ''!'');' + #13#10 +
-'' + #13#10 +
-'  writeln(''Name: '', name);' + #13#10 +
-'  writeln(''Age : '', age);' + #13#10 +
-'  writeln(''Nice to meet you, '', name, ''!'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Simple Calculator', 'Beginners', 'Ask two numbers and show all operations',
-'// ============================================================' + #13#10 +
-'// SIMPLE CALCULATOR' + #13#10 +
-'// Teaches: InputBox, StrToFloat, arithmetic operators,' + #13#10 +
-'//          FloatToStr, ShowMessage' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  a, b   : Real;    // the two numbers the user types' + #13#10 +
-'  result : Real;    // stores each calculation result' + #13#10 +
-'  sa, sb : String;  // temporary string versions' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  // Get two numbers from the user via dialog boxes' + #13#10 +
-'  sa := InputBox(''Enter first number:'', ''Calculator'', ''10'');' + #13#10 +
-'  sb := InputBox(''Enter second number:'', ''Calculator'', ''5'');' + #13#10 +
-'' + #13#10 +
-'  // *** NOTE: StrToFloat converts a string like "3.14" into a number' + #13#10 +
-'  a := StrToFloat(sa);' + #13#10 +
-'  b := StrToFloat(sb);' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Calculator Results ==='');' + #13#10 +
-'  writeln(a, '' + '', b, '' = '', a + b);' + #13#10 +
-'  writeln(a, '' - '', b, '' = '', a - b);' + #13#10 +
-'  writeln(a, '' * '', b, '' = '', a * b);' + #13#10 +
-'' + #13#10 +
-'  // *** NOTE: Guard against dividing by zero!' + #13#10 +
-'  if b <> 0 then' + #13#10 +
-'    writeln(a, '' / '', b, '' = '', a / b)' + #13#10 +
-'  else' + #13#10 +
-'    writeln(''Cannot divide by zero!'');' + #13#10 +
-'' + #13#10 +
-'  // div and mod only work on integers, so we use round()' + #13#10 +
-'  writeln(round(a), '' div '', round(b), '' = '', round(a) div round(b));' + #13#10 +
-'  writeln(round(a), '' mod '', round(b), '' = '', round(a) mod round(b));' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: Numbers & Maths
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('FizzBuzz', 'Numbers & Maths', 'The classic programming interview challenge',
-'// ============================================================' + #13#10 +
-'// FIZZBUZZ' + #13#10 +
-'// The classic programming challenge — used in job interviews!' + #13#10 +
-'// Teaches: for loops, mod operator, if/else if chains' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  i : Integer;   // our loop counter' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''FizzBuzz from 1 to 100:'');' + #13#10 +
-'  writeln(''----------------------------'');' + #13#10 +
-'' + #13#10 +
-'  // Count from 1 to 100' + #13#10 +
-'  for i := 1 to 100 do' + #13#10 +
-'  begin' + #13#10 +
-'    // *** NOTE: Check mod 15 FIRST (divisible by both 3 and 5)' + #13#10 +
-'    // If we checked mod 3 first, FizzBuzz would never print!' + #13#10 +
-'    if i mod 15 = 0 then' + #13#10 +
-'      writeln(''FizzBuzz'')' + #13#10 +
-'    else if i mod 3 = 0 then' + #13#10 +
-'      writeln(''Fizz'')' + #13#10 +
-'    else if i mod 5 = 0 then' + #13#10 +
-'      writeln(''Buzz'')' + #13#10 +
-'    else' + #13#10 +
-'      writeln(i);   // just print the number' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Fibonacci Sequence', 'Numbers & Maths', 'Generate Fibonacci numbers — nature''s favourite sequence',
-'// ============================================================' + #13#10 +
-'// FIBONACCI SEQUENCE' + #13#10 +
-'// Each number is the sum of the two before it: 0,1,1,2,3,5,8...' + #13#10 +
-'// Found in sunflowers, shells, galaxies, and stock markets!' + #13#10 +
-'// Teaches: variables, for loops, accumulation pattern' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  a, b, c : Integer;   // three consecutive Fibonacci numbers' + #13#10 +
-'  i       : Integer;   // loop counter' + #13#10 +
-'  howMany : Integer;   // how many to generate' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  howMany := 20;   // change this to generate more or fewer' + #13#10 +
-'' + #13#10 +
-'  writeln(''Fibonacci Sequence ('', howMany, '' numbers):'');' + #13#10 +
-'  writeln(''----------------------------'');' + #13#10 +
-'' + #13#10 +
-'  // Seed the sequence with the first two values' + #13#10 +
-'  a := 0;' + #13#10 +
-'  b := 1;' + #13#10 +
-'  writeln(a);' + #13#10 +
-'  writeln(b);' + #13#10 +
-'' + #13#10 +
-'  // Generate the rest: each new number = previous two added together' + #13#10 +
-'  for i := 3 to howMany do' + #13#10 +
-'  begin' + #13#10 +
-'    c := a + b;      // new number' + #13#10 +
-'    writeln(c);' + #13#10 +
-'    a := b;          // slide the window forward' + #13#10 +
-'    b := c;' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Prime Numbers', 'Numbers & Maths', 'Find all primes up to N using trial division',
-'// ============================================================' + #13#10 +
-'// PRIME NUMBERS' + #13#10 +
-'// A prime is only divisible by 1 and itself: 2,3,5,7,11,13...' + #13#10 +
-'// Teaches: functions, nested loops, early exit with exit' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// A function that tests whether a number is prime.' + #13#10 +
-'// Returns true if prime, false if not.' + #13#10 +
-'function IsPrime(n: Integer): Boolean;' + #13#10 +
-'var' + #13#10 +
-'  i : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  // Numbers less than 2 are never prime' + #13#10 +
-'  if n < 2 then begin Result := false; exit; end;' + #13#10 +
-'' + #13#10 +
-'  // Assume prime until proven otherwise' + #13#10 +
-'  Result := true;' + #13#10 +
-'  i := 2;' + #13#10 +
-'' + #13#10 +
-'  // *** NOTE: We only need to check up to sqrt(n).' + #13#10 +
-'  // If n has a factor bigger than sqrt(n), it must also' + #13#10 +
-'  // have one smaller — so we would have found it already.' + #13#10 +
-'  while i * i <= n do' + #13#10 +
-'  begin' + #13#10 +
-'    if n mod i = 0 then' + #13#10 +
-'    begin' + #13#10 +
-'      Result := false;   // found a factor — not prime!' + #13#10 +
-'      exit;              // no need to check further' + #13#10 +
-'    end;' + #13#10 +
-'    inc(i);' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  n, count : Integer;' + #13#10 +
-'  limit    : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  limit := 100;   // find all primes up to this number' + #13#10 +
-'  count := 0;' + #13#10 +
-'' + #13#10 +
-'  writeln(''Prime numbers up to '', limit, '':'');' + #13#10 +
-'  for n := 2 to limit do' + #13#10 +
-'    if IsPrime(n) then' + #13#10 +
-'    begin' + #13#10 +
-'      write(n, ''  '');' + #13#10 +
-'      inc(count);' + #13#10 +
-'    end;' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  writeln(''Total: '', count, '' primes found.'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Factorial', 'Numbers & Maths', 'Calculate factorials using recursion',
-'// ============================================================' + #13#10 +
-'// FACTORIAL' + #13#10 +
-'// n! = n * (n-1) * (n-2) * ... * 1   e.g. 5! = 120' + #13#10 +
-'// Teaches: recursive functions, the beauty of self-reference' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// Recursive function: it calls ITSELF with a smaller number' + #13#10 +
-'// until it reaches the base case (n=1)' + #13#10 +
-'function Factorial(n: Integer): Integer;' + #13#10 +
-'begin' + #13#10 +
-'  // *** NOTE: Every recursive function needs a BASE CASE' + #13#10 +
-'  // Without it the function would call itself forever!' + #13#10 +
-'  if n <= 1 then' + #13#10 +
-'    Result := 1                           // base case: stop here' + #13#10 +
-'  else' + #13#10 +
-'    Result := n * Factorial(n - 1);       // recursive case' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  i : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Factorial Table:'');' + #13#10 +
-'  writeln(''----------------'');' + #13#10 +
-'  for i := 0 to 12 do' + #13#10 +
-'    writeln(i, ''! = '', Factorial(i));' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Times Tables', 'Numbers & Maths', 'Print a full multiplication grid',
-'// ============================================================' + #13#10 +
-'// TIMES TABLES' + #13#10 +
-'// Generates a complete multiplication grid.' + #13#10 +
-'// Teaches: nested for loops, write vs writeln, formatting' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  row, col : Integer;   // row = first number, col = second' + #13#10 +
-'  product  : Integer;   // their product' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Multiplication Table (1-10):'');' + #13#10 +
-'  writeln(''     1   2   3   4   5   6   7   8   9  10'');' + #13#10 +
-'  writeln(''   ----------------------------------------'');' + #13#10 +
-'' + #13#10 +
-'  // *** NOTE: Nested loops — the outer loop controls rows,' + #13#10 +
-'  // the inner loop controls columns within each row.' + #13#10 +
-'  for row := 1 to 10 do' + #13#10 +
-'  begin' + #13#10 +
-'    // Print the row header (the number on the left)' + #13#10 +
-'    write(row, '' |'');' + #13#10 +
-'' + #13#10 +
-'    // Print each product in the row' + #13#10 +
-'    for col := 1 to 10 do' + #13#10 +
-'    begin' + #13#10 +
-'      product := row * col;' + #13#10 +
-'      // write() (no ln) keeps us on the same line' + #13#10 +
-'      write('' '', product);' + #13#10 +
-'      if product < 10 then write(''  '')     // align single digits' + #13#10 +
-'      else if product < 100 then write('' '') // align double digits' + #13#10 +
-'      else write('''');' + #13#10 +
-'    end;' + #13#10 +
-'    writeln('''');   // end the row with a newline' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Pascal''s Triangle', 'Numbers & Maths', 'Draw the famous number triangle',
-'// ============================================================' + #13#10 +
-'// PASCAL''S TRIANGLE' + #13#10 +
-'// Each number is the sum of the two numbers above it.' + #13#10 +
-'// Row 0: 1  Row 1: 1 1  Row 2: 1 2 1  Row 3: 1 3 3 1' + #13#10 +
-'// Teaches: nested loops, the binomial coefficient formula' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// Computes C(n,k) = n! / (k! * (n-k)!) using a safe iterative method' + #13#10 +
-'function BinCoeff(n, k: Integer): Integer;' + #13#10 +
-'var' + #13#10 +
-'  i, r : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  r := 1;' + #13#10 +
-'  for i := 0 to k - 1 do' + #13#10 +
-'    r := r * (n - i) div (i + 1);' + #13#10 +
-'  Result := r;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  row, col, rows : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  rows := 10;   // how many rows to print' + #13#10 +
-'  writeln(''Pascal''''s Triangle ('', rows, '' rows):'');' + #13#10 +
-'  for row := 0 to rows - 1 do' + #13#10 +
-'  begin' + #13#10 +
-'    for col := 0 to row do' + #13#10 +
-'    begin' + #13#10 +
-'      write(BinCoeff(row, col));' + #13#10 +
-'      if col < row then write(''  '');' + #13#10 +
-'    end;' + #13#10 +
-'    writeln('''');' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Number Base Converter', 'Numbers & Maths', 'Convert decimal to binary, octal, hex',
-'// ============================================================' + #13#10 +
-'// NUMBER BASE CONVERTER' + #13#10 +
-'// Converts a decimal number to binary, octal and hexadecimal.' + #13#10 +
-'// Teaches: while loops, div, mod, string building, caseof' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// Convert n to a string in the given base (2, 8, or 16)' + #13#10 +
-'function ToBase(n, base: Integer): String;' + #13#10 +
-'var' + #13#10 +
-'  digits : String;' + #13#10 +
-'  digit  : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  if n = 0 then begin Result := ''0''; exit; end;' + #13#10 +
-'  digits := '''';' + #13#10 +
-'  while n > 0 do' + #13#10 +
-'  begin' + #13#10 +
-'    digit := n mod base;   // get the rightmost digit' + #13#10 +
-'    n     := n div base;   // remove it' + #13#10 +
-'    // For hex we need letters A-F for values 10-15' + #13#10 +
-'    if digit < 10 then' + #13#10 +
-'      digits := IntToStr(digit) + digits   // prepend digit' + #13#10 +
-'    else' + #13#10 +
-'      digits := Chr(Ord(''A'') + digit - 10) + digits;' + #13#10 +
-'  end;' + #13#10 +
-'  Result := digits;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  n   : Integer;' + #13#10 +
-'  inp : String;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  inp := InputBox(''Enter a decimal number (0-65535):'', ''Base Converter'', ''255'');' + #13#10 +
-'  n   := StrToInt(inp);' + #13#10 +
-'' + #13#10 +
-'  writeln(''Decimal    : '', n);' + #13#10 +
-'  writeln(''Binary     : '', ToBase(n, 2));' + #13#10 +
-'  writeln(''Octal      : '', ToBase(n, 8));' + #13#10 +
-'  writeln(''Hexadecimal: '', ToBase(n, 16));' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: Games & Fun
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('Number Guessing Game', 'Games & Fun', 'Guess the secret number — computer gives hints',
-'// ============================================================' + #13#10 +
-'// NUMBER GUESSING GAME' + #13#10 +
-'// The computer picks a secret number. You guess!' + #13#10 +
-'// Teaches: random, while loops, if/else, InputBox, ShowMessage' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  secret  : Integer;   // the number the computer chose' + #13#10 +
-'  guess   : Integer;   // the player''s guess' + #13#10 +
-'  tries   : Integer;   // how many guesses taken so far' + #13#10 +
-'  inp     : String;    // raw input from InputBox' + #13#10 +
-'  playing : Boolean;   // is the game still going?' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  // *** NOTE: Randomize seeds the random number generator.' + #13#10 +
-'  // Without this you get the same sequence every run!' + #13#10 +
-'  Randomize;' + #13#10 +
-'' + #13#10 +
-'  // Pick a secret number from 1 to 100' + #13#10 +
-'  secret  := Random(100) + 1;' + #13#10 +
-'  tries   := 0;' + #13#10 +
-'  playing := true;' + #13#10 +
-'' + #13#10 +
-'  ShowMessage(''I have picked a number between 1 and 100. Can you guess it?'');' + #13#10 +
-'' + #13#10 +
-'  while playing do' + #13#10 +
-'  begin' + #13#10 +
-'    inp   := InputBox(''Your guess (1-100):'', ''Guessing Game'', '''');' + #13#10 +
-'    guess := StrToInt(inp);' + #13#10 +
-'    inc(tries);' + #13#10 +
-'' + #13#10 +
-'    if guess < secret then' + #13#10 +
-'      ShowMessage(''Too low! Try higher.'')'' )' + #13#10 +
-'    else if guess > secret then' + #13#10 +
-'      ShowMessage(''Too high! Try lower.'')' + #13#10 +
-'    else' + #13#10 +
-'    begin' + #13#10 +
-'      // Correct!' + #13#10 +
-'      ShowMessage(''Correct! You got it in '' + IntToStr(tries) + '' tries!'');' + #13#10 +
-'      playing := false;' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  writeln(''Game over! The number was '', secret);' + #13#10 +
-'  writeln(''You needed '', tries, '' guesses.'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Dice Roller', 'Games & Fun', 'Roll dice and track statistics',
-'// ============================================================' + #13#10 +
-'// DICE ROLLER' + #13#10 +
-'// Rolls a six-sided die many times and counts each result.' + #13#10 +
-'// Teaches: random, arrays (via individual vars), for loops,' + #13#10 +
-'//          accumulation, percentages' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  rolls    : Integer;   // total number of dice rolls' + #13#10 +
-'  i, face  : Integer;   // loop counter, dice face value' + #13#10 +
-'  c1,c2,c3 : Integer;   // counts for faces 1,2,3' + #13#10 +
-'  c4,c5,c6 : Integer;   // counts for faces 4,5,6' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  Randomize;' + #13#10 +
-'  rolls := 600;   // try changing this to 60 or 6000' + #13#10 +
-'  c1 := 0; c2 := 0; c3 := 0;' + #13#10 +
-'  c4 := 0; c5 := 0; c6 := 0;' + #13#10 +
-'' + #13#10 +
-'  writeln(''Rolling a die '', rolls, '' times...'');' + #13#10 +
-'' + #13#10 +
-'  for i := 1 to rolls do' + #13#10 +
-'  begin' + #13#10 +
-'    // Random(6) gives 0..5, so +1 gives 1..6' + #13#10 +
-'    face := Random(6) + 1;' + #13#10 +
-'    case face of' + #13#10 +
-'      1: inc(c1);' + #13#10 +
-'      2: inc(c2);' + #13#10 +
-'      3: inc(c3);' + #13#10 +
-'      4: inc(c4);' + #13#10 +
-'      5: inc(c5);' + #13#10 +
-'      6: inc(c6);' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  writeln(''Results (each face should be ~'', round(100/6), ''%):'');' + #13#10 +
-'  writeln(''Face 1: '', c1, ''  ('', round(c1*100/rolls), ''%)'');' + #13#10 +
-'  writeln(''Face 2: '', c2, ''  ('', round(c2*100/rolls), ''%)'');' + #13#10 +
-'  writeln(''Face 3: '', c3, ''  ('', round(c3*100/rolls), ''%)'');' + #13#10 +
-'  writeln(''Face 4: '', c4, ''  ('', round(c4*100/rolls), ''%)'');' + #13#10 +
-'  writeln(''Face 5: '', c5, ''  ('', round(c5*100/rolls), ''%)'');' + #13#10 +
-'  writeln(''Face 6: '', c6, ''  ('', round(c6*100/rolls), ''%)'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Rock Paper Scissors', 'Games & Fun', 'Play against the computer',
-'// ============================================================' + #13#10 +
-'// ROCK PAPER SCISSORS' + #13#10 +
-'// You vs the computer — best of 5 wins!' + #13#10 +
-'// Teaches: caseof, random, while loops, score tracking' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'function ComputerChoice: String;' + #13#10 +
-'var r : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  r := Random(3);' + #13#10 +
-'  case r of' + #13#10 +
-'    0: Result := ''Rock'';' + #13#10 +
-'    1: Result := ''Paper'';' + #13#10 +
-'    2: Result := ''Scissors'';' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'// Returns 1 if player wins, -1 if computer wins, 0 if draw' + #13#10 +
-'function RoundResult(player, computer: String): Integer;' + #13#10 +
-'begin' + #13#10 +
-'  if player = computer then Result := 0' + #13#10 +
-'  else if ((player = ''Rock'')     and (computer = ''Scissors'')) or' + #13#10 +
-'          ((player = ''Paper'')    and (computer = ''Rock''))     or' + #13#10 +
-'          ((player = ''Scissors'') and (computer = ''Paper'')) then' + #13#10 +
-'    Result := 1' + #13#10 +
-'  else' + #13#10 +
-'    Result := -1;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  player, computer : String;' + #13#10 +
-'  pScore, cScore   : Integer;' + #13#10 +
-'  res              : Integer;' + #13#10 +
-'  playing          : Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  Randomize;' + #13#10 +
-'  pScore := 0; cScore := 0;' + #13#10 +
-'  playing := true;' + #13#10 +
-'  writeln(''=== Rock Paper Scissors — First to 3 wins! ==='');' + #13#10 +
-'' + #13#10 +
-'  while playing do' + #13#10 +
-'  begin' + #13#10 +
-'    player   := InputBox(''Your choice:'', ''Rock / Paper / Scissors'', ''Rock'');' + #13#10 +
-'    computer := ComputerChoice;' + #13#10 +
-'    res      := RoundResult(player, computer);' + #13#10 +
-'' + #13#10 +
-'    write(''You: '', player, ''   Computer: '', computer, ''   -> '');' + #13#10 +
-'    if res = 1  then begin writeln(''You win the round!'');  inc(pScore); end' + #13#10 +
-'    else if res = -1 then begin writeln(''Computer wins!''); inc(cScore); end' + #13#10 +
-'    else writeln(''Draw!'');' + #13#10 +
-'' + #13#10 +
-'    writeln(''Score: You '', pScore, ''  —  Computer '', cScore);' + #13#10 +
-'' + #13#10 +
-'    if (pScore >= 3) or (cScore >= 3) then playing := false;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  if pScore > cScore then ShowMessage(''You WIN the match! Well done!'')' + #13#10 +
-'  else ShowMessage(''Computer wins the match. Better luck next time!'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Coin Flipper', 'Games & Fun', 'Flip coins and track heads vs tails',
-'// ============================================================' + #13#10 +
-'// COIN FLIPPER' + #13#10 +
-'// Flip a coin many times and see if it really is 50/50.' + #13#10 +
-'// Teaches: random, loops, counters, percentages, Confirm' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  heads, tails : Integer;' + #13#10 +
-'  i, flips     : Integer;' + #13#10 +
-'  keepGoing    : Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  Randomize;' + #13#10 +
-'  heads := 0; tails := 0;' + #13#10 +
-'  keepGoing := true;' + #13#10 +
-'' + #13#10 +
-'  while keepGoing do' + #13#10 +
-'  begin' + #13#10 +
-'    flips := StrToInt(InputBox(''How many flips?'', ''Coin Flipper'', ''100''));' + #13#10 +
-'' + #13#10 +
-'    for i := 1 to flips do' + #13#10 +
-'      // Random(2) gives 0 or 1 — we call 0=Heads, 1=Tails' + #13#10 +
-'      if Random(2) = 0 then inc(heads) else inc(tails);' + #13#10 +
-'' + #13#10 +
-'    writeln(''After '', heads + tails, '' flips:'');' + #13#10 +
-'    writeln(''  Heads: '', heads, '' ('', round(heads*100/(heads+tails)), ''%)'');' + #13#10 +
-'    writeln(''  Tails: '', tails, '' ('', round(tails*100/(heads+tails)), ''%)'');' + #13#10 +
-'' + #13#10 +
-'    // *** NOTE: Confirm returns true for Yes, false for No' + #13#10 +
-'    keepGoing := Confirm(''Flip more coins?'');' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  writeln(''Final: Heads='', heads, '' Tails='', tails);' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: Science & Conversion
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('Temperature Converter', 'Science & Conversion', 'Convert between C, F and Kelvin',
-'// ============================================================' + #13#10 +
-'// TEMPERATURE CONVERTER' + #13#10 +
-'// Converts between Celsius, Fahrenheit and Kelvin.' + #13#10 +
-'// Teaches: functions, caseof, InputBox, real arithmetic' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'function CtoF(c: Real): Real;  begin Result := (c * 9/5) + 32;     end;' + #13#10 +
-'function FtoC(f: Real): Real;  begin Result := (f - 32) * 5/9;     end;' + #13#10 +
-'function CtoK(c: Real): Real;  begin Result := c + 273.15;         end;' + #13#10 +
-'function KtoC(k: Real): Real;  begin Result := k - 273.15;         end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  temp, c, f, k : Real;' + #13#10 +
-'  fromUnit       : String;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  fromUnit := InputBox(''Convert FROM which unit? (C / F / K)'', ''Converter'', ''C'');' + #13#10 +
-'  temp     := StrToFloat(InputBox(''Enter temperature:'', ''Converter'', ''100''));' + #13#10 +
-'' + #13#10 +
-'  // *** NOTE: caseof is our MiniDelphi string switch statement' + #13#10 +
-'  caseof UpperCase(fromUnit) of' + #13#10 +
-'    ''C'': begin c := temp; f := CtoF(c); k := CtoK(c); end;' + #13#10 +
-'    ''F'': begin f := temp; c := FtoC(f); k := CtoK(c); end;' + #13#10 +
-'    ''K'': begin k := temp; c := KtoC(k); f := CtoF(c); end;' + #13#10 +
-'  else' + #13#10 +
-'    begin' + #13#10 +
-'      ShowErrorBox(''Unknown unit. Use C, F or K.'');' + #13#10 +
-'      exit;' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Temperature Conversion ==='');' + #13#10 +
-'  writeln(''Celsius    : '', round(c * 100) / 100);' + #13#10 +
-'  writeln(''Fahrenheit : '', round(f * 100) / 100);' + #13#10 +
-'  writeln(''Kelvin     : '', round(k * 100) / 100);' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('BMI Calculator', 'Science & Conversion', 'Calculate Body Mass Index with category',
-'// ============================================================' + #13#10 +
-'// BMI CALCULATOR' + #13#10 +
-'// BMI = weight(kg) / height(m)^2' + #13#10 +
-'// Teaches: real arithmetic, if/else chains, sqr()' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  weight, height, bmi : Real;' + #13#10 +
-'  category            : String;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  weight := StrToFloat(InputBox(''Weight in kg:'', ''BMI'', ''70''));' + #13#10 +
-'  height := StrToFloat(InputBox(''Height in metres (e.g. 1.75):'', ''BMI'', ''1.75''));' + #13#10 +
-'' + #13#10 +
-'  // sqr(x) = x * x' + #13#10 +
-'  bmi := weight / sqr(height);' + #13#10 +
-'' + #13#10 +
-'  // WHO categories' + #13#10 +
-'  if      bmi < 18.5 then category := ''Underweight''' + #13#10 +
-'  else if bmi < 25.0 then category := ''Normal weight''' + #13#10 +
-'  else if bmi < 30.0 then category := ''Overweight''' + #13#10 +
-'  else                    category := ''Obese'';' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== BMI Result ==='');' + #13#10 +
-'  writeln(''Weight   : '', weight, '' kg'');' + #13#10 +
-'  writeln(''Height   : '', height, '' m'');' + #13#10 +
-'  writeln(''BMI      : '', round(bmi * 10) / 10);' + #13#10 +
-'  writeln(''Category : '', category);' + #13#10 +
-'' + #13#10 +
-'  ShowInfoBox(''Your BMI is '' + FloatToStr(round(bmi*10)/10) + '' — '' + category);' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Loan Calculator', 'Science & Conversion', 'Calculate monthly payments and total interest',
-'// ============================================================' + #13#10 +
-'// LOAN CALCULATOR' + #13#10 +
-'// Calculates monthly repayments using the standard formula.' + #13#10 +
-'// Teaches: real maths, exp/ln (for power), financial formulas' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  principal : Real;   // amount borrowed' + #13#10 +
-'  rate      : Real;   // annual interest rate (e.g. 5 for 5%)' + #13#10 +
-'  years     : Real;   // loan term in years' + #13#10 +
-'  monthly   : Real;   // monthly payment' + #13#10 +
-'  r, n      : Real;   // monthly rate, number of payments' + #13#10 +
-'  total     : Real;   // total amount paid back' + #13#10 +
-'  interest  : Real;   // total interest paid' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  principal := StrToFloat(InputBox(''Loan amount ($):'', ''Loan Calculator'', ''10000''));' + #13#10 +
-'  rate      := StrToFloat(InputBox(''Annual interest rate (%):'', ''Loan Calculator'', ''5''));' + #13#10 +
-'  years     := StrToFloat(InputBox(''Loan term (years):'', ''Loan Calculator'', ''5''));' + #13#10 +
-'' + #13#10 +
-'  // Convert annual rate to monthly decimal' + #13#10 +
-'  r := (rate / 100) / 12;' + #13#10 +
-'  n := years * 12;   // total months' + #13#10 +
-'' + #13#10 +
-'  // Standard mortgage formula: M = P * r*(1+r)^n / ((1+r)^n - 1)' + #13#10 +
-'  // *** NOTE: power(base, exp) = exp(exp * ln(base))' + #13#10 +
-'  if r = 0 then' + #13#10 +
-'    monthly := principal / n   // zero interest' + #13#10 +
-'  else' + #13#10 +
-'    monthly := principal * r * power(1+r, n) / (power(1+r, n) - 1);' + #13#10 +
-'' + #13#10 +
-'  total    := monthly * n;' + #13#10 +
-'  interest := total - principal;' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Loan Summary ==='');' + #13#10 +
-'  writeln(''Principal       : $'', round(principal));' + #13#10 +
-'  writeln(''Monthly Payment : $'', round(monthly * 100) / 100);' + #13#10 +
-'  writeln(''Total Paid      : $'', round(total * 100) / 100);' + #13#10 +
-'  writeln(''Total Interest  : $'', round(interest * 100) / 100);' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: Strings & Text
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('Caesar Cipher', 'Strings & Text', 'Encrypt and decrypt text by shifting letters',
-'// ============================================================' + #13#10 +
-'// CAESAR CIPHER' + #13#10 +
-'// Julius Caesar encrypted messages by shifting each letter.' + #13#10 +
-'// A shift of 3: A->D, B->E, ..., Z->C' + #13#10 +
-'// Teaches: string loops, Ord, Chr, mod for wrapping' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// Encrypt a single character with the given shift' + #13#10 +
-'function ShiftChar(ch: String; shift: Integer): String;' + #13#10 +
-'var code : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  // Only shift letters — leave spaces and punctuation alone' + #13#10 +
-'  if (ch >= ''A'') and (ch <= ''Z'') then' + #13#10 +
-'  begin' + #13#10 +
-'    // Ord converts a character to its ASCII number (A=65)' + #13#10 +
-'    // We subtract 65 to get 0-25, shift, wrap with mod, add 65 back' + #13#10 +
-'    code   := (Ord(ch) - 65 + shift) mod 26;' + #13#10 +
-'    if code < 0 then code := code + 26;   // handle negative shifts' + #13#10 +
-'    Result := Chr(code + 65);' + #13#10 +
-'  end' + #13#10 +
-'  else if (ch >= ''a'') and (ch <= ''z'') then' + #13#10 +
-'  begin' + #13#10 +
-'    code   := (Ord(ch) - 97 + shift) mod 26;' + #13#10 +
-'    if code < 0 then code := code + 26;' + #13#10 +
-'    Result := Chr(code + 97);' + #13#10 +
-'  end' + #13#10 +
-'  else' + #13#10 +
-'    Result := ch;   // not a letter — pass through unchanged' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'function Encrypt(msg: String; shift: Integer): String;' + #13#10 +
-'var i : Integer;' + #13#10 +
-'    r : String;' + #13#10 +
-'begin' + #13#10 +
-'  r := '''';' + #13#10 +
-'  for i := 1 to Length(msg) do' + #13#10 +
-'    r := r + ShiftChar(Copy(msg, i, 1), shift);' + #13#10 +
-'  Result := r;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  msg, enc, dec : String;' + #13#10 +
-'  shift         : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  msg   := InputBox(''Enter message to encrypt:'', ''Caesar Cipher'', ''Hello World'');' + #13#10 +
-'  shift := StrToInt(InputBox(''Shift amount (1-25):'', ''Caesar Cipher'', ''13''));' + #13#10 +
-'' + #13#10 +
-'  enc := Encrypt(msg, shift);' + #13#10 +
-'  dec := Encrypt(enc, -shift);   // decrypt = encrypt with negative shift' + #13#10 +
-'' + #13#10 +
-'  writeln(''Original  : '', msg);' + #13#10 +
-'  writeln(''Encrypted : '', enc);' + #13#10 +
-'  writeln(''Decrypted : '', dec);' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Palindrome Checker', 'Strings & Text', 'Check if a word reads the same backwards',
-'// ============================================================' + #13#10 +
-'// PALINDROME CHECKER' + #13#10 +
-'// A palindrome reads the same forwards and backwards.' + #13#10 +
-'// Examples: racecar, level, noon, madam' + #13#10 +
-'// Teaches: string functions, Copy, Length, LowerCase' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// Reverse a string character by character' + #13#10 +
-'function Reverse(s: String): String;' + #13#10 +
-'var i : Integer;' + #13#10 +
-'    r : String;' + #13#10 +
-'begin' + #13#10 +
-'  r := '''';' + #13#10 +
-'  // Walk backwards through the string adding each character' + #13#10 +
-'  for i := Length(s) downto 1 do' + #13#10 +
-'    r := r + Copy(s, i, 1);' + #13#10 +
-'  Result := r;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'// Check if a word is a palindrome (ignores case)' + #13#10 +
-'function IsPalindrome(s: String): Boolean;' + #13#10 +
-'var clean : String;' + #13#10 +
-'begin' + #13#10 +
-'  clean  := LowerCase(s);' + #13#10 +
-'  Result := (clean = Reverse(clean));' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  word    : String;' + #13#10 +
-'  testing : Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  testing := true;' + #13#10 +
-'  writeln(''=== Palindrome Checker ==='');' + #13#10 +
-'  writeln(''(type "quit" to stop)'');' + #13#10 +
-'' + #13#10 +
-'  // Test some well-known palindromes automatically' + #13#10 +
-'  if IsPalindrome(''racecar'') then writeln(''racecar -> Palindrome!'') else writeln(''racecar -> Not a palindrome'');' + #13#10 +
-'  if IsPalindrome(''level'') then writeln(''level -> Palindrome!'') else writeln(''level -> Not a palindrome'');' + #13#10 +
-'  if IsPalindrome(''hello'') then writeln(''hello -> Not a palindrome'') else writeln(''hello -> Palindrome!'');' + #13#10 +
-'  if IsPalindrome(''noon'') then writeln(''noon -> Palindrome!'') else writeln(''noon -> Not a palindrome'');' + #13#10 +
-'  if IsPalindrome(''Delphi'') then writeln(''Delphi -> Not a palindrome'') else writeln(''Delphi -> Palindrome!'');' + #13#10 +
-'' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  while testing do' + #13#10 +
-'  begin' + #13#10 +
-'    word := InputBox(''Enter a word to check:'', ''Palindrome'', '''');' + #13#10 +
-'    if LowerCase(word) = ''quit'' then' + #13#10 +
-'      testing := false' + #13#10 +
-'    else if IsPalindrome(word) then' + #13#10 +
-'      ShowInfoBox(''"'' + word + ''" is a palindrome!'')' + #13#10 +
-'    else' + #13#10 +
-'      ShowInfoBox(''"'' + word + ''" is NOT a palindrome.'');' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Word Counter', 'Strings & Text', 'Count words, characters and vowels in text',
-'// ============================================================' + #13#10 +
-'// WORD COUNTER' + #13#10 +
-'// Analyses a sentence: counts words, chars, vowels.' + #13#10 +
-'// Teaches: string loops, Pos, Copy, Length, counters' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'function CountWords(s: String): Integer;' + #13#10 +
-'var' + #13#10 +
-'  i, count : Integer;' + #13#10 +
-'  inWord   : Boolean;' + #13#10 +
-'begin' + #13#10 +
-'  count  := 0;' + #13#10 +
-'  inWord := false;' + #13#10 +
-'  for i := 1 to Length(s) do' + #13#10 +
-'  begin' + #13#10 +
-'    if Copy(s, i, 1) <> '' '' then' + #13#10 +
-'    begin' + #13#10 +
-'      if not inWord then begin inc(count); inWord := true; end;' + #13#10 +
-'    end' + #13#10 +
-'    else' + #13#10 +
-'      inWord := false;' + #13#10 +
-'  end;' + #13#10 +
-'  Result := count;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'function CountVowels(s: String): Integer;' + #13#10 +
-'var' + #13#10 +
-'  i, count : Integer;' + #13#10 +
-'  ch       : String;' + #13#10 +
-'begin' + #13#10 +
-'  count := 0;' + #13#10 +
-'  s     := LowerCase(s);' + #13#10 +
-'  for i := 1 to Length(s) do' + #13#10 +
-'  begin' + #13#10 +
-'    ch := Copy(s, i, 1);' + #13#10 +
-'    if (ch=''a'') or (ch=''e'') or (ch=''i'') or (ch=''o'') or (ch=''u'') then' + #13#10 +
-'      inc(count);' + #13#10 +
-'  end;' + #13#10 +
-'  Result := count;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var text : String;' + #13#10 +
-'begin' + #13#10 +
-'  text := InputBox(''Enter some text to analyse:'', ''Word Counter'',' + #13#10 +
-'                   ''The quick brown fox jumps over the lazy dog'');' + #13#10 +
-'  writeln(''=== Text Analysis ==='');' + #13#10 +
-'  writeln(''Text       : '', text);' + #13#10 +
-'  writeln(''Characters : '', Length(text));' + #13#10 +
-'  writeln(''Words      : '', CountWords(text));' + #13#10 +
-'  writeln(''Vowels     : '', CountVowels(text));' + #13#10 +
-'  writeln(''Uppercase  : '', UpperCase(text));' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: Algorithms
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('Bubble Sort', 'Algorithms', 'Sort 10 numbers using the bubble sort algorithm',
-'// ============================================================' + #13#10 +
-'// BUBBLE SORT' + #13#10 +
-'// One of the simplest sorting algorithms.' + #13#10 +
-'// Repeatedly swaps adjacent elements that are in the wrong order.' + #13#10 +
-'// Teaches: nested loops, the swap pattern, sorting concepts' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// We simulate an array using 10 separate variables' + #13#10 +
-'// (MiniDelphi does not yet have real arrays)' + #13#10 +
-'var' + #13#10 +
-'  a1,a2,a3,a4,a5   : Integer;' + #13#10 +
-'  a6,a7,a8,a9,a10  : Integer;' + #13#10 +
-'  temp, i, j       : Integer;' + #13#10 +
-'  swapped          : Boolean;' + #13#10 +
-'' + #13#10 +
-'// Print all 10 values on one line' + #13#10 +
-'procedure PrintAll;' + #13#10 +
-'begin' + #13#10 +
-'  write(a1,'' '',a2,'' '',a3,'' '',a4,'' '',a5,'' '');' + #13#10 +
-'  writeln(a6,'' '',a7,'' '',a8,'' '',a9,'' '',a10);' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  // Start with a scrambled list' + #13#10 +
-'  a1:=64; a2:=34; a3:=25; a4:=12; a5:=22;' + #13#10 +
-'  a6:=11; a7:=90; a8:=45; a9:=78; a10:=3;' + #13#10 +
-'' + #13#10 +
-'  write(''Before: ''); PrintAll;' + #13#10 +
-'' + #13#10 +
-'  // *** NOTE: Bubble sort makes multiple passes.' + #13#10 +
-'  // Each pass "bubbles" the largest unsorted element to its place.' + #13#10 +
-'  // We stop early if no swaps happened (already sorted).' + #13#10 +
-'  i := 10;' + #13#10 +
-'  repeat' + #13#10 +
-'    swapped := false;' + #13#10 +
-'    // One pass — compare adjacent pairs' + #13#10 +
-'    if a1  > a2  then begin temp:=a1;  a1 :=a2;  a2 :=temp; swapped:=true; end;' + #13#10 +
-'    if a2  > a3  then begin temp:=a2;  a2 :=a3;  a3 :=temp; swapped:=true; end;' + #13#10 +
-'    if a3  > a4  then begin temp:=a3;  a3 :=a4;  a4 :=temp; swapped:=true; end;' + #13#10 +
-'    if a4  > a5  then begin temp:=a4;  a4 :=a5;  a5 :=temp; swapped:=true; end;' + #13#10 +
-'    if a5  > a6  then begin temp:=a5;  a5 :=a6;  a6 :=temp; swapped:=true; end;' + #13#10 +
-'    if a6  > a7  then begin temp:=a6;  a6 :=a7;  a7 :=temp; swapped:=true; end;' + #13#10 +
-'    if a7  > a8  then begin temp:=a7;  a7 :=a8;  a8 :=temp; swapped:=true; end;' + #13#10 +
-'    if a8  > a9  then begin temp:=a8;  a8 :=a9;  a9 :=temp; swapped:=true; end;' + #13#10 +
-'    if a9  > a10 then begin temp:=a9;  a9 :=a10; a10:=temp; swapped:=true; end;' + #13#10 +
-'    dec(i);' + #13#10 +
-'  until (not swapped) or (i = 0);' + #13#10 +
-'' + #13#10 +
-'  write(''After:  ''); PrintAll;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Binary Search', 'Algorithms', 'Find a number in a sorted list efficiently',
-'// ============================================================' + #13#10 +
-'// BINARY SEARCH' + #13#10 +
-'// Finds a value in a SORTED list by halving the search range.' + #13#10 +
-'// Much faster than checking every element!' + #13#10 +
-'// Teaches: while loops, div (halving), algorithm thinking' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// Simulate searching in 1..100 (all numbers present)' + #13#10 +
-'// Returns the step count to find the target' + #13#10 +
-'function BinarySearch(target, lo, hi: Integer): Integer;' + #13#10 +
-'var' + #13#10 +
-'  mid, steps : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  steps := 0;' + #13#10 +
-'  while lo <= hi do' + #13#10 +
-'  begin' + #13#10 +
-'    inc(steps);' + #13#10 +
-'    // *** NOTE: mid is the middle of the current range' + #13#10 +
-'    mid := (lo + hi) div 2;' + #13#10 +
-'    writeln(''  Step '', steps, '': checking '', mid);' + #13#10 +
-'    if mid = target then' + #13#10 +
-'    begin' + #13#10 +
-'      writeln(''  Found '', target, '' in '', steps, '' steps!'');' + #13#10 +
-'      Result := steps;' + #13#10 +
-'      exit;' + #13#10 +
-'    end' + #13#10 +
-'    else if mid < target then' + #13#10 +
-'      lo := mid + 1   // target is in the upper half' + #13#10 +
-'    else' + #13#10 +
-'      hi := mid - 1;  // target is in the lower half' + #13#10 +
-'  end;' + #13#10 +
-'  writeln(''  Not found!'');' + #13#10 +
-'  Result := -1;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var target : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  target := StrToInt(InputBox(''Search for (1-100):'', ''Binary Search'', ''73''));' + #13#10 +
-'  writeln(''Searching for '', target, '' in range 1..100:'');' + #13#10 +
-'  BinarySearch(target, 1, 100);' + #13#10 +
-'  writeln(''(Linear search would need up to 100 steps)'');' + #13#10 +
-'  writeln(''(Binary search needs at most 7 steps for 1..100)'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('GCD & LCM', 'Algorithms', 'Greatest common divisor and least common multiple',
-'// ============================================================' + #13#10 +
-'// GCD AND LCM' + #13#10 +
-'// GCD: largest number that divides both evenly' + #13#10 +
-'// LCM: smallest number both divide into evenly' + #13#10 +
-'// Teaches: Euclidean algorithm, while loop, math relationships' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// Euclid''s algorithm — over 2000 years old and still the best!' + #13#10 +
-'function GCD(a, b: Integer): Integer;' + #13#10 +
-'var temp : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  // *** NOTE: Keep replacing (a,b) with (b, a mod b)' + #13#10 +
-'  // until b becomes 0. Whatever a is then — that is the GCD.' + #13#10 +
-'  while b <> 0 do' + #13#10 +
-'  begin' + #13#10 +
-'    temp := b;' + #13#10 +
-'    b    := a mod b;' + #13#10 +
-'    a    := temp;' + #13#10 +
-'  end;' + #13#10 +
-'  Result := a;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'function LCM(a, b: Integer): Integer;' + #13#10 +
-'begin' + #13#10 +
-'  // LCM = (a * b) / GCD(a, b)' + #13#10 +
-'  Result := (a * b) div GCD(a, b);' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var a, b : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  a := StrToInt(InputBox(''First number:'',  ''GCD/LCM'', ''48''));' + #13#10 +
-'  b := StrToInt(InputBox(''Second number:'', ''GCD/LCM'', ''18''));' + #13#10 +
-'  writeln(''GCD('', a, '', '', b, '') = '', GCD(a, b));' + #13#10 +
-'  writeln(''LCM('', a, '', '', b, '') = '', LCM(a, b));' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Star Patterns', 'Algorithms', 'Draw triangles, diamonds and pyramids with stars',
-'// ============================================================' + #13#10 +
-'// STAR PATTERNS' + #13#10 +
-'// Drawing shapes with nested loops.' + #13#10 +
-'// Teaches: nested for loops, write vs writeln, pattern logic' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'procedure DrawTriangle(size: Integer);' + #13#10 +
-'var row, col : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Right Triangle (size='', size, ''):'');' + #13#10 +
-'  for row := 1 to size do' + #13#10 +
-'  begin' + #13#10 +
-'    for col := 1 to row do write(''* '');' + #13#10 +
-'    writeln('''');' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure DrawPyramid(size: Integer);' + #13#10 +
-'var row, col : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Pyramid (size='', size, ''):'');' + #13#10 +
-'  for row := 1 to size do' + #13#10 +
-'  begin' + #13#10 +
-'    // Print leading spaces to centre the row' + #13#10 +
-'    for col := 1 to size - row do write('' '');' + #13#10 +
-'    // Print the stars' + #13#10 +
-'    for col := 1 to 2 * row - 1 do write(''*'');' + #13#10 +
-'    writeln('''');' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure DrawDiamond(size: Integer);' + #13#10 +
-'var row, col : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Diamond (size='', size, ''):'');' + #13#10 +
-'  // Top half' + #13#10 +
-'  for row := 1 to size do' + #13#10 +
-'  begin' + #13#10 +
-'    for col := 1 to size - row do write('' '');' + #13#10 +
-'    for col := 1 to 2*row-1 do write(''*'');' + #13#10 +
-'    writeln('''');' + #13#10 +
-'  end;' + #13#10 +
-'  // Bottom half' + #13#10 +
-'  for row := size - 1 downto 1 do' + #13#10 +
-'  begin' + #13#10 +
-'    for col := 1 to size - row do write('' '');' + #13#10 +
-'    for col := 1 to 2*row-1 do write(''*'');' + #13#10 +
-'    writeln('''');' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  DrawTriangle(6);' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  DrawPyramid(6);' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  DrawDiamond(5);' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Roman Numerals', 'Algorithms', 'Convert numbers to Roman numeral notation',
-'// ============================================================' + #13#10 +
-'// ROMAN NUMERALS' + #13#10 +
-'// Converts integers to Roman numeral strings.' + #13#10 +
-'// I=1 V=5 X=10 L=50 C=100 D=500 M=1000' + #13#10 +
-'// Teaches: while loops, string building, greedy algorithm' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'function ToRoman(n: Integer): String;' + #13#10 +
-'var result : String;' + #13#10 +
-'begin' + #13#10 +
-'  result := '''';' + #13#10 +
-'  // *** NOTE: Greedy approach — subtract the largest possible' + #13#10 +
-'  // Roman value each time until nothing is left.' + #13#10 +
-'  while n >= 1000 do begin result := result + ''M'';    n := n - 1000; end;' + #13#10 +
-'  while n >= 900  do begin result := result + ''CM'';   n := n - 900;  end;' + #13#10 +
-'  while n >= 500  do begin result := result + ''D'';    n := n - 500;  end;' + #13#10 +
-'  while n >= 400  do begin result := result + ''CD'';   n := n - 400;  end;' + #13#10 +
-'  while n >= 100  do begin result := result + ''C'';    n := n - 100;  end;' + #13#10 +
-'  while n >= 90   do begin result := result + ''XC'';   n := n - 90;   end;' + #13#10 +
-'  while n >= 50   do begin result := result + ''L'';    n := n - 50;   end;' + #13#10 +
-'  while n >= 40   do begin result := result + ''XL'';   n := n - 40;   end;' + #13#10 +
-'  while n >= 10   do begin result := result + ''X'';    n := n - 10;   end;' + #13#10 +
-'  while n >= 9    do begin result := result + ''IX'';   n := n - 9;    end;' + #13#10 +
-'  while n >= 5    do begin result := result + ''V'';    n := n - 5;    end;' + #13#10 +
-'  while n >= 4    do begin result := result + ''IV'';   n := n - 4;    end;' + #13#10 +
-'  while n >= 1    do begin result := result + ''I'';    n := n - 1;    end;' + #13#10 +
-'  Result := result;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var i : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Roman Numerals 1-20:'');' + #13#10 +
-'  for i := 1 to 20 do' + #13#10 +
-'    writeln(i, '' = '', ToRoman(i));' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  writeln(''Some notable numbers:'');' + #13#10 +
-'  writeln(''2024 = '', ToRoman(2024));' + #13#10 +
-'  writeln(''1999 = '', ToRoman(1999));' + #13#10 +
-'  writeln(''3999 = '', ToRoman(3999));' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: File & Data
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('Grade Book', 'File & Data', 'Record student grades and save to file',
-'// ============================================================' + #13#10 +
-'// GRADE BOOK' + #13#10 +
-'// Collects student names and scores, saves to a file.' + #13#10 +
-'// Teaches: loops, file I/O, AppendFile, WriteFile, ReadFile' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  fname  : String;   // the file we save grades to' + #13#10 +
-'  name   : String;   // student name' + #13#10 +
-'  score  : String;   // score as text' + #13#10 +
-'  adding : Boolean;  // keep adding students?' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  fname := GetAppPath + ''grades.txt'';' + #13#10 +
-'  WriteFile(fname, ''=== Grade Book ===' + #13#10 + ''');' + #13#10 +
-'' + #13#10 +
-'  adding := true;' + #13#10 +
-'  writeln(''=== Grade Book ==='');' + #13#10 +
-'  writeln(''Enter student grades (Cancel to finish):'');' + #13#10 +
-'' + #13#10 +
-'  while adding do' + #13#10 +
-'  begin' + #13#10 +
-'    name := InputBox(''Student name (blank to finish):'', ''Grade Book'', '''');' + #13#10 +
-'    if name = '''' then' + #13#10 +
-'      adding := false' + #13#10 +
-'    else' + #13#10 +
-'    begin' + #13#10 +
-'      score := InputBox(''Score for '' + name + '' (0-100):'', ''Grade Book'', ''0'');' + #13#10 +
-'      // AppendFile adds a line to the file without erasing existing content' + #13#10 +
-'      AppendFile(fname, name + '': '' + score);' + #13#10 +
-'      writeln(''Recorded: '', name, '' = '', score);' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  writeln(''=== Saved Grade Book ==='');' + #13#10 +
-'  writeln(ReadFile(fname));' + #13#10 +
-'  ShowInfoBox(''Grades saved to: '' + fname);' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('To-Do List', 'File & Data', 'A persistent to-do list saved to disk',
-'// ============================================================' + #13#10 +
-'// TO-DO LIST' + #13#10 +
-'// Add tasks that persist between runs — saved to disk.' + #13#10 +
-'// Teaches: WriteFile, AppendFile, ReadFile, FileExists, menus' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  fname  : String;' + #13#10 +
-'  choice : String;' + #13#10 +
-'  task   : String;' + #13#10 +
-'  running: Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  fname   := GetAppPath + ''todo.txt'';' + #13#10 +
-'  running := true;' + #13#10 +
-'' + #13#10 +
-'  // Create the file if it does not exist yet' + #13#10 +
-'  if not FileExists(fname) then' + #13#10 +
-'    WriteFile(fname, ''--- My To-Do List ---'');' + #13#10 +
-'' + #13#10 +
-'  while running do' + #13#10 +
-'  begin' + #13#10 +
-'    writeln(''=== TO-DO LIST ==='');' + #13#10 +
-'    writeln(ReadFile(fname));' + #13#10 +
-'    writeln(''---'');' + #13#10 +
-'    choice := InputBox(' + #13#10 +
-'      ''A=Add task  C=Clear all  Q=Quit'',' + #13#10 +
-'      ''To-Do List'', ''A'');' + #13#10 +
-'' + #13#10 +
-'    caseof UpperCase(choice) of' + #13#10 +
-'      ''A'':' + #13#10 +
-'      begin' + #13#10 +
-'        task := InputBox(''New task:'', ''Add Task'', '''');' + #13#10 +
-'        if task <> '''' then' + #13#10 +
-'        begin' + #13#10 +
-'          AppendFile(fname, ''[ ] '' + task);' + #13#10 +
-'          writeln(''Added: '', task);' + #13#10 +
-'        end;' + #13#10 +
-'      end;' + #13#10 +
-'      ''C'':' + #13#10 +
-'      begin' + #13#10 +
-'        if Confirm(''Clear ALL tasks?'') then' + #13#10 +
-'          WriteFile(fname, ''--- My To-Do List ---'');' + #13#10 +
-'      end;' + #13#10 +
-'      ''Q'': running := false;' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'  writeln(''Goodbye!'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Phone Book', 'File & Data', 'Save and search contacts stored in a file',
-'// ============================================================' + #13#10 +
-'// PHONE BOOK' + #13#10 +
-'// A simple contact list saved to a text file.' + #13#10 +
-'// Teaches: file I/O, string search with Pos, menus, loops' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  fname   : String;' + #13#10 +
-'  choice  : String;' + #13#10 +
-'  name    : String;' + #13#10 +
-'  phone   : String;' + #13#10 +
-'  search  : String;' + #13#10 +
-'  all     : String;' + #13#10 +
-'  running : Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  fname   := GetAppPath + ''phonebook.txt'';' + #13#10 +
-'  running := true;' + #13#10 +
-'' + #13#10 +
-'  if not FileExists(fname) then' + #13#10 +
-'    WriteFile(fname, ''=== Phone Book ==='');' + #13#10 +
-'' + #13#10 +
-'  while running do' + #13#10 +
-'  begin' + #13#10 +
-'    choice := InputBox(''A=Add  S=Search  L=List  Q=Quit'', ''Phone Book'', ''L'');' + #13#10 +
-'    caseof UpperCase(choice) of' + #13#10 +
-'      ''A'':' + #13#10 +
-'      begin' + #13#10 +
-'        name  := InputBox(''Contact name:'',  ''Add Contact'', '''');' + #13#10 +
-'        phone := InputBox(''Phone number:'', ''Add Contact'', '''');' + #13#10 +
-'        if name <> '''' then' + #13#10 +
-'        begin' + #13#10 +
-'          AppendFile(fname, name + '' | '' + phone);' + #13#10 +
-'          writeln(''Added: '', name, '' | '', phone);' + #13#10 +
-'        end;' + #13#10 +
-'      end;' + #13#10 +
-'      ''S'':' + #13#10 +
-'      begin' + #13#10 +
-'        search := InputBox(''Search for name:'', ''Search'', '''');' + #13#10 +
-'        all    := ReadFile(fname);' + #13#10 +
-'        // *** NOTE: Pos returns 0 if the string is not found' + #13#10 +
-'        if Pos(search, all) > 0 then' + #13#10 +
-'          writeln(''Found! Check the list below.'')' + #13#10 +
-'        else' + #13#10 +
-'          writeln(''Not found: '', search);' + #13#10 +
-'        writeln(all);' + #13#10 +
-'      end;' + #13#10 +
-'      ''L'': writeln(ReadFile(fname));' + #13#10 +
-'      ''Q'': running := false;' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Shopping Bill', 'File & Data', 'Build a shopping list and calculate the total',
-'// ============================================================' + #13#10 +
-'// SHOPPING BILL' + #13#10 +
-'// Add items with prices, see running total, save receipt.' + #13#10 +
-'// Teaches: running totals, string formatting, file saving' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  item    : String;' + #13#10 +
-'  price   : Real;' + #13#10 +
-'  total   : Real;' + #13#10 +
-'  receipt : String;' + #13#10 +
-'  adding  : Boolean;' + #13#10 +
-'  fname   : String;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  total   := 0;' + #13#10 +
-'  receipt := ''=== Shopping Bill ==='' + #13#10 + '''';' + #13#10 +
-'  adding  := true;' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Shopping Bill ==='');' + #13#10 +
-'  writeln(''Add items (leave name blank to finish):'');' + #13#10 +
-'' + #13#10 +
-'  while adding do' + #13#10 +
-'  begin' + #13#10 +
-'    item := InputBox(''Item name (blank=done):'', ''Shopping'', '''');' + #13#10 +
-'    if item = '''' then' + #13#10 +
-'      adding := false' + #13#10 +
-'    else' + #13#10 +
-'    begin' + #13#10 +
-'      price   := StrToFloat(InputBox(''Price for '' + item + '':'', ''Shopping'', ''0''));' + #13#10 +
-'      total   := total + price;' + #13#10 +
-'      receipt := receipt + item + '': $'' + FloatToStr(round(price*100)/100) + #13#10 + '''';' + #13#10 +
-'      writeln(item, '': $'', round(price*100)/100, ''  (Running total: $'', round(total*100)/100, '')'');' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  receipt := receipt + ''---'' + #13#10 + ''TOTAL: $'' + FloatToStr(round(total*100)/100);' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  writeln(receipt);' + #13#10 +
-'' + #13#10 +
-'  if Confirm(''Save receipt to file?'') then' + #13#10 +
-'  begin' + #13#10 +
-'    fname := SaveFileDialog(''Text Files|*.txt'', ''txt'');' + #13#10 +
-'    if fname <> '''' then' + #13#10 +
-'    begin' + #13#10 +
-'      WriteFile(fname, receipt);' + #13#10 +
-'      ShowInfoBox(''Receipt saved to: '' + fname);' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: Utilities
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('Password Generator', 'Utilities', 'Generate strong random passwords',
-'// ============================================================' + #13#10 +
-'// PASSWORD GENERATOR' + #13#10 +
-'// Generates random passwords with letters, numbers, symbols.' + #13#10 +
-'// Teaches: random, string building, Chr, Ord, loops' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  length   : Integer;' + #13#10 +
-'  password : String;' + #13#10 +
-'  i, kind  : Integer;' + #13#10 +
-'  ch       : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  Randomize;' + #13#10 +
-'  length   := StrToInt(InputBox(''Password length:'', ''Password Generator'', ''12''));' + #13#10 +
-'  password := '''';' + #13#10 +
-'' + #13#10 +
-'  writeln(''Generating '', length, ''-character passwords:'');' + #13#10 +
-'  writeln(''---'');' + #13#10 +
-'' + #13#10 +
-'  // Generate 5 passwords to choose from' + #13#10 +
-'  var p, q : Integer;' + #13#10 +
-'  var symbols : String;' + #13#10 +
-'  symbols := ''!@#$%^&*-+='';' + #13#10 +
-'  for p := 1 to 5 do' + #13#10 +
-'  begin' + #13#10 +
-'    password := '''';' + #13#10 +
-'    for i := 1 to length do' + #13#10 +
-'    begin' + #13#10 +
-'      // Randomly pick: 0=uppercase, 1=lowercase, 2=digit, 3=symbol' + #13#10 +
-'      kind := Random(4);' + #13#10 +
-'      case kind of' + #13#10 +
-'        0: ch := Ord(''A'') + Random(26);   // A-Z' + #13#10 +
-'        1: ch := Ord(''a'') + Random(26);   // a-z' + #13#10 +
-'        2: ch := Ord(''0'') + Random(10);   // 0-9' + #13#10 +
-'        3: ch := Ord(Copy(symbols, Random(Length(symbols))+1, 1));' + #13#10 +
-'      end;' + #13#10 +
-'      password := password + Chr(ch);' + #13#10 +
-'    end;' + #13#10 +
-'    writeln(p, '': '', password);' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Unit Converter', 'Utilities', 'Convert lengths, weights and volumes',
-'// ============================================================' + #13#10 +
-'// UNIT CONVERTER' + #13#10 +
-'// Convert between metric and imperial units.' + #13#10 +
-'// Teaches: caseof menus, functions, real arithmetic' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'function KmToMiles(km: Real): Real;  begin Result := km * 0.621371; end;' + #13#10 +
-'function MilesToKm(m: Real): Real;   begin Result := m * 1.60934;  end;' + #13#10 +
-'function KgToLbs(kg: Real): Real;    begin Result := kg * 2.20462; end;' + #13#10 +
-'function LbsToKg(lb: Real): Real;    begin Result := lb * 0.453592; end;' + #13#10 +
-'function LitToGal(l: Real): Real;    begin Result := l * 0.264172; end;' + #13#10 +
-'function GalToLit(g: Real): Real;    begin Result := g * 3.78541;  end;' + #13#10 +
-'function CmToIn(c: Real): Real;      begin Result := c * 0.393701; end;' + #13#10 +
-'function InToCm(i: Real): Real;      begin Result := i * 2.54;     end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  cat, value : String;' + #13#10 +
-'  n          : Real;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''=== Unit Converter ==='');' + #13#10 +
-'  cat := InputBox(''Category: KM/MILES/KG/LBS/LIT/GAL/CM/IN'', ''Converter'', ''KM'');' + #13#10 +
-'  value := InputBox(''Enter value:'', ''Converter'', ''100'');' + #13#10 +
-'  n := StrToFloat(value);' + #13#10 +
-'' + #13#10 +
-'  caseof UpperCase(cat) of' + #13#10 +
-'    ''KM''   : writeln(n, '' km = '', round(KmToMiles(n)*1000)/1000, '' miles'');' + #13#10 +
-'    ''MILES'': writeln(n, '' miles = '', round(MilesToKm(n)*1000)/1000, '' km'');' + #13#10 +
-'    ''KG''   : writeln(n, '' kg = '', round(KgToLbs(n)*1000)/1000, '' lbs'');' + #13#10 +
-'    ''LBS''  : writeln(n, '' lbs = '', round(LbsToKg(n)*1000)/1000, '' kg'');' + #13#10 +
-'    ''LIT''  : writeln(n, '' litres = '', round(LitToGal(n)*1000)/1000, '' gallons'');' + #13#10 +
-'    ''GAL''  : writeln(n, '' gallons = '', round(GalToLit(n)*1000)/1000, '' litres'');' + #13#10 +
-'    ''CM''   : writeln(n, '' cm = '', round(CmToIn(n)*1000)/1000, '' inches'');' + #13#10 +
-'    ''IN''   : writeln(n, '' inches = '', round(InToCm(n)*1000)/1000, '' cm'');' + #13#10 +
-'  else' + #13#10 +
-'    ShowWarningBox(''Unknown category: '' + cat);' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Countdown Timer', 'Utilities', 'A simple countdown using a loop',
-  '// ============================================================' + #13#10 +
-  '// COUNTDOWN TIMER' + #13#10 +
-  '// Counts down from N to zero, showing each second.' + #13#10 +
-  '// Teaches: for downto, write, string formatting, Sleep' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  seconds : Integer;' + #13#10 +
-  '  i, mins, secs : Integer;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  seconds := StrToInt(InputBox(''Count down from (seconds):'', ''Countdown'', ''10''));' + #13#10 +
-  '' + #13#10 +
-  '  writeln(''Starting countdown from '', seconds, '' seconds...'');' + #13#10 +
-  '  writeln(''---'');' + #13#10 +
-  '' + #13#10 +
-  '  for i := seconds downto 0 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    // Convert total seconds into minutes and seconds' + #13#10 +
-  '    mins := i div 60;' + #13#10 +
-  '    secs := i mod 60;' + #13#10 +
-  '' + #13#10 +
-  '    // Format as MM:SS (pad single digits with a leading zero)' + #13#10 +
-  '    if secs < 10 then' + #13#10 +
-  '      writeln(mins, '':0'', secs)' + #13#10 +
-  '    else' + #13#10 +
-  '      writeln(mins, '':'', secs);' + #13#10 +
-  '' + #13#10 +
-  '    // Pause execution for 1 second (1000 milliseconds)' + #13#10 +
-  '    if i > 0 then' + #13#10 +
-  '      Sleep(1000);' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  writeln(''---'');' + #13#10 +
-  '  ShowMessage(''Time is up!'');' + #13#10 +
-  '  writeln(''DONE!'');' + #13#10 +
-  'end.');
-
-
-// ---------------------------------------------------------------------------
-Add('Statistics Calculator', 'Utilities', 'Enter numbers, get mean, min, max, range',
-'// ============================================================' + #13#10 +
-'// STATISTICS CALCULATOR' + #13#10 +
-'// Enter a series of numbers and get key statistics.' + #13#10 +
-'// Teaches: accumulation, min/max tracking, real arithmetic' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  n, count  : Integer;' + #13#10 +
-'  total     : Real;' + #13#10 +
-'  minVal    : Real;' + #13#10 +
-'  maxVal    : Real;' + #13#10 +
-'  value     : Real;' + #13#10 +
-'  inp       : String;' + #13#10 +
-'  going     : Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  count := 0;' + #13#10 +
-'  total := 0;' + #13#10 +
-'  going := true;' + #13#10 +
-'  // Use extreme values so first entry always beats them' + #13#10 +
-'  minVal :=  999999;' + #13#10 +
-'  maxVal := -999999;' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Statistics Calculator ==='');' + #13#10 +
-'  writeln(''Enter numbers one at a time. Blank to finish.'');' + #13#10 +
-'' + #13#10 +
-'  while going do' + #13#10 +
-'  begin' + #13#10 +
-'    inp := InputBox(''Enter a number (blank=done):'', ''Statistics'', '''');' + #13#10 +
-'    if inp = '''' then' + #13#10 +
-'      going := false' + #13#10 +
-'    else' + #13#10 +
-'    begin' + #13#10 +
-'      value := StrToFloat(inp);' + #13#10 +
-'      inc(count);' + #13#10 +
-'      total := total + value;' + #13#10 +
-'      // Track the smallest and largest values seen' + #13#10 +
-'      if value < minVal then minVal := value;' + #13#10 +
-'      if value > maxVal then maxVal := value;' + #13#10 +
-'      writeln(''Added: '', value, ''  (count='', count, '')'');' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  if count = 0 then' + #13#10 +
-'    writeln(''No numbers entered.'')' + #13#10 +
-'  else' + #13#10 +
-'  begin' + #13#10 +
-'    writeln('''');' + #13#10 +
-'    writeln(''=== Results ==='');' + #13#10 +
-'    writeln(''Count  : '', count);' + #13#10 +
-'    writeln(''Sum    : '', total);' + #13#10 +
-'    writeln(''Mean   : '', round((total/count)*1000)/1000);' + #13#10 +
-'    writeln(''Min    : '', minVal);' + #13#10 +
-'    writeln(''Max    : '', maxVal);' + #13#10 +
-'    writeln(''Range  : '', maxVal - minVal);' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CATEGORY: Advanced
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('Collatz Conjecture', 'Advanced', 'Explore the famous unsolved 3n+1 sequence',
-'// ============================================================' + #13#10 +
-'// COLLATZ CONJECTURE' + #13#10 +
-'// Pick any number. If even: halve it. If odd: multiply by 3 and add 1.' + #13#10 +
-'// Repeat. The conjecture says you always reach 1. Nobody has proved it!' + #13#10 +
-'// Teaches: while loops, mod, div, counters' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  n, steps : Integer;' + #13#10 +
-'  maxN     : Integer;   // highest value reached' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  n     := StrToInt(InputBox(''Start number (try 27!):'', ''Collatz'', ''27''));' + #13#10 +
-'  steps := 0;' + #13#10 +
-'  maxN  := n;' + #13#10 +
-'' + #13#10 +
-'  writeln(''Collatz sequence starting at '', n, '':'');' + #13#10 +
-'  write(n);' + #13#10 +
-'' + #13#10 +
-'  while n <> 1 do' + #13#10 +
-'  begin' + #13#10 +
-'    if n mod 2 = 0 then' + #13#10 +
-'      n := n div 2          // even: halve' + #13#10 +
-'    else' + #13#10 +
-'      n := 3 * n + 1;       // odd: 3n+1' + #13#10 +
-'' + #13#10 +
-'    write('' -> '', n);' + #13#10 +
-'    inc(steps);' + #13#10 +
-'    if n > maxN then maxN := n;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  writeln(''Reached 1 in '', steps, '' steps.'');' + #13#10 +
-'  writeln(''Highest value reached: '', maxN);' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Sieve of Eratosthenes', 'Advanced', 'The fastest way to find all primes up to N',
-'// ============================================================' + #13#10 +
-'// SIEVE OF ERATOSTHENES' + #13#10 +
-'// Ancient Greek method for finding all primes.' + #13#10 +
-'// Mark multiples of each prime as composite.' + #13#10 +
-'// Teaches: nested loops, boolean logic, efficiency thinking' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// We simulate a boolean array using 20 individual variables' + #13#10 +
-'// (isPrime1..isPrime50 = whether each number is prime)' + #13#10 +
-'// This version works up to 50 to fit in our variable model' + #13#10 +
-'var' + #13#10 +
-'  limit : Integer;' + #13#10 +
-'  i, j  : Integer;' + #13#10 +
-'  count : Integer;' + #13#10 +
-'  // We use a String to track which numbers are prime' + #13#10 +
-'  // P[i] = ''1'' means i is prime, ''0'' means composite' + #13#10 +
-'  primes : String;' + #13#10 +
-'  ch     : String;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  limit := 50;' + #13#10 +
-'  // Build a string of ''1''s — we start assuming all are prime' + #13#10 +
-'  primes := '''';' + #13#10 +
-'  for i := 0 to limit do' + #13#10 +
-'    primes := primes + ''1'';' + #13#10 +
-'' + #13#10 +
-'  // 0 and 1 are not prime' + #13#10 +
-'  primes[1] := ''0'';   // index 1 = number 0' + #13#10 +
-'  primes[2] := ''0'';   // index 2 = number 1' + #13#10 +
-'' + #13#10 +
-'  // Sieve: for each prime p, mark all its multiples as not prime' + #13#10 +
-'  i := 2;' + #13#10 +
-'  while i * i <= limit do' + #13#10 +
-'  begin' + #13#10 +
-'    // *** NOTE: i+1 because our string is 1-indexed' + #13#10 +
-'    if Copy(primes, i+1, 1) = ''1'' then' + #13#10 +
-'    begin' + #13#10 +
-'      j := i * i;' + #13#10 +
-'      while j <= limit do' + #13#10 +
-'      begin' + #13#10 +
-'        primes[j+1] := ''0'';   // mark as composite' + #13#10 +
-'        j := j + i;' + #13#10 +
-'      end;' + #13#10 +
-'    end;' + #13#10 +
-'    inc(i);' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  count := 0;' + #13#10 +
-'  write(''Primes up to '', limit, '': '');' + #13#10 +
-'  for i := 2 to limit do' + #13#10 +
-'    if Copy(primes, i+1, 1) = ''1'' then' + #13#10 +
-'    begin' + #13#10 +
-'      write(i, '' '');' + #13#10 +
-'      inc(count);' + #13#10 +
-'    end;' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  writeln(''Found '', count, '' primes.'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Sine Wave', 'Advanced', 'Draw an ASCII sine wave using maths',
-'// ============================================================' + #13#10 +
-'// ASCII SINE WAVE' + #13#10 +
-'// Uses sin() to draw a text-art wave pattern.' + #13#10 +
-'// Teaches: sin, pi, round, nested loops, real maths' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  x, y     : Integer;' + #13#10 +
-'  height   : Integer;   // half-height of the wave' + #13#10 +
-'  width    : Integer;   // how many columns wide' + #13#10 +
-'  sineVal  : Real;' + #13#10 +
-'  col      : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  height := 8;    // half-amplitude — wave goes from -8 to +8' + #13#10 +
-'  width  := 60;   // one full cycle' + #13#10 +
-'' + #13#10 +
-'  writeln(''ASCII Sine Wave:'');' + #13#10 +
-'  writeln('''');' + #13#10 +
-'' + #13#10 +
-'  // For each row (y axis), print stars where the sine curve passes' + #13#10 +
-'  for y := height downto -height do' + #13#10 +
-'  begin' + #13#10 +
-'    for x := 0 to width - 1 do' + #13#10 +
-'    begin' + #13#10 +
-'      // sin() takes radians; 2*pi = one full cycle' + #13#10 +
-'      sineVal := sin(2 * pi * x / width) * height;' + #13#10 +
-'      col     := round(sineVal);' + #13#10 +
-'' + #13#10 +
-'      // Print a star if we are at the sine value for this column,' + #13#10 +
-'      // or print the centre axis line' + #13#10 +
-'      if col = y then' + #13#10 +
-'        write(''*'')' + #13#10 +
-'      else if y = 0 then' + #13#10 +
-'        write(''-'')   // centre axis' + #13#10 +
-'      else' + #13#10 +
-'        write('' '');' + #13#10 +
-'    end;' + #13#10 +
-'    writeln('''');' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Recursive Descent', 'Advanced', 'Build a tiny expression evaluator from scratch',
-'// ============================================================' + #13#10 +
-'// MINI EXPRESSION EVALUATOR' + #13#10 +
-'// Evaluates simple maths expressions using recursive functions.' + #13#10 +
-'// This is actually how MiniDelphi itself evaluates YOUR code!' + #13#10 +
-'// Teaches: recursion, string parsing, the "eval" concept' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// We evaluate expressions of the form: number op number' + #13#10 +
-'// e.g. "3 + 4", "10 * 5", "100 / 4"' + #13#10 +
-'' + #13#10 +
-'function FindOp(expr: String; out opPos: Integer): String;' + #13#10 +
-'var i : Integer;' + #13#10 +
-'    ch : String;' + #13#10 +
-'begin' + #13#10 +
-'  Result := '''';' + #13#10 +
-'  for i := 2 to Length(expr) - 1 do' + #13#10 +
-'  begin' + #13#10 +
-'    ch := Copy(expr, i, 1);' + #13#10 +
-'    if (ch = ''+'') or (ch = ''-'') or (ch = ''*'') or (ch = ''/'') then' + #13#10 +
-'    begin' + #13#10 +
-'      opPos  := i;' + #13#10 +
-'      Result := ch;' + #13#10 +
-'      exit;' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'function Evaluate(expr: String): Real;' + #13#10 +
-'var' + #13#10 +
-'  op    : String;' + #13#10 +
-'  opPos : Integer;' + #13#10 +
-'  left, right : Real;' + #13#10 +
-'begin' + #13#10 +
-'  expr  := Trim(expr);' + #13#10 +
-'  op    := FindOp(expr, opPos);' + #13#10 +
-'  if op = '''' then' + #13#10 +
-'  begin' + #13#10 +
-'    Result := StrToFloat(Trim(expr));' + #13#10 +
-'    exit;' + #13#10 +
-'  end;' + #13#10 +
-'  left  := StrToFloat(Trim(Copy(expr, 1, opPos - 1)));' + #13#10 +
-'  right := StrToFloat(Trim(Copy(expr, opPos + 1, Length(expr))));' + #13#10 +
-'  caseof op of' + #13#10 +
-'    ''+'': Result := left + right;' + #13#10 +
-'    ''-'': Result := left - right;' + #13#10 +
-'    ''*'': Result := left * right;' + #13#10 +
-'    ''/'': if right <> 0 then Result := left / right else Result := 0;' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  expr   : String;' + #13#10 +
-'  going  : Boolean;' + #13#10 +
-'begin' + #13#10 +
-'  going := true;' + #13#10 +
-'  writeln(''Mini Expression Evaluator'');' + #13#10 +
-'  writeln(''Enter: number op number  (e.g. 3 + 4.5)'');' + #13#10 +
-'  writeln(''Type "quit" to exit.'');' + #13#10 +
-'  while going do' + #13#10 +
-'  begin' + #13#10 +
-'    expr := InputBox(''Expression:'', ''Evaluator'', ''10 * 3.14'');' + #13#10 +
-'    if LowerCase(expr) = ''quit'' then' + #13#10 +
-'      going := false' + #13#10 +
-'    else' + #13#10 +
-'      writeln(expr, '' = '', Evaluate(expr));' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Magic 8-Ball', 'Games & Fun', 'Ask a question, get a mystical answer',
-'// ============================================================' + #13#10 +
-'// MAGIC 8-BALL' + #13#10 +
-'// Ask any yes/no question and receive wisdom!' + #13#10 +
-'// Teaches: random, caseof, ShowMessage, while loops' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'function GetAnswer: String;' + #13#10 +
-'var r : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  r := Random(10);' + #13#10 +
-'  case r of' + #13#10 +
-'    0: Result := ''It is certain.'';' + #13#10 +
-'    1: Result := ''Without a doubt.'';' + #13#10 +
-'    2: Result := ''Yes, definitely!'';' + #13#10 +
-'    3: Result := ''You may rely on it.'';' + #13#10 +
-'    4: Result := ''Signs point to yes.'';' + #13#10 +
-'    5: Result := ''Reply hazy, try again.'';' + #13#10 +
-'    6: Result := ''Ask again later.'';' + #13#10 +
-'    7: Result := ''Don''''t count on it.'';' + #13#10 +
-'    8: Result := ''My sources say no.'';' + #13#10 +
-'    9: Result := ''Outlook not so good.'';' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  question : String;' + #13#10 +
-'  answer   : String;' + #13#10 +
-'  going    : Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  Randomize;' + #13#10 +
-'  going := true;' + #13#10 +
-'  writeln(''=== Magic 8-Ball ==='');' + #13#10 +
-'  writeln(''Ask any yes/no question...'');' + #13#10 +
-'' + #13#10 +
-'  while going do' + #13#10 +
-'  begin' + #13#10 +
-'    question := InputBox(''Ask the Magic 8-Ball:'', ''Magic 8-Ball'', '''');' + #13#10 +
-'    if question = '''' then' + #13#10 +
-'      going := false' + #13#10 +
-'    else' + #13#10 +
-'    begin' + #13#10 +
-'      answer := GetAnswer;' + #13#10 +
-'      writeln(''Q: '', question);' + #13#10 +
-'      writeln(''A: '', answer);' + #13#10 +
-'      writeln(''---'');' + #13#10 +
-'      ShowInfoBox(''🎱 '' + answer);' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'  writeln(''The 8-Ball rests.'');' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Number Patterns', 'Numbers & Maths', 'Explore interesting number properties',
-'// ============================================================' + #13#10 +
-'// NUMBER PATTERNS' + #13#10 +
-'// Explore perfect numbers, abundant, deficient, and Armstrong.' + #13#10 +
-'// Teaches: nested loops, functions, number theory' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'// Sum of proper divisors (all divisors except the number itself)' + #13#10 +
-'function SumDivisors(n: Integer): Integer;' + #13#10 +
-'var i, s : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  s := 1;   // 1 is always a divisor' + #13#10 +
-'  i := 2;' + #13#10 +
-'  while i * i <= n do' + #13#10 +
-'  begin' + #13#10 +
-'    if n mod i = 0 then' + #13#10 +
-'    begin' + #13#10 +
-'      s := s + i;' + #13#10 +
-'      if i <> n div i then s := s + n div i;' + #13#10 +
-'    end;' + #13#10 +
-'    inc(i);' + #13#10 +
-'  end;' + #13#10 +
-'  Result := s;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'// Armstrong number: sum of digits^(number of digits) = number' + #13#10 +
-'// e.g. 153 = 1^3 + 5^3 + 3^3' + #13#10 +
-'function IsArmstrong(n: Integer): Boolean;' + #13#10 +
-'var temp, digits, sum, d : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  temp := n; digits := 0; sum := 0;' + #13#10 +
-'  while temp > 0 do begin inc(digits); temp := temp div 10; end;' + #13#10 +
-'  temp := n;' + #13#10 +
-'  while temp > 0 do' + #13#10 +
-'  begin' + #13#10 +
-'    d    := temp mod 10;' + #13#10 +
-'    sum  := sum + round(power(d, digits));' + #13#10 +
-'    temp := temp div 10;' + #13#10 +
-'  end;' + #13#10 +
-'  Result := (sum = n);' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var i, s : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''=== Perfect Numbers (sum of divisors = itself) ==='');' + #13#10 +
-'  for i := 2 to 1000 do' + #13#10 +
-'    if SumDivisors(i) = i then' + #13#10 +
-'      writeln(i, '' is perfect  (divisors sum to '', SumDivisors(i), '')'');' + #13#10 +
-'' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  writeln(''=== Armstrong Numbers up to 1000 ==='');' + #13#10 +
-'  for i := 1 to 999 do' + #13#10 +
-'    if IsArmstrong(i) then' + #13#10 +
-'      writeln(i);' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Morse Code', 'Strings & Text', 'Translate text into Morse code dots and dashes',
-'// ============================================================' + #13#10 +
-'// MORSE CODE TRANSLATOR' + #13#10 +
-'// Converts text to Morse code (. and -)' + #13#10 +
-'// Teaches: caseof strings, string loops, Copy, UpperCase' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'function LetterToMorse(ch: String): String;' + #13#10 +
-'begin' + #13#10 +
-'  caseof UpperCase(ch) of' + #13#10 +
-'    ''A'': Result := ''.-'';    ''B'': Result := ''-...'';' + #13#10 +
-'    ''C'': Result := ''-.-.'';  ''D'': Result := ''-..'';' + #13#10 +
-'    ''E'': Result := ''.'';     ''F'': Result := ''..-.'';' + #13#10 +
-'    ''G'': Result := ''--.'';   ''H'': Result := ''...."'';' + #13#10 +
-'    ''I'': Result := ''..'';    ''J'': Result := ''.---'';' + #13#10 +
-'    ''K'': Result := ''-.-'';   ''L'': Result := ''.-..'';' + #13#10 +
-'    ''M'': Result := ''--'';    ''N'': Result := ''-.'';' + #13#10 +
-'    ''O'': Result := ''---'';   ''P'': Result := ''.--.'';' + #13#10 +
-'    ''Q'': Result := ''--.-'';  ''R'': Result := ''.-.'';' + #13#10 +
-'    ''S'': Result := ''...'';   ''T'': Result := ''-'';' + #13#10 +
-'    ''U'': Result := ''..-'';   ''V'': Result := ''...-'';' + #13#10 +
-'    ''W'': Result := ''.--'';   ''X'': Result := ''-..-'';' + #13#10 +
-'    ''Y'': Result := ''-.--'';  ''Z'': Result := ''--..'';' + #13#10 +
-'    ''0'': Result := ''-----''; ''1'': Result := ''.----'';' + #13#10 +
-'    ''2'': Result := ''..---''; ''3'': Result := ''...--'';' + #13#10 +
-'    ''4'': Result := ''....-''; ''5'': Result := ''.....'';' + #13#10 +
-'    ''6'': Result := ''-....''; ''7'': Result := ''--...'';' + #13#10 +
-'    ''8'': Result := ''---..''; ''9'': Result := ''----.'';' + #13#10 +
-'    '' '': Result := ''/'';' + #13#10 +
-'  else' + #13#10 +
-'    Result := ''?'';' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  text, morse : String;' + #13#10 +
-'  i           : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  text  := InputBox(''Text to convert:'', ''Morse Code'', ''Hello World'');' + #13#10 +
-'  morse := '''';' + #13#10 +
-'  for i := 1 to Length(text) do' + #13#10 +
-'    morse := morse + LetterToMorse(Copy(text, i, 1)) + '' '';' + #13#10 +
-'  writeln(''Text : '', text);' + #13#10 +
-'  writeln(''Morse: '', morse);' + #13#10 +
-'end.');
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  MULTI-FILE EXAMPLES
-//  Each uses AddMulti() with an array of F() file records.
-//  The project tab writes all files to a temp folder and opens the main one.
-// ═══════════════════════════════════════════════════════════════════════════
-
-// ---------------------------------------------------------------------------
-// 1. MathLib — the simplest possible example of a library
-// ---------------------------------------------------------------------------
-AddMulti('MathLib Demo', 'Multi-File Projects',
-  'Your first library: maths helpers imported by the main program',
-[
-  F('MathLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// MATHLIB.MDP — A reusable maths library' + #13#10 +
-  '//' + #13#10 +
-  '// This is a LIBRARY file. It has no begin..end block.' + #13#10 +
-  '// Other programs import it with:' + #13#10 +
-  '//     uses' + #13#10 +
-  '//       ''MathLib.mdp'';' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: A library is just a collection of reusable routines.' + #13#10 +
-  '//     You write them once and use them in many programs.' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  '// Returns n squared (n * n)' + #13#10 +
-  'function Square(n: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := n * n;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Returns n cubed (n * n * n)' + #13#10 +
-  'function Cube(n: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := n * n * n;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Returns the hypotenuse of a right triangle (Pythagoras)' + #13#10 +
-  'function Hypotenuse(a, b: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  // a^2 + b^2 = c^2  =>  c = sqrt(a^2 + b^2)' + #13#10 +
-  '  Result := sqrt(Square(a) + Square(b));' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Returns the average of two numbers' + #13#10 +
-  'function Average(a, b: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := (a + b) / 2;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Clamps a value between lo and hi' + #13#10 +
-  'function Clamp(value, lo, hi: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  if value < lo then Result := lo' + #13#10 +
-  '  else if value > hi then Result := hi' + #13#10 +
-  '  else Result := value;' + #13#10 +
-  'end;'),
-
-  F('Main.mdp',
-  '// ============================================================' + #13#10 +
-  '// MAIN.MDP — Uses MathLib to do calculations' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: The uses clause tells MiniDelphi which library files' + #13#10 +
-  '//     to load. The filename must be in single quotes.' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''MathLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  n : Real;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  n := 5;' + #13#10 +
-  '  writeln(''=== MathLib Demo ==='');' + #13#10 +
-  '  writeln(''n           = '', n);' + #13#10 +
-  '  writeln(''Square(n)   = '', Square(n));      // from MathLib' + #13#10 +
-  '  writeln(''Cube(n)     = '', Cube(n));        // from MathLib' + #13#10 +
-  '  writeln(''Hypotenuse(3,4) = '', Hypotenuse(3, 4));  // should be 5' + #13#10 +
-  '  writeln(''Average(7,13)   = '', Average(7, 13));    // should be 10' + #13#10 +
-  '  writeln(''Clamp(150,0,100)= '', Clamp(150, 0, 100)); // should be 100' + #13#10 +
-  'end.', True)
-]);
-
-// ---------------------------------------------------------------------------
-// 2. StringLib — string utility library
-// ---------------------------------------------------------------------------
-AddMulti('StringLib Demo', 'Multi-File Projects',
-  'A string utilities library: reverse, repeat, contains, pad and more',
-[
-  F('StringLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// STRINGLIB.MDP — Reusable string utility functions' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  '// Reverse a string: ''hello'' becomes ''olleh''' + #13#10 +
-  'function StrReverse(s: String): String;' + #13#10 +
-  'var i : Integer;' + #13#10 +
-  '    r : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  r := '''';' + #13#10 +
-  '  for i := Length(s) downto 1 do' + #13#10 +
-  '    r := r + Copy(s, i, 1);' + #13#10 +
-  '  Result := r;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Repeat a string n times: StrRep(''ab'',3) = ''ababab''' + #13#10 +
-  'function StrRep(s: String; n: Integer): String;' + #13#10 +
-  'var i : Integer;' + #13#10 +
-  '    r : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  r := '''';' + #13#10 +
-  '  for i := 1 to n do r := r + s;' + #13#10 +
-  '  Result := r;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// True if s contains substr' + #13#10 +
-  'function StrContains(s, substr: String): Boolean;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := Pos(substr, s) > 0;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Pad s on the left to width w using padChar' + #13#10 +
-  'function PadLeft(s: String; w: Integer; padChar: String): String;' + #13#10 +
-  'begin' + #13#10 +
-  '  while Length(s) < w do s := padChar + s;' + #13#10 +
-  '  Result := s;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Count how many times substr appears in s' + #13#10 +
-  'function StrCount(s, substr: String): Integer;' + #13#10 +
-  'var p, count : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  count := 0;' + #13#10 +
-  '  p     := Pos(substr, s);' + #13#10 +
-  '  while p > 0 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    inc(count);' + #13#10 +
-  '    s := Copy(s, p + Length(substr), Length(s));' + #13#10 +
-  '    p := Pos(substr, s);' + #13#10 +
-  '  end;' + #13#10 +
-  '  Result := count;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// True if s is a palindrome' + #13#10 +
-  'function IsPalindrome(s: String): Boolean;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := LowerCase(s) = StrReverse(LowerCase(s));' + #13#10 +
-  'end;'),
-
-  F('Main.mdp',
-  '// ============================================================' + #13#10 +
-  '// MAIN.MDP — Demonstrates StringLib' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''StringLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln(''=== StringLib Demo ==='');' + #13#10 +
-  '  writeln(''StrReverse("hello")    = '', StrReverse(''hello''));' + #13#10 +
-  '  writeln(''StrRep("ab", 4)        = '', StrRep(''ab'', 4));' + #13#10 +
-  '  writeln(''StrContains("Delphi","ph") = '', StrContains(''Delphi'', ''ph''));' + #13#10 +
-  '  writeln(''PadLeft("7", 4, "0")   = '', PadLeft(''7'', 4, ''0''));' + #13#10 +
-  '  writeln(''StrCount("banana","a") = '', StrCount(''banana'', ''a''));' + #13#10 +
-  '  writeln(''IsPalindrome("racecar")= '', IsPalindrome(''racecar''));' + #13#10 +
-  '  writeln(''IsPalindrome("hello")  = '', IsPalindrome(''hello''));' + #13#10 +
-  'end.', True)
-]);
-
-// ---------------------------------------------------------------------------
-// 3. Student Grade System — three files working together
-// ---------------------------------------------------------------------------
-AddMulti('Student Grade System', 'Multi-File Projects',
-  'Three units: MathLib + GradeLib + Main — shows unit chaining',
-[
-  F('MathUtils.mdp',
-  '// ============================================================' + #13#10 +
-  '// MATHUTILS.MDP — Low-level maths helpers' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'function RoundTo2(n: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := round(n * 100) / 100;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function Percentage(score, total: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  if total = 0 then Result := 0' + #13#10 +
-  '  else Result := RoundTo2(score / total * 100);' + #13#10 +
-  'end;'),
-
-  F('GradeLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// GRADELIB.MDP — Grade classification built on MathUtils' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: A library can itself import another library!' + #13#10 +
-  '//     This is called a dependency chain.' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''MathUtils.mdp'';   // GradeLib depends on MathUtils' + #13#10 +
-  '' + #13#10 +
-  '// Convert a percentage score to a letter grade' + #13#10 +
-  'function LetterGrade(pct: Real): String;' + #13#10 +
-  'begin' + #13#10 +
-  '  if      pct >= 90 then Result := ''A+''' + #13#10 +
-  '  else if pct >= 80 then Result := ''A''' + #13#10 +
-  '  else if pct >= 70 then Result := ''B''' + #13#10 +
-  '  else if pct >= 60 then Result := ''C''' + #13#10 +
-  '  else if pct >= 50 then Result := ''D''' + #13#10 +
-  '  else                    Result := ''F'';' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Print one student result line' + #13#10 +
-  'procedure PrintResult(name: String; score, total: Real);' + #13#10 +
-  'var pct : Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  pct := Percentage(score, total);   // from MathUtils' + #13#10 +
-  '  writeln(name, '': '', score, ''/'', total,' + #13#10 +
-  '          ''  ('', pct, ''%)  Grade: '', LetterGrade(pct));' + #13#10 +
-  'end;'),
-
-  F('Main.mdp',
-  '// ============================================================' + #13#10 +
-  '// MAIN.MDP — Student Grade System' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: We only import GradeLib here.' + #13#10 +
-  '//     GradeLib automatically imports MathUtils for us.' + #13#10 +
-  '//     This is the power of dependency chains!' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''GradeLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln(''=== Student Report Card ==='');' + #13#10 +
-  '  writeln(''----------------------------'');' + #13#10 +
-  '  PrintResult(''Alice'',   87, 100);' + #13#10 +
-  '  PrintResult(''Bob'',     63, 100);' + #13#10 +
-  '  PrintResult(''Carol'',   95, 100);' + #13#10 +
-  '  PrintResult(''Dave'',    42, 100);' + #13#10 +
-  '  PrintResult(''Eve'',     78, 100);' + #13#10 +
-  '  writeln(''----------------------------'');' + #13#10 +
-  '  writeln(''Class average: '', Percentage(87+63+95+42+78, 500), ''%'');' + #13#10 +
-  'end.', True)
-]);
-
-// ---------------------------------------------------------------------------
-// 4. Shape Calculator — geometry library
-// ---------------------------------------------------------------------------
-AddMulti('Shape Calculator', 'Multi-File Projects',
-  'GeometryLib provides area/perimeter for circles, rectangles and triangles',
-[
-  F('GeometryLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// GEOMETRYLIB.MDP — Area and perimeter calculations' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  '// Circle' + #13#10 +
-  'function CircleArea(r: Real): Real;' + #13#10 +
-  'begin Result := pi * r * r; end;' + #13#10 +
-  '' + #13#10 +
-  'function CirclePerimeter(r: Real): Real;' + #13#10 +
-  'begin Result := 2 * pi * r; end;' + #13#10 +
-  '' + #13#10 +
-  '// Rectangle' + #13#10 +
-  'function RectArea(w, h: Real): Real;' + #13#10 +
-  'begin Result := w * h; end;' + #13#10 +
-  '' + #13#10 +
-  'function RectPerimeter(w, h: Real): Real;' + #13#10 +
-  'begin Result := 2 * (w + h); end;' + #13#10 +
-  '' + #13#10 +
-  '// Triangle (Heron''s formula for area from 3 sides)' + #13#10 +
-  'function TriangleArea(a, b, c: Real): Real;' + #13#10 +
-  'var s : Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  s      := (a + b + c) / 2;   // semi-perimeter' + #13#10 +
-  '  Result := sqrt(s * (s-a) * (s-b) * (s-c));' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function TrianglePerimeter(a, b, c: Real): Real;' + #13#10 +
-  'begin Result := a + b + c; end;' + #13#10 +
-  '' + #13#10 +
-  '// Print a formatted shape report' + #13#10 +
-  'procedure ShapeReport(shape: String; area, perim: Real);' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln(shape);' + #13#10 +
-  '  writeln(''  Area      : '', round(area * 100) / 100);' + #13#10 +
-  '  writeln(''  Perimeter : '', round(perim * 100) / 100);' + #13#10 +
-  'end;'),
-
-  F('Main.mdp',
-  '// ============================================================' + #13#10 +
-  '// MAIN.MDP — Shape Calculator using GeometryLib' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''GeometryLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln(''=== Shape Calculator ==='');' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  ShapeReport(''Circle (r=5):'', CircleArea(5), CirclePerimeter(5));' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  ShapeReport(''Rectangle (8x3):'', RectArea(8,3), RectPerimeter(8,3));' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  ShapeReport(''Triangle (3,4,5):'', TriangleArea(3,4,5), TrianglePerimeter(3,4,5));' + #13#10 +
-  'end.', True)
-]);
-
-// ---------------------------------------------------------------------------
-// 5. Personal Finance — two libraries, one main
-// ---------------------------------------------------------------------------
-AddMulti('Personal Finance Tracker', 'Multi-File Projects',
-  'TaxLib + InterestLib + main program — real-world finance calculations',
-[
-  F('TaxLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// TAXLIB.MDP — Income tax calculations' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  '// Simple progressive tax: 0% on first 12000, 20% next, 40% above 50000' + #13#10 +
-  'function IncomeTax(income: Real): Real;' + #13#10 +
-  'var tax : Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  tax := 0;' + #13#10 +
-  '  if income > 50000 then tax := tax + (income - 50000) * 0.40;' + #13#10 +
-  '  if income > 12000 then' + #13#10 +
-  '    tax := tax + (min(income, 50000) - 12000) * 0.20;' + #13#10 +
-  '  Result := tax;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function TakeHomePay(gross: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := gross - IncomeTax(gross);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure PrintTaxSummary(gross: Real);' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln(''Gross income  : $'', round(gross));' + #13#10 +
-  '  writeln(''Income tax    : $'', round(IncomeTax(gross)));' + #13#10 +
-  '  writeln(''Take-home pay : $'', round(TakeHomePay(gross)));' + #13#10 +
-  'end;'),
-
-  F('InterestLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// INTERESTLIB.MDP — Savings and loan interest' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  '// Simple interest: P * R * T' + #13#10 +
-  'function SimpleInterest(principal, rate, years: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := principal * (rate / 100) * years;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Compound interest: P * (1 + R)^T' + #13#10 +
-  'function CompoundInterest(principal, rate, years: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := principal * power(1 + rate/100, years) - principal;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Future value of a savings account' + #13#10 +
-  'function FutureValue(principal, rate, years: Real): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := principal * power(1 + rate/100, years);' + #13#10 +
-  'end;'),
-
-  F('Main.mdp',
-  '// ============================================================' + #13#10 +
-  '// MAIN.MDP — Personal Finance Tracker' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: We import TWO libraries here.' + #13#10 +
-  '//     Each one provides a different set of tools.' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''TaxLib.mdp'',' + #13#10 +
-  '  ''InterestLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'var salary : Real;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  salary := StrToFloat(InputBox(''Annual salary ($):'', ''Finance'', ''45000''));' + #13#10 +
-  '' + #13#10 +
-  '  writeln(''=== Personal Finance Report ==='');' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''--- Tax Summary ---'');' + #13#10 +
-  '  PrintTaxSummary(salary);          // from TaxLib' + #13#10 +
-  '' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''--- If you save $5000 for 10 years at 4% ---'');' + #13#10 +
-  '  writeln(''Simple interest   : $'', round(SimpleInterest(5000, 4, 10)));' + #13#10 +
-  '  writeln(''Compound interest : $'', round(CompoundInterest(5000, 4, 10)));' + #13#10 +
-  '  writeln(''Future value      : $'', round(FutureValue(5000, 4, 10)));' + #13#10 +
-  'end.', True)
-]);
-
-// ---------------------------------------------------------------------------
-// 6. Text Adventure Game — GameEngine + Rooms + Main
-// ---------------------------------------------------------------------------
-AddMulti('Mini Text Adventure', 'Multi-File Projects',
-  'GameEngine library powers a tiny text adventure — shows event-driven design',
-[
-  F('GameEngine.mdp',
-  '// ============================================================' + #13#10 +
-  '// GAMEENGINE.MDP — Core engine for a text adventure game' + #13#10 +
-  '//' + #13#10 +
-  '// Provides: player state, movement, inventory basics' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  '// Global player state' + #13#10 +
-  'var' + #13#10 +
-  '  PlayerHealth  : Integer;' + #13#10 +
-  '  PlayerGold    : Integer;' + #13#10 +
-  '  PlayerRoom    : Integer;   // 1=Entrance 2=Hall 3=Dungeon 4=Treasure' + #13#10 +
-  '  GameOver      : Boolean;' + #13#10 +
-  '' + #13#10 +
-  'procedure InitPlayer;' + #13#10 +
-  'begin' + #13#10 +
-  '  PlayerHealth := 100;' + #13#10 +
-  '  PlayerGold   := 0;' + #13#10 +
-  '  PlayerRoom   := 1;' + #13#10 +
-  '  GameOver     := false;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure ShowStatus;' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln(''[ Health: '', PlayerHealth, ''  Gold: '', PlayerGold, '' ]'');' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure TakeDamage(amount: Integer);' + #13#10 +
-  'begin' + #13#10 +
-  '  PlayerHealth := PlayerHealth - amount;' + #13#10 +
-  '  if PlayerHealth <= 0 then' + #13#10 +
-  '  begin' + #13#10 +
-  '    PlayerHealth := 0;' + #13#10 +
-  '    GameOver     := true;' + #13#10 +
-  '    writeln(''You have been defeated!'');' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure AddGold(amount: Integer);' + #13#10 +
-  'begin' + #13#10 +
-  '  PlayerGold := PlayerGold + amount;' + #13#10 +
-  '  writeln(''You found '', amount, '' gold!'');' + #13#10 +
-  'end;'),
-
-  F('Main.mdp',
-  '// ============================================================' + #13#10 +
-  '// MAIN.MDP — Mini Text Adventure' + #13#10 +
-  '//' + #13#10 +
-  '// Uses GameEngine for all player state and combat.' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''GameEngine.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'procedure DoRoom;' + #13#10 +
-  'var choice : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  case PlayerRoom of' + #13#10 +
-  '    1:' + #13#10 +
-  '    begin' + #13#10 +
-  '      writeln(''=== Castle Entrance ==='');' + #13#10 +
-  '      writeln(''A dark castle looms before you.'');' + #13#10 +
-  '      writeln(''Exits: NORTH=Hall'');' + #13#10 +
-  '      ShowStatus;' + #13#10 +
-  '      choice := InputBox(''Which way? (NORTH/QUIT):'', ''Adventure'', ''NORTH'');' + #13#10 +
-  '      caseof UpperCase(choice) of' + #13#10 +
-  '        ''NORTH'' : PlayerRoom := 2;' + #13#10 +
-  '        ''QUIT''  : GameOver  := true;' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '    2:' + #13#10 +
-  '    begin' + #13#10 +
-  '      writeln(''=== Great Hall ==='');' + #13#10 +
-  '      writeln(''A goblin blocks the way! It attacks!'');' + #13#10 +
-  '      TakeDamage(20);' + #13#10 +
-  '      if not GameOver then' + #13#10 +
-  '      begin' + #13#10 +
-  '        writeln(''You defeat the goblin.'');' + #13#10 +
-  '        AddGold(15);' + #13#10 +
-  '        writeln(''Exits: SOUTH=Entrance NORTH=Dungeon'');' + #13#10 +
-  '        ShowStatus;' + #13#10 +
-  '        choice := InputBox(''Which way?:'', ''Adventure'', ''NORTH'');' + #13#10 +
-  '        caseof UpperCase(choice) of' + #13#10 +
-  '          ''SOUTH'' : PlayerRoom := 1;' + #13#10 +
-  '          ''NORTH'' : PlayerRoom := 3;' + #13#10 +
-  '        end;' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '    3:' + #13#10 +
-  '    begin' + #13#10 +
-  '      writeln(''=== The Dungeon ==='');' + #13#10 +
-  '      writeln(''A dragon lurks here! Massive claws rake you!'');' + #13#10 +
-  '      TakeDamage(40);' + #13#10 +
-  '      if not GameOver then' + #13#10 +
-  '      begin' + #13#10 +
-  '        writeln(''You slay the dragon!'');' + #13#10 +
-  '        AddGold(100);' + #13#10 +
-  '        writeln(''Exits: SOUTH=Hall EAST=Treasure Room'');' + #13#10 +
-  '        ShowStatus;' + #13#10 +
-  '        choice := InputBox(''Which way?:'', ''Adventure'', ''EAST'');' + #13#10 +
-  '        caseof UpperCase(choice) of' + #13#10 +
-  '          ''SOUTH'' : PlayerRoom := 2;' + #13#10 +
-  '          ''EAST''  : PlayerRoom := 4;' + #13#10 +
-  '        end;' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '    4:' + #13#10 +
-  '    begin' + #13#10 +
-  '      writeln(''=== Treasure Room ==='');' + #13#10 +
-  '      writeln(''Piles of gold glitter everywhere!'');' + #13#10 +
-  '      AddGold(500);' + #13#10 +
-  '      writeln(''YOU WIN! Final gold: '', PlayerGold);' + #13#10 +
-  '      ShowMessage(''YOU WIN! Total gold: '' + IntToStr(PlayerGold));' + #13#10 +
-  '      GameOver := true;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  InitPlayer;' + #13#10 +
-  '  ShowMessage(''Welcome to the Mini Text Adventure! Use dialogs to navigate.'');' + #13#10 +
-  '  while not GameOver do' + #13#10 +
-  '    DoRoom;' + #13#10 +
-  '  writeln(''Game over. Final gold: '', PlayerGold);' + #13#10 +
-  'end.', True)
-]);
-
-// ---------------------------------------------------------------------------
-// 7. Statistics Suite — DataLib + StatsLib + Main
-// ---------------------------------------------------------------------------
-AddMulti('Statistics Suite', 'Multi-File Projects',
-  'DataLib handles collections, StatsLib computes mean/variance/stddev',
-[
-  F('DataLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// DATALIB.MDP — Simple data collection into a string-encoded list' + #13#10 +
-  '//' + #13#10 +
-  '// Since MiniDelphi has no arrays, we encode numbers as a' + #13#10 +
-  '// comma-separated string and parse them back when needed.' + #13#10 +
-  '// *** NOTE: This is a common trick in constrained environments!' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  '// Add a number to the dataset (stored as CSV string)' + #13#10 +
-  'function DataAdd(data: String; value: Real): String;' + #13#10 +
-  'begin' + #13#10 +
-  '  if data = '''' then Result := FloatToStr(value)' + #13#10 +
-  '  else Result := data + '','' + FloatToStr(value);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Count items in dataset' + #13#10 +
-  'function DataCount(data: String): Integer;' + #13#10 +
-  'var i, count : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  if data = '''' then begin Result := 0; exit; end;' + #13#10 +
-  '  count := 1;' + #13#10 +
-  '  for i := 1 to Length(data) do' + #13#10 +
-  '    if Copy(data, i, 1) = '','' then inc(count);' + #13#10 +
-  '  Result := count;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Get item at position k (1-based) from dataset' + #13#10 +
-  'function DataGet(data: String; k: Integer): Real;' + #13#10 +
-  'var i, cur, p : Integer;' + #13#10 +
-  '    token     : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  cur := 1; p := 1;' + #13#10 +
-  '  for i := 1 to Length(data) + 1 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    if (i > Length(data)) or (Copy(data, i, 1) = '','') then' + #13#10 +
-  '    begin' + #13#10 +
-  '      if cur = k then' + #13#10 +
-  '      begin' + #13#10 +
-  '        Result := StrToFloat(Copy(data, p, i - p));' + #13#10 +
-  '        exit;' + #13#10 +
-  '      end;' + #13#10 +
-  '      inc(cur); p := i + 1;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  '  Result := 0;' + #13#10 +
-  'end;'),
-
-  F('StatsLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// STATSLIB.MDP — Statistical functions built on DataLib' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''DataLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'function StatSum(data: String): Real;' + #13#10 +
-  'var i : Integer;' + #13#10 +
-  '    s : Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  s := 0;' + #13#10 +
-  '  for i := 1 to DataCount(data) do s := s + DataGet(data, i);' + #13#10 +
-  '  Result := s;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function StatMean(data: String): Real;' + #13#10 +
-  'var n : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  n := DataCount(data);' + #13#10 +
-  '  if n = 0 then Result := 0' + #13#10 +
-  '  else Result := StatSum(data) / n;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function StatMin(data: String): Real;' + #13#10 +
-  'var i : Integer;' + #13#10 +
-  '    m : Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  m := DataGet(data, 1);' + #13#10 +
-  '  for i := 2 to DataCount(data) do' + #13#10 +
-  '    if DataGet(data, i) < m then m := DataGet(data, i);' + #13#10 +
-  '  Result := m;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function StatMax(data: String): Real;' + #13#10 +
-  'var i : Integer;' + #13#10 +
-  '    m : Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  m := DataGet(data, 1);' + #13#10 +
-  '  for i := 2 to DataCount(data) do' + #13#10 +
-  '    if DataGet(data, i) > m then m := DataGet(data, i);' + #13#10 +
-  '  Result := m;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function StatVariance(data: String): Real;' + #13#10 +
-  'var i, n : Integer;' + #13#10 +
-  '    mean, sum : Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  n := DataCount(data);' + #13#10 +
-  '  if n < 2 then begin Result := 0; exit; end;' + #13#10 +
-  '  mean := StatMean(data);' + #13#10 +
-  '  sum  := 0;' + #13#10 +
-  '  for i := 1 to n do' + #13#10 +
-  '    sum := sum + sqr(DataGet(data, i) - mean);' + #13#10 +
-  '  Result := sum / (n - 1);   // sample variance' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function StatStdDev(data: String): Real;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := sqrt(StatVariance(data));' + #13#10 +
-  'end;'),
-
-  F('Main.mdp',
-  '// ============================================================' + #13#10 +
-  '// MAIN.MDP — Statistics Suite' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''StatsLib.mdp'';   // StatsLib pulls in DataLib automatically' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  data  : String;   // our dataset as CSV' + #13#10 +
-  '  inp   : String;' + #13#10 +
-  '  going : Boolean;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  data  := '''';' + #13#10 +
-  '  going := true;' + #13#10 +
-  '  writeln(''=== Statistics Suite ==='');' + #13#10 +
-  '  writeln(''Enter numbers one at a time. Blank = calculate.'');' + #13#10 +
-  '' + #13#10 +
-  '  while going do' + #13#10 +
-  '  begin' + #13#10 +
-  '    inp := InputBox(''Add value (blank=done):'', ''Stats'', '''');' + #13#10 +
-  '    if inp = '''' then' + #13#10 +
-  '      going := false' + #13#10 +
-  '    else' + #13#10 +
-  '      data := DataAdd(data, StrToFloat(inp));' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  if DataCount(data) = 0 then' + #13#10 +
-  '    writeln(''No data entered.'')' + #13#10 +
-  '  else' + #13#10 +
-  '  begin' + #13#10 +
-  '    writeln(''Count  : '', DataCount(data));' + #13#10 +
-  '    writeln(''Sum    : '', StatSum(data));' + #13#10 +
-  '    writeln(''Mean   : '', round(StatMean(data)*1000)/1000);' + #13#10 +
-  '    writeln(''Min    : '', StatMin(data));' + #13#10 +
-  '    writeln(''Max    : '', StatMax(data));' + #13#10 +
-  '    writeln(''StdDev : '', round(StatStdDev(data)*1000)/1000);' + #13#10 +
-  '  end;' + #13#10 +
-  'end.', True)
-]);
-
-// ---------------------------------------------------------------------------
-// 8. Unit Conversion System — UnitsLib shared across two programs
-// ---------------------------------------------------------------------------
-AddMulti('Shared Units Demo', 'Multi-File Projects',
-  'One UnitsLib used by TWO different main programs — shows true reuse',
-[
-  F('UnitsLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// UNITSLIB.MDP — Conversion functions used by multiple programs' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: This is WHY libraries exist.' + #13#10 +
-  '//     Write the conversion logic ONCE, use it EVERYWHERE.' + #13#10 +
-  '//     If the formula needs fixing, fix it in ONE place.' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  '// Length' + #13#10 +
-  'function MetresToFeet(m: Real): Real;   begin Result := m * 3.28084;  end;' + #13#10 +
-  'function FeetToMetres(f: Real): Real;   begin Result := f * 0.3048;   end;' + #13#10 +
-  'function KmToMiles(k: Real): Real;      begin Result := k * 0.621371; end;' + #13#10 +
-  '' + #13#10 +
-  '// Weight' + #13#10 +
-  'function KgToLbs(kg: Real): Real;       begin Result := kg * 2.20462; end;' + #13#10 +
-  'function LbsToKg(lb: Real): Real;       begin Result := lb * 0.453592; end;' + #13#10 +
-  '' + #13#10 +
-  '// Temperature' + #13#10 +
-  'function CelsiusToF(c: Real): Real;     begin Result := c * 9/5 + 32;  end;' + #13#10 +
-  'function FahrenheitToC(f: Real): Real;  begin Result := (f-32) * 5/9;  end;' + #13#10 +
-  '' + #13#10 +
-  '// Speed' + #13#10 +
-  'function KphToMph(k: Real): Real;       begin Result := k * 0.621371; end;' + #13#10 +
-  'function MphToKph(m: Real): Real;       begin Result := m * 1.60934;  end;'),
-
-  F('ScientificConverter.mdp',
-  '// ============================================================' + #13#10 +
-  '// SCIENTIFICCONVERTER.MDP' + #13#10 +
-  '// A scientific-style converter using UnitsLib' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''UnitsLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'var n : Real;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln(''=== Scientific Converter ==='');' + #13#10 +
-  '  n := StrToFloat(InputBox(''Enter metres:'', ''Converter'', ''1''));' + #13#10 +
-  '  writeln(n, '' metres = '', round(MetresToFeet(n)*1000)/1000, '' feet'');' + #13#10 +
-  '  n := StrToFloat(InputBox(''Enter km/h:'', ''Converter'', ''100''));' + #13#10 +
-  '  writeln(n, '' km/h = '', round(KphToMph(n)*100)/100, '' mph'');' + #13#10 +
-  '  n := StrToFloat(InputBox(''Enter Celsius:'', ''Converter'', ''100''));' + #13#10 +
-  '  writeln(n, '' C = '', CelsiusToF(n), '' F'');' + #13#10 +
-  'end.', True),
-
-  F('CookingConverter.mdp',
-  '// ============================================================' + #13#10 +
-  '// COOKINGCONVERTER.MDP' + #13#10 +
-  '// A cooking-style converter — SAME library, different purpose!' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''UnitsLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'var oz, lbs, f : Real;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln(''=== Cooking Converter ==='');' + #13#10 +
-  '  lbs := StrToFloat(InputBox(''Recipe calls for (lbs):'', ''Cooking'', ''2.5''));' + #13#10 +
-  '  writeln(lbs, '' lbs = '', round(LbsToKg(lbs)*100)/100, '' kg'');' + #13#10 +
-  '  f := StrToFloat(InputBox(''Oven temp (Fahrenheit):'', ''Cooking'', ''350''));' + #13#10 +
-  '  writeln(f, '' F = '', round(FahrenheitToC(f)), '' C (Gas mark ~'', round((FahrenheitToC(f)-121)/14), '')'');' + #13#10 +
-  'end.')
-]);
-
-// ---------------------------------------------------------------------------
-// 9. Logging System — LogLib used by an app
-// ---------------------------------------------------------------------------
-AddMulti('Logging System', 'Multi-File Projects',
-  'LogLib writes timestamped entries to a file — used by any program',
-[
-  F('LogLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// LOGLIB.MDP — Reusable logging library' + #13#10 +
-  '//' + #13#10 +
-  '// Writes timestamped log entries to a file.' + #13#10 +
-  '// Any program that imports this gets professional logging.' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: This is a real pattern used in every serious app.' + #13#10 +
-  '//     Logging lets you trace what your program did.' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  LogFile    : String;    // path to the log file' + #13#10 +
-  '  LogEnabled : Boolean;   // can be turned off' + #13#10 +
-  '' + #13#10 +
-  '// Call this first to set the log file path' + #13#10 +
-  'procedure LogInit(fname: String);' + #13#10 +
-  'begin' + #13#10 +
-  '  LogFile    := fname;' + #13#10 +
-  '  LogEnabled := true;' + #13#10 +
-  '  AppendFile(LogFile, ''=== Log started ==='');' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Write an INFO entry' + #13#10 +
-  'procedure LogInfo(msg: String);' + #13#10 +
-  'begin' + #13#10 +
-  '  if LogEnabled then' + #13#10 +
-  '    AppendFile(LogFile, ''[INFO]    '' + msg);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Write a WARNING entry' + #13#10 +
-  'procedure LogWarn(msg: String);' + #13#10 +
-  'begin' + #13#10 +
-  '  if LogEnabled then' + #13#10 +
-  '    AppendFile(LogFile, ''[WARNING] '' + msg);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Write an ERROR entry' + #13#10 +
-  'procedure LogError(msg: String);' + #13#10 +
-  'begin' + #13#10 +
-  '  if LogEnabled then' + #13#10 +
-  '    AppendFile(LogFile, ''[ERROR]   '' + msg);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Read and display the whole log' + #13#10 +
-  'procedure LogShow;' + #13#10 +
-  'begin' + #13#10 +
-  '  if FileExists(LogFile) then' + #13#10 +
-  '    writeln(ReadFile(LogFile))' + #13#10 +
-  '  else' + #13#10 +
-  '    writeln(''(log file not found)'');' + #13#10 +
-  'end;'),
-
-  F('Main.mdp',
-  '// ============================================================' + #13#10 +
-  '// MAIN.MDP — A program that uses LogLib for audit logging' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''LogLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  username : String;' + #13#10 +
-  '  action   : String;' + #13#10 +
-  '  running  : Boolean;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  // Initialise logging to a file next to the program' + #13#10 +
-  '  LogInit(GetAppPath + ''app.log'');' + #13#10 +
-  '  LogInfo(''Application started'');' + #13#10 +
-  '' + #13#10 +
-  '  username := InputBox(''Username:'', ''Login'', ''admin'');' + #13#10 +
-  '  LogInfo(''User logged in: '' + username);' + #13#10 +
-  '  writeln(''Welcome, '', username, ''!'');' + #13#10 +
-  '' + #13#10 +
-  '  running := true;' + #13#10 +
-  '  while running do' + #13#10 +
-  '  begin' + #13#10 +
-  '    action := InputBox(''Action (save/delete/warn/quit):'', ''App'', ''save'');' + #13#10 +
-  '    caseof LowerCase(action) of' + #13#10 +
-  '      ''save''  : begin LogInfo(''User saved data'');   writeln(''Data saved.''); end;' + #13#10 +
-  '      ''delete'': begin LogWarn(''User deleted data''); writeln(''Data deleted.''); end;' + #13#10 +
-  '      ''warn''  : begin LogError(''User triggered error''); ShowErrorBox(''Error logged!''); end;' + #13#10 +
-  '      ''quit''  : begin LogInfo(''User quit''); running := false; end;' + #13#10 +
-  '    else' + #13#10 +
-  '      LogWarn(''Unknown action: '' + action);' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''=== Session Log ==='');' + #13#10 +
-  '  LogShow;' + #13#10 +
-  'end.', True)
-]);
-
-// ---------------------------------------------------------------------------
-// 10. Quiz Engine — QuizLib + a Science Quiz + a Maths Quiz
-// ---------------------------------------------------------------------------
-AddMulti('Quiz Engine', 'Multi-File Projects',
-  'QuizLib runs any quiz — plug in Science or Maths question sets',
-[
-  F('QuizLib.mdp',
-  '// ============================================================' + #13#10 +
-  '// QUIZLIB.MDP — Generic quiz engine' + #13#10 +
-  '//' + #13#10 +
-  '// Provides: ask a question, check answer, keep score.' + #13#10 +
-  '// The question CONTENT is defined by the calling program.' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: Separating the ENGINE from the CONTENT is great design.' + #13#10 +
-  '//     One engine, unlimited quiz topics!' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  QuizScore   : Integer;' + #13#10 +
-  '  QuizTotal   : Integer;' + #13#10 +
-  '' + #13#10 +
-  'procedure QuizInit;' + #13#10 +
-  'begin' + #13#10 +
-  '  QuizScore := 0;' + #13#10 +
-  '  QuizTotal := 0;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// Ask one question. answer is the correct answer (case-insensitive).' + #13#10 +
-  'procedure QuizAsk(question, answer: String);' + #13#10 +
-  'var given : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  inc(QuizTotal);' + #13#10 +
-  '  given := InputBox(''Q'' + IntToStr(QuizTotal) + '': '' + question,' + #13#10 +
-  '                    ''Quiz'', '''');' + #13#10 +
-  '  if LowerCase(Trim(given)) = LowerCase(Trim(answer)) then' + #13#10 +
-  '  begin' + #13#10 +
-  '    inc(QuizScore);' + #13#10 +
-  '    writeln(''CORRECT! '', answer);' + #13#10 +
-  '  end' + #13#10 +
-  '  else' + #13#10 +
-  '    writeln(''Wrong. Answer was: '', answer);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure QuizResults(quizName: String);' + #13#10 +
-  'var pct : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  pct := round(QuizScore * 100 / QuizTotal);' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''=== '', quizName, '' Results ==='');' + #13#10 +
-  '  writeln(''Score: '', QuizScore, '' / '', QuizTotal, '' ('', pct, ''%)'');' + #13#10 +
-  '  if pct >= 80 then ShowInfoBox(''Excellent! '', pct, ''%!'')' + #13#10 +
-  '  else if pct >= 60 then ShowInfoBox(''Good effort: '', pct, ''%'')' + #13#10 +
-  '  else ShowInfoBox(''Keep studying! '', pct, ''%'');' + #13#10 +
-  'end;'),
-
-  F('ScienceQuiz.mdp',
-  '// ============================================================' + #13#10 +
-  '// SCIENCEQUIZ.MDP — A science quiz using QuizLib' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''QuizLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  QuizInit;' + #13#10 +
-  '  ShowMessage(''Science Quiz — 5 questions. Good luck!'');' + #13#10 +
-  '  QuizAsk(''What is the chemical symbol for water?'',            ''H2O'');' + #13#10 +
-  '  QuizAsk(''How many planets are in our solar system?'',        ''8'');' + #13#10 +
-  '  QuizAsk(''What gas do plants absorb from the air?'',          ''carbon dioxide'');' + #13#10 +
-  '  QuizAsk(''What force keeps us on the ground?'',               ''gravity'');' + #13#10 +
-  '  QuizAsk(''What is the speed of light (km/s, rounded)? '', ''300000'');' + #13#10 +
-  '  QuizResults(''Science Quiz'');' + #13#10 +
-  'end.', True),
-
-  F('MathsQuiz.mdp',
-  '// ============================================================' + #13#10 +
-  '// MATHSQUIZ.MDP — A maths quiz using the SAME QuizLib' + #13#10 +
-  '//' + #13#10 +
-  '// *** NOTE: Same engine (QuizLib), completely different content.' + #13#10 +
-  '//     This is the power of reusable libraries!' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'uses' + #13#10 +
-  '  ''QuizLib.mdp'';' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  QuizInit;' + #13#10 +
-  '  ShowMessage(''Maths Quiz — 5 questions. Good luck!'');' + #13#10 +
-  '  QuizAsk(''What is 7 x 8?'',                      ''56'');' + #13#10 +
-  '  QuizAsk(''What is the square root of 144?'',     ''12'');' + #13#10 +
-  '  QuizAsk(''What is 15% of 200?'',                 ''30'');' + #13#10 +
-  '  QuizAsk(''How many sides does a hexagon have?'', ''6'');' + #13#10 +
-  '  QuizAsk(''What is 2 to the power of 10?'',      ''1024'');' + #13#10 +
-  '  QuizResults(''Maths Quiz'');' + #13#10 +
-  'end.')
-]);
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  DATABASE EXAMPLES
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('SQLite Hello World', 'Database',
-  'Create a database, insert records, query them back',
-'// ============================================================' + #13#10 +
-'// SQLITE HELLO WORLD' + #13#10 +
-'// Your first database program!' + #13#10 +
-'// Teaches: DbOpen, DbExec, DbQuery, DbClose' + #13#10 +
-'//' + #13#10 +
-'// REQUIRES: sqlite3.dll in the same folder as MiniDelphi.exe' + #13#10 +
-'// Download from: https://sqlite.org/download.html' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  // Open (or create) a database file' + #13#10 +
-'  if not DbOpen(GetAppPath + ''hello.db'') then' + #13#10 +
-'  begin' + #13#10 +
-'    writeln(''Cannot open database: '', DbLastError);' + #13#10 +
-'    exit;' + #13#10 +
-'  end;' + #13#10 +
-'  writeln(''Database opened: '', DbFilename);' + #13#10 +
-'' + #13#10 +
-'  // Create a table (IF NOT EXISTS means it is safe to run again)' + #13#10 +
-'  DbExec(''CREATE TABLE IF NOT EXISTS people ('' +' + #13#10 +
-'         ''  id   INTEGER PRIMARY KEY AUTOINCREMENT,'' +' + #13#10 +
-'         ''  name TEXT NOT NULL,'' +' + #13#10 +
-'         ''  age  INTEGER'');' + #13#10 +
-'' + #13#10 +
-'  // Clear old data so we start fresh each run' + #13#10 +
-'  DbExec(''DELETE FROM people'');' + #13#10 +
-'' + #13#10 +
-'  // Insert some records' + #13#10 +
-'  DbExec(''INSERT INTO people (name, age) VALUES (''''Alice'''', 30)'');' + #13#10 +
-'  DbExec(''INSERT INTO people (name, age) VALUES (''''Bob'''',   25)'');' + #13#10 +
-'  DbExec(''INSERT INTO people (name, age) VALUES (''''Carol'''', 35)'');' + #13#10 +
-'  writeln(''3 records inserted.'');' + #13#10 +
-'' + #13#10 +
-'  // Query all records' + #13#10 +
-'  writeln('''');' + #13#10 +
-'  writeln(''All people:'');' + #13#10 +
-'  writeln(DbQuery(''SELECT * FROM people ORDER BY name''));' + #13#10 +
-'' + #13#10 +
-'  // Query with a condition' + #13#10 +
-'  writeln(''People over 28:'');' + #13#10 +
-'  writeln(DbQuery(''SELECT name, age FROM people WHERE age > 28''));' + #13#10 +
-'' + #13#10 +
-'  // Get a single value' + #13#10 +
-'  writeln(''Count: '', DbQueryValue(''SELECT COUNT(*) FROM people''));' + #13#10 +
-'  writeln(''Oldest: '', DbQueryValue(''SELECT MAX(age) FROM people''));' + #13#10 +
-'' + #13#10 +
-'  DbClose;' + #13#10 +
-'  writeln(''Done.'');' + #13#10 +
-'end.');
-
-Add('Phone Book Database', 'Database',
-  'A persistent phone book stored in SQLite',
-'// ============================================================' + #13#10 +
-'// PHONE BOOK DATABASE' + #13#10 +
-'// Contacts stored in SQLite — survive between runs!' + #13#10 +
-'// Teaches: INSERT, SELECT, DELETE, WHERE, LIKE search' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  choice  : String;' + #13#10 +
-'  name    : String;' + #13#10 +
-'  phone   : String;' + #13#10 +
-'  search  : String;' + #13#10 +
-'  running : Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  if not DbOpen(GetAppPath + ''phonebook.db'') then' + #13#10 +
-'  begin' + #13#10 +
-'    ShowErrorBox(''Cannot open database: '' + DbLastError);' + #13#10 +
-'    exit;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  DbExec(''CREATE TABLE IF NOT EXISTS contacts ('' +' + #13#10 +
-'         ''  id    INTEGER PRIMARY KEY AUTOINCREMENT,'' +' + #13#10 +
-'         ''  name  TEXT NOT NULL,'' +' + #13#10 +
-'         ''  phone TEXT)'');' + #13#10 +
-'' + #13#10 +
-'  running := true;' + #13#10 +
-'  while running do' + #13#10 +
-'  begin' + #13#10 +
-'    choice := InputBox(''A=Add  S=Search  L=List  D=Delete  Q=Quit'',' + #13#10 +
-'                       ''Phone Book'', ''L'');' + #13#10 +
-'    caseof UpperCase(choice) of' + #13#10 +
-'      ''A'':' + #13#10 +
-'      begin' + #13#10 +
-'        name  := InputBox(''Name:'',  ''Add Contact'', '''');' + #13#10 +
-'        phone := InputBox(''Phone:'', ''Add Contact'', '''');' + #13#10 +
-'        if name <> '''' then' + #13#10 +
-'        begin' + #13#10 +
-'          // *** NOTE: Use double quotes inside SQL strings' + #13#10 +
-'          DbExec(''INSERT INTO contacts (name, phone) VALUES ('''''' + name + '''''', '''''' + phone + '''''')'');' + #13#10 +
-'          writeln(''Added: '', name);' + #13#10 +
-'        end;' + #13#10 +
-'      end;' + #13#10 +
-'      ''S'':' + #13#10 +
-'      begin' + #13#10 +
-'        search := InputBox(''Search name:'', ''Search'', '''');' + #13#10 +
-'        // LIKE with % is a wildcard search' + #13#10 +
-'        writeln(DbQuery(''SELECT name, phone FROM contacts WHERE name LIKE ''''%'' + search + ''%''''''));' + #13#10 +
-'      end;' + #13#10 +
-'      ''L'': writeln(DbQuery(''SELECT id, name, phone FROM contacts ORDER BY name''));' + #13#10 +
-'      ''D'':' + #13#10 +
-'      begin' + #13#10 +
-'        name := InputBox(''Delete name:'', ''Delete'', '''');' + #13#10 +
-'        if Confirm(''Delete '' + name + ''?'') then' + #13#10 +
-'        begin' + #13#10 +
-'          DbExec(''DELETE FROM contacts WHERE name = '''''' + name + '''''''' );' + #13#10 +
-'          writeln(''Deleted: '', name);' + #13#10 +
-'        end;' + #13#10 +
-'      end;' + #13#10 +
-'      ''Q'': running := false;' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'  DbClose;' + #13#10 +
-'end.');
-
-Add('Grade Book Database', 'Database',
-  'Store student grades in SQLite with averages and statistics',
-'// ============================================================' + #13#10 +
-'// GRADE BOOK DATABASE' + #13#10 +
-'// Student grades stored in SQLite with SQL aggregates.' + #13#10 +
-'// Teaches: GROUP BY, AVG, MAX, MIN, aggregate functions' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  student : String;' + #13#10 +
-'  subject : String;' + #13#10 +
-'  score   : String;' + #13#10 +
-'  adding  : Boolean;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  DbOpen(GetAppPath + ''grades.db'');' + #13#10 +
-'  DbExec(''CREATE TABLE IF NOT EXISTS grades ('' +' + #13#10 +
-'         ''  student TEXT, subject TEXT, score REAL)'');' + #13#10 +
-'  DbExec(''DELETE FROM grades'');' + #13#10 +
-'' + #13#10 +
-'  // Pre-load some sample data' + #13#10 +
-'  DbExec(''INSERT INTO grades VALUES (''''Alice'''',   ''''Maths'''',   92)'');' + #13#10 +
-'  DbExec(''INSERT INTO grades VALUES (''''Alice'''',   ''''Science'''', 88)'');' + #13#10 +
-'  DbExec(''INSERT INTO grades VALUES (''''Bob'''',     ''''Maths'''',   75)'');' + #13#10 +
-'  DbExec(''INSERT INTO grades VALUES (''''Bob'''',     ''''Science'''', 82)'');' + #13#10 +
-'  DbExec(''INSERT INTO grades VALUES (''''Carol'''',   ''''Maths'''',   95)'');' + #13#10 +
-'  DbExec(''INSERT INTO grades VALUES (''''Carol'''',   ''''Science'''', 91)'');' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== All Grades ==='');' + #13#10 +
-'  writeln(DbQuery(''SELECT student, subject, score FROM grades ORDER BY student, subject''));' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Average per Student ==='');' + #13#10 +
-'  // GROUP BY lets us summarise — one row per student' + #13#10 +
-'  writeln(DbQuery(''SELECT student, AVG(score) as average, '' +' + #13#10 +
-'                  ''MIN(score) as lowest, MAX(score) as highest '' +' + #13#10 +
-'                  ''FROM grades GROUP BY student ORDER BY average DESC''));' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Class Statistics ==='');' + #13#10 +
-'  writeln(''Class average: '', DbQueryValue(''SELECT AVG(score) FROM grades''));' + #13#10 +
-'  writeln(''Top score:     '', DbQueryValue(''SELECT MAX(score) FROM grades''));' + #13#10 +
-'' + #13#10 +
-'  DbClose;' + #13#10 +
-'end.');
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  OOP EXAMPLES
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('OOP Hello World', 'Object Oriented',
-  'Your first class — TGreeter with a field and a method',
-'// ============================================================' + #13#10 +
-'// OOP HELLO WORLD' + #13#10 +
-'// The simplest possible class: one field, one method.' + #13#10 +
-'// Teaches: type, class, fields, methods, Create, dot notation' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'type' + #13#10 +
-'  // Define a class called TGreeter.' + #13#10 +
-'  // By convention Delphi class names start with T.' + #13#10 +
-'  TGreeter = class' + #13#10 +
-'    // A field — this is data the object holds' + #13#10 +
-'    Name : String;' + #13#10 +
-'' + #13#10 +
-'    // A method — this is something the object can DO' + #13#10 +
-'    procedure SayHello;' + #13#10 +
-'    procedure SayGoodbye;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'// Method implementations come after the type block.' + #13#10 +
-'// *** NOTE: Use ClassName.MethodName format.' + #13#10 +
-'procedure TGreeter.SayHello;' + #13#10 +
-'begin' + #13#10 +
-'  // Self refers to the object this method was called on' + #13#10 +
-'  writeln(''Hello! My name is '', Self.Name, ''.'');' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure TGreeter.SayGoodbye;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Goodbye from '', Self.Name, ''!'');' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  g1, g2 : TGreeter;   // two variables that will hold objects' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  // Create two independent TGreeter objects' + #13#10 +
-'  g1 := TGreeter.Create;' + #13#10 +
-'  g2 := TGreeter.Create;' + #13#10 +
-'' + #13#10 +
-'  // Set each object''s Name field independently' + #13#10 +
-'  g1.Name := ''Alice'';' + #13#10 +
-'  g2.Name := ''Bob'';' + #13#10 +
-'' + #13#10 +
-'  // Call methods on each object using dot notation' + #13#10 +
-'  g1.SayHello;' + #13#10 +
-'  g2.SayHello;' + #13#10 +
-'  g1.SayGoodbye;' + #13#10 +
-'  writeln(''g1.Name = '', g1.Name);' + #13#10 +
-'  writeln(''g2.Name = '', g2.Name);' + #13#10 +
-'end.');
-
-Add('Inheritance Demo', 'Object Oriented',
-  'TAnimal → TDog and TCat — virtual methods and polymorphism',
-'// ============================================================' + #13#10 +
-'// INHERITANCE DEMO' + #13#10 +
-'// TAnimal is the base class. TDog and TCat extend it.' + #13#10 +
-'// Teaches: class(Parent), virtual, override, polymorphism' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'type' + #13#10 +
-'  // Base class — all animals have a Name and can Speak' + #13#10 +
-'  TAnimal = class' + #13#10 +
-'    Name : String;' + #13#10 +
-'    // virtual means subclasses CAN override this method' + #13#10 +
-'    procedure Speak; virtual;' + #13#10 +
-'    procedure Describe;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  // TDog extends TAnimal — it INHERITS Name and Describe' + #13#10 +
-'  TDog = class(TAnimal)' + #13#10 +
-'    Breed : String;' + #13#10 +
-'    // override means we are replacing the parent''s version' + #13#10 +
-'    procedure Speak; override;' + #13#10 +
-'    procedure Fetch;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  TCat = class(TAnimal)' + #13#10 +
-'    Indoor : Boolean;' + #13#10 +
-'    procedure Speak; override;' + #13#10 +
-'    procedure Purr;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'// Base class method implementations' + #13#10 +
-'procedure TAnimal.Speak;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(Self.Name, '' says: ...'');   // default — subclasses override this' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure TAnimal.Describe;' + #13#10 +
-'begin' + #13#10 +
-'  write(Self.Name, '' is a '', Self.ClassName, '' and says: '');' + #13#10 +
-'  Self.Speak;   // *** NOTE: This calls the OVERRIDDEN version!' + #13#10 +
-'                // This is POLYMORPHISM — the behaviour depends on' + #13#10 +
-'                // the actual type of Self at runtime.' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'// Dog implementations' + #13#10 +
-'procedure TDog.Speak;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Woof! Woof!'');' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure TDog.Fetch;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(Self.Name, '' fetches the ball!'');' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'// Cat implementations' + #13#10 +
-'procedure TCat.Speak;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Meow!'');' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure TCat.Purr;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(Self.Name, '' purrs contentedly...'');' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  dog : TDog;' + #13#10 +
-'  cat : TCat;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  dog       := TDog.Create;' + #13#10 +
-'  dog.Name  := ''Rex'';' + #13#10 +
-'  dog.Breed := ''Labrador'';' + #13#10 +
-'' + #13#10 +
-'  cat        := TCat.Create;' + #13#10 +
-'  cat.Name   := ''Whiskers'';' + #13#10 +
-'  cat.Indoor := true;' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Animal Demo ==='');' + #13#10 +
-'  dog.Describe;   // calls TDog.Speak via polymorphism' + #13#10 +
-'  cat.Describe;   // calls TCat.Speak via polymorphism' + #13#10 +
-'  dog.Fetch;' + #13#10 +
-'  cat.Purr;' + #13#10 +
-'  writeln(''Dog breed: '', dog.Breed);' + #13#10 +
-'  writeln(''Cat indoor: '', cat.Indoor);' + #13#10 +
-'end.');
-
-Add('Interface Demo', 'Object Oriented',
-  'IShape interface implemented by TCircle and TRectangle',
-'// ============================================================' + #13#10 +
-'// INTERFACE DEMO' + #13#10 +
-'// An interface defines a CONTRACT — any class that implements' + #13#10 +
-'// it MUST provide those methods.' + #13#10 +
-'// Teaches: interface, implements, polymorphism via interface' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'type' + #13#10 +
-'  // The interface — a contract with no implementation' + #13#10 +
-'  IShape = interface' + #13#10 +
-'    function  Area      : Real;' + #13#10 +
-'    function  Perimeter : Real;' + #13#10 +
-'    function  ShapeName : String;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  // TCircle PROMISES to implement IShape' + #13#10 +
-'  TCircle = class(TObject, IShape)' + #13#10 +
-'    Radius : Real;' + #13#10 +
-'    function  Area      : Real;' + #13#10 +
-'    function  Perimeter : Real;' + #13#10 +
-'    function  ShapeName : String;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  TRectangle = class(TObject, IShape)' + #13#10 +
-'    Width, Height : Real;' + #13#10 +
-'    function  Area      : Real;' + #13#10 +
-'    function  Perimeter : Real;' + #13#10 +
-'    function  ShapeName : String;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'function TCircle.Area;      begin Result := pi * Self.Radius * Self.Radius; end;' + #13#10 +
-'function TCircle.Perimeter; begin Result := 2 * pi * Self.Radius;           end;' + #13#10 +
-'function TCircle.ShapeName; begin Result := ''Circle'';                       end;' + #13#10 +
-'' + #13#10 +
-'function TRectangle.Area;      begin Result := Self.Width * Self.Height;          end;' + #13#10 +
-'function TRectangle.Perimeter; begin Result := 2 * (Self.Width + Self.Height);    end;' + #13#10 +
-'function TRectangle.ShapeName; begin Result := ''Rectangle'';                       end;' + #13#10 +
-'' + #13#10 +
-'// This procedure works with ANY IShape — it doesn''t care about the type' + #13#10 +
-'procedure PrintShapeInfo(s: TObject);' + #13#10 +
-'begin' + #13#10 +
-'  // *** NOTE: We check the interface using "is"' + #13#10 +
-'  if s is IShape then' + #13#10 +
-'    writeln(''Unknown shape — does not implement IShape'')' + #13#10 +
-'  else' + #13#10 +
-'  begin' + #13#10 +
-'    // Call methods based on the class type' + #13#10 +
-'    if s is TCircle then' + #13#10 +
-'    begin' + #13#10 +
-'      var c := TCircle(s);' + #13#10 +
-'      writeln(c.ShapeName, '': area='', round(c.Area*100)/100,' + #13#10 +
-'              '' perim='', round(c.Perimeter*100)/100);' + #13#10 +
-'    end' + #13#10 +
-'    else if s is TRectangle then' + #13#10 +
-'    begin' + #13#10 +
-'      var r := TRectangle(s);' + #13#10 +
-'      writeln(r.ShapeName, '': area='', round(r.Area*100)/100,' + #13#10 +
-'              '' perim='', round(r.Perimeter*100)/100);' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  c : TCircle;' + #13#10 +
-'  r : TRectangle;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  c        := TCircle.Create;' + #13#10 +
-'  c.Radius := 5;' + #13#10 +
-'' + #13#10 +
-'  r        := TRectangle.Create;' + #13#10 +
-'  r.Width  := 8;' + #13#10 +
-'  r.Height := 3;' + #13#10 +
-'' + #13#10 +
-'  writeln(''=== Shape Report ==='');' + #13#10 +
-'  PrintShapeInfo(c);' + #13#10 +
-'  PrintShapeInfo(r);' + #13#10 +
-'end.');
-
-Add('Constructor & Destructor', 'Object Oriented',
-  'Show how constructors initialise objects properly',
-'// ============================================================' + #13#10 +
-'// CONSTRUCTOR AND DESTRUCTOR' + #13#10 +
-'// Constructors run when an object is created.' + #13#10 +
-'// Destructors run when it is destroyed.' + #13#10 +
-'// Teaches: constructor, destructor, object lifecycle' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'type' + #13#10 +
-'  TBankAccount = class' + #13#10 +
-'    Owner   : String;' + #13#10 +
-'    Balance : Real;' + #13#10 +
-'' + #13#10 +
-'    // Constructor takes parameters to initialise the object' + #13#10 +
-'    constructor Create(ownerName: String; initialBalance: Real);' + #13#10 +
-'    destructor  Destroy;' + #13#10 +
-'' + #13#10 +
-'    procedure Deposit(amount: Real);' + #13#10 +
-'    procedure Withdraw(amount: Real);' + #13#10 +
-'    procedure ShowBalance;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'constructor TBankAccount.Create(ownerName: String; initialBalance: Real);' + #13#10 +
-'begin' + #13#10 +
-'  // *** NOTE: The constructor sets up the object''s initial state' + #13#10 +
-'  Self.Owner   := ownerName;' + #13#10 +
-'  Self.Balance := initialBalance;' + #13#10 +
-'  writeln(''Account created for '', Self.Owner,' + #13#10 +
-'          '' with $'', initialBalance);' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'destructor TBankAccount.Destroy;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''Account for '', Self.Owner, '' closed. Final balance: $'', Self.Balance);' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure TBankAccount.Deposit(amount: Real);' + #13#10 +
-'begin' + #13#10 +
-'  Self.Balance := Self.Balance + amount;' + #13#10 +
-'  writeln(''Deposited $'', amount, ''. New balance: $'', Self.Balance);' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure TBankAccount.Withdraw(amount: Real);' + #13#10 +
-'begin' + #13#10 +
-'  if amount > Self.Balance then' + #13#10 +
-'    writeln(''Insufficient funds!'')' + #13#10 +
-'  else' + #13#10 +
-'  begin' + #13#10 +
-'    Self.Balance := Self.Balance - amount;' + #13#10 +
-'    writeln(''Withdrew $'', amount, ''. New balance: $'', Self.Balance);' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'procedure TBankAccount.ShowBalance;' + #13#10 +
-'begin' + #13#10 +
-'  writeln(Self.Owner, '' balance: $'', Self.Balance);' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  acc : TBankAccount;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  writeln(''=== Bank Account Demo ==='');' + #13#10 +
-'  acc := TBankAccount.Create(''Alice'', 1000);' + #13#10 +
-'  acc.Deposit(500);' + #13#10 +
-'  acc.Withdraw(200);' + #13#10 +
-'  acc.Withdraw(2000);   // should fail' + #13#10 +
-'  acc.ShowBalance;' + #13#10 +
-'  acc.Destroy;' + #13#10 +
-'end.');
-
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  GRAPHICS & ANIMATION EXAMPLES
-// ═══════════════════════════════════════════════════════════════════════════
-
-Add('Bouncing Ball', 'Graphics',
-  'A glowing ball bouncing around the window with trail effect',
-'// ============================================================' + #13#10 +
-'// BOUNCING BALL' + #13#10 +
-'// A colourful ball bounces around the window.' + #13#10 +
-'// Close the window to stop.' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  x, y, dx, dy, r : Integer;' + #13#10 +
-'  colors : String;' + #13#10 +
-'  ci, frame : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  GfxOpen(640, 480, ''Bouncing Ball'');' + #13#10 +
-'' + #13#10 +
-'  x  := 320;  y  := 240;' + #13#10 +
-'  dx := 5;    dy := 3;' + #13#10 +
-'  r  := 30;' + #13#10 +
-'  ci := 0;' + #13#10 +
-'  frame := 0;' + #13#10 +
-'' + #13#10 +
-'  while GfxRunning do' + #13#10 +
-'  begin' + #13#10 +
-'    // Clear with dark background' + #13#10 +
-'    GfxClear(''black'');' + #13#10 +
-'' + #13#10 +
-'    // Draw shadow' + #13#10 +
-'    GfxColor(''#202020'');' + #13#10 +
-'    GfxFillEllipse(x + 8, y + 8, r, r div 3);' + #13#10 +
-'' + #13#10 +
-'    // Pick colour based on frame' + #13#10 +
-'    ci := (frame div 8) mod 7;' + #13#10 +
-'    case ci of' + #13#10 +
-'      0 : GfxColor(''red'');' + #13#10 +
-'      1 : GfxColor(''orange'');' + #13#10 +
-'      2 : GfxColor(''yellow'');' + #13#10 +
-'      3 : GfxColor(''lime'');' + #13#10 +
-'      4 : GfxColor(''cyan'');' + #13#10 +
-'      5 : GfxColor(''blue'');' + #13#10 +
-'      6 : GfxColor(''magenta'');' + #13#10 +
-'    end;' + #13#10 +
-'' + #13#10 +
-'    // Draw glowing ball (concentric circles)' + #13#10 +
-'    GfxFillCircle(x, y, r);' + #13#10 +
-'    GfxColor(''white'');' + #13#10 +
-'    GfxFillCircle(x - r div 4, y - r div 4, r div 5);' + #13#10 +
-'' + #13#10 +
-'    // Score / frame counter' + #13#10 +
-'    GfxColor(''silver'');' + #13#10 +
-'    GfxSetFont(14, false);' + #13#10 +
-'    GfxDrawText(10, 10, ''Frame: '' + IntToStr(frame));' + #13#10 +
-'    GfxDrawText(10, 30, ''Close window to stop'');' + #13#10 +
-'' + #13#10 +
-'    GfxShow;' + #13#10 +
-'    GfxDelay(16);' + #13#10 +
-'' + #13#10 +
-'    // Move ball' + #13#10 +
-'    x := x + dx;' + #13#10 +
-'    y := y + dy;' + #13#10 +
-'' + #13#10 +
-'    // Bounce off walls' + #13#10 +
-'    if (x - r < 0) or (x + r > 640) then dx := -dx;' + #13#10 +
-'    if (y - r < 0) or (y + r > 480) then dy := -dy;' + #13#10 +
-'' + #13#10 +
-'    // Keep in bounds' + #13#10 +
-'    if x - r < 0 then x := r;' + #13#10 +
-'    if x + r > 640 then x := 640 - r;' + #13#10 +
-'    if y - r < 0 then y := r;' + #13#10 +
-'    if y + r > 480 then y := 480 - r;' + #13#10 +
-'' + #13#10 +
-'    inc(frame);' + #13#10 +
-'  end;' + #13#10 +
-'  writeln(''Simulation ran for '', frame, '' frames.'');' + #13#10 +
-'end.');
-
-Add('Starfield', 'Graphics',
-  'Classic screensaver: stars flying towards you through space',
-'// ============================================================' + #13#10 +
-'// STARFIELD SCREENSAVER' + #13#10 +
-'// Stars fly towards you — a classic screensaver effect.' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  i, frame : Integer;' + #13#10 +
-'  cx, cy   : Integer;' + #13#10 +
-'  // Each star: sx[i]=x  sy[i]=y  sz[i]=depth' + #13#10 +
-'  sx1, sy1, sz1 : Integer;' + #13#10 +
-'  sx2, sy2, sz2 : Integer;' + #13#10 +
-'  sx3, sy3, sz3 : Integer;' + #13#10 +
-'  sx4, sy4, sz4 : Integer;' + #13#10 +
-'  sx5, sy5, sz5 : Integer;' + #13#10 +
-'  px, py, br     : Integer;' + #13#10 +
-'' + #13#10 +
-'procedure DrawStar(var sx, sy, sz: Integer; cx, cy: Integer);' + #13#10 +
-'var px, py, br, size : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  // Project 3D -> 2D' + #13#10 +
-'  if sz <= 0 then sz := 1;' + #13#10 +
-'  px := cx + (sx * 400) div sz;' + #13#10 +
-'  py := cy + (sy * 400) div sz;' + #13#10 +
-'  br := 255 - (sz * 255) div 800;' + #13#10 +
-'  size := 1 + (800 - sz) div 200;' + #13#10 +
-'' + #13#10 +
-'  if (px > 0) and (px < 640) and (py > 0) and (py < 480) then' + #13#10 +
-'  begin' + #13#10 +
-'    if br > 200 then GfxColor(''white'')' + #13#10 +
-'    else if br > 100 then GfxColor(''silver'')' + #13#10 +
-'    else GfxColor(''grey'');' + #13#10 +
-'    GfxFillCircle(px, py, size);' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  // Move star closer' + #13#10 +
-'  sz := sz - 8;' + #13#10 +
-'  if sz <= 0 then' + #13#10 +
-'  begin' + #13#10 +
-'    sz := 700 + (sz mod 100);' + #13#10 +
-'    sx := (sz mod 400) - 200;' + #13#10 +
-'    sy := (sz mod 300) - 150;' + #13#10 +
-'  end;' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  GfxOpen(640, 480, ''Starfield'');' + #13#10 +
-'  cx := 320;  cy := 240;' + #13#10 +
-'  sx1 := -100; sy1 := 80;  sz1 := 100;' + #13#10 +
-'  sx2 :=  150; sy2 := -60; sz2 := 250;' + #13#10 +
-'  sx3 :=  -50; sy3 := 130; sz3 := 400;' + #13#10 +
-'  sx4 :=  200; sy4 := -90; sz4 := 550;' + #13#10 +
-'  sx5 := -180; sy5 :=  40; sz5 := 650;' + #13#10 +
-'  frame := 0;' + #13#10 +
-'' + #13#10 +
-'  while GfxRunning do' + #13#10 +
-'  begin' + #13#10 +
-'    GfxClear(''black'');' + #13#10 +
-'    DrawStar(sx1, sy1, sz1, cx, cy);' + #13#10 +
-'    DrawStar(sx2, sy2, sz2, cx, cy);' + #13#10 +
-'    DrawStar(sx3, sy3, sz3, cx, cy);' + #13#10 +
-'    DrawStar(sx4, sy4, sz4, cx, cy);' + #13#10 +
-'    DrawStar(sx5, sy5, sz5, cx, cy);' + #13#10 +
-'' + #13#10 +
-'    GfxColor(''gold'');' + #13#10 +
-'    GfxSetFont(16, true);' + #13#10 +
-'    GfxDrawText(10, 10, ''STARFIELD'');' + #13#10 +
-'    GfxShow;' + #13#10 +
-'    GfxDelay(20);' + #13#10 +
-'    inc(frame);' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-Add('Solar System', 'Graphics',
-  'Animated solar system with planets orbiting the sun',
-'// ============================================================' + #13#10 +
-'// SOLAR SYSTEM ANIMATION' + #13#10 +
-'// Planets orbit the sun. Uses trigonometry for circular motion.' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  frame, cx, cy : Integer;' + #13#10 +
-'  angle1, angle2, angle3 : Real;' + #13#10 +
-'  px, py : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  GfxOpen(640, 480, ''Solar System'');' + #13#10 +
-'  cx := 320;  cy := 240;' + #13#10 +
-'  angle1 := 0;  angle2 := 0;  angle3 := 0;' + #13#10 +
-'  frame := 0;' + #13#10 +
-'' + #13#10 +
-'  while GfxRunning do' + #13#10 +
-'  begin' + #13#10 +
-'    GfxClear(''black'');' + #13#10 +
-'' + #13#10 +
-'    // Draw orbit rings' + #13#10 +
-'    GfxColor(''#202020'');' + #13#10 +
-'    GfxDrawCircle(cx, cy, 80);' + #13#10 +
-'    GfxDrawCircle(cx, cy, 140);' + #13#10 +
-'    GfxDrawCircle(cx, cy, 200);' + #13#10 +
-'' + #13#10 +
-'    // Sun' + #13#10 +
-'    GfxColor(''gold'');' + #13#10 +
-'    GfxFillCircle(cx, cy, 30);' + #13#10 +
-'    GfxColor(''yellow'');' + #13#10 +
-'    GfxFillCircle(cx - 8, cy - 8, 10);' + #13#10 +
-'' + #13#10 +
-'    // Mercury (fast, small, grey)' + #13#10 +
-'    px := cx + round(80 * cos(angle1));' + #13#10 +
-'    py := cy + round(80 * sin(angle1));' + #13#10 +
-'    GfxColor(''grey'');' + #13#10 +
-'    GfxFillCircle(px, py, 6);' + #13#10 +
-'' + #13#10 +
-'    // Earth (medium, blue)' + #13#10 +
-'    px := cx + round(140 * cos(angle2));' + #13#10 +
-'    py := cy + round(140 * sin(angle2));' + #13#10 +
-'    GfxColor(''blue'');' + #13#10 +
-'    GfxFillCircle(px, py, 10);' + #13#10 +
-'    GfxColor(''lime'');' + #13#10 +
-'    GfxFillCircle(px + 2, py - 2, 4);' + #13#10 +
-'' + #13#10 +
-'    // Mars (slower, red)' + #13#10 +
-'    px := cx + round(200 * cos(angle3));' + #13#10 +
-'    py := cy + round(200 * sin(angle3));' + #13#10 +
-'    GfxColor(''red'');' + #13#10 +
-'    GfxFillCircle(px, py, 8);' + #13#10 +
-'' + #13#10 +
-'    // Labels' + #13#10 +
-'    GfxColor(''silver'');' + #13#10 +
-'    GfxSetFont(12, false);' + #13#10 +
-'    GfxDrawText(10, 10, ''SOLAR SYSTEM'');' + #13#10 +
-'    GfxDrawText(10, 28, ''Mercury / Earth / Mars'');' + #13#10 +
-'' + #13#10 +
-'    GfxShow;' + #13#10 +
-'    GfxDelay(16);' + #13#10 +
-'' + #13#10 +
-'    // Advance angles (different speeds)' + #13#10 +
-'    angle1 := angle1 + 0.06;' + #13#10 +
-'    angle2 := angle2 + 0.03;' + #13#10 +
-'    angle3 := angle3 + 0.018;' + #13#10 +
-'    inc(frame);' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-Add('Gorilla Game', 'Graphics',
-  'Gorillas-style artillery game — two players throw bananas',
-'// ============================================================' + #13#10 +
-'// GORILLA GAME' + #13#10 +
-'// Two gorillas throw bananas across the city skyline.' + #13#10 +
-'// Enter angle and speed. Hit the other gorilla to win!' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  g1x, g1y, g2x, g2y : Integer;' + #13#10 +
-'  player, round_no    : Integer;' + #13#10 +
-'  score1, score2      : Integer;' + #13#10 +
-'  playing             : Boolean;' + #13#10 +
-'  angle, speed        : Real;' + #13#10 +
-'  bx, by, vx, vy      : Real;' + #13#10 +
-'  t, gravity          : Real;' + #13#10 +
-'  step                : Integer;' + #13#10 +
-'  hit                 : Boolean;' + #13#10 +
-'  ang_str, spd_str    : String;' + #13#10 +
-'  i                   : Integer;' + #13#10 +
-'' + #13#10 +
-'procedure DrawScene;' + #13#10 +
-'var bh : Integer;' + #13#10 +
-'begin' + #13#10 +
-'  GfxClear(''#1a1a2e'');' + #13#10 +
-'' + #13#10 +
-'  // Stars' + #13#10 +
-'  GfxColor(''white'');' + #13#10 +
-'  GfxFillCircle(50,  30, 1);  GfxFillCircle(150, 20, 1);' + #13#10 +
-'  GfxFillCircle(300, 40, 1);  GfxFillCircle(450, 15, 1);' + #13#10 +
-'  GfxFillCircle(550, 35, 1);  GfxFillCircle(600, 60, 1);' + #13#10 +
-'' + #13#10 +
-'  // Moon' + #13#10 +
-'  GfxColor(''gold'');' + #13#10 +
-'  GfxFillCircle(580, 50, 20);' + #13#10 +
-'  GfxColor(''#1a1a2e'');' + #13#10 +
-'  GfxFillCircle(570, 42, 16);' + #13#10 +
-'' + #13#10 +
-'  // Buildings' + #13#10 +
-'  GfxColor(''#2d2d5a'');' + #13#10 +
-'  GfxFillRect(10,  310, 60, 170);  // building 1' + #13#10 +
-'  GfxFillRect(80,  280, 50, 200);  // building 2' + #13#10 +
-'  GfxFillRect(140, 320, 70, 160);  // building 3' + #13#10 +
-'  GfxFillRect(230, 290, 55, 190);  // building 4' + #13#10 +
-'  GfxFillRect(300, 300, 65, 180);  // building 5' + #13#10 +
-'  GfxFillRect(380, 270, 50, 210);  // building 6' + #13#10 +
-'  GfxFillRect(440, 310, 60, 170);  // building 7' + #13#10 +
-'  GfxFillRect(510, 285, 55, 195);  // building 8' + #13#10 +
-'  GfxFillRect(575, 300, 55, 180);  // building 9' + #13#10 +
-'' + #13#10 +
-'  // Building windows' + #13#10 +
-'  GfxColor(''gold'');' + #13#10 +
-'  GfxFillRect(20, 320, 10, 8);   GfxFillRect(40, 320, 10, 8);' + #13#10 +
-'  GfxFillRect(20, 340, 10, 8);   GfxFillRect(40, 340, 10, 8);' + #13#10 +
-'  GfxFillRect(90, 295, 10, 8);   GfxFillRect(110, 295, 10, 8);' + #13#10 +
-'  GfxFillRect(90, 315, 10, 8);   GfxFillRect(110, 315, 10, 8);' + #13#10 +
-'' + #13#10 +
-'  // Ground' + #13#10 +
-'  GfxColor(''#1a4a1a'');' + #13#10 +
-'  GfxFillRect(0, 460, 640, 20);' + #13#10 +
-'' + #13#10 +
-'  // Gorilla 1 (left, player 1)' + #13#10 +
-'  GfxColor(''#8B4513'');' + #13#10 +
-'  GfxFillRect(g1x - 15, g1y - 30, 30, 30);  // body' + #13#10 +
-'  GfxFillCircle(g1x, g1y - 35, 12);          // head' + #13#10 +
-'  GfxColor(''black'');' + #13#10 +
-'  GfxFillCircle(g1x - 4, g1y - 37, 3);      // left eye' + #13#10 +
-'  GfxFillCircle(g1x + 4, g1y - 37, 3);      // right eye' + #13#10 +
-'' + #13#10 +
-'  // Gorilla 2 (right, player 2)' + #13#10 +
-'  GfxColor(''#8B4513'');' + #13#10 +
-'  GfxFillRect(g2x - 15, g2y - 30, 30, 30);  // body' + #13#10 +
-'  GfxFillCircle(g2x, g2y - 35, 12);          // head' + #13#10 +
-'  GfxColor(''black'');' + #13#10 +
-'  GfxFillCircle(g2x - 4, g2y - 37, 3);' + #13#10 +
-'  GfxFillCircle(g2x + 4, g2y - 37, 3);' + #13#10 +
-'' + #13#10 +
-'  // Scores and current player' + #13#10 +
-'  GfxColor(''white'');' + #13#10 +
-'  GfxSetFont(14, true);' + #13#10 +
-'  GfxDrawText(10,  10, ''P1: '' + IntToStr(score1));' + #13#10 +
-'  GfxDrawText(560, 10, ''P2: '' + IntToStr(score2));' + #13#10 +
-'  GfxColor(''yellow'');' + #13#10 +
-'  if player = 1 then GfxDrawText(250, 10, ''< PLAYER 1'')' + #13#10 +
-'  else GfxDrawText(270, 10, ''PLAYER 2 >'');' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'function InRange(v, lo, hi: Integer): Boolean;' + #13#10 +
-'begin' + #13#10 +
-'  Result := (v >= lo) and (v <= hi);' + #13#10 +
-'end;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  GfxOpen(640, 480, ''Gorilla Game'');' + #13#10 +
-'' + #13#10 +
-'  g1x := 65;    g1y := 308;' + #13#10 +
-'  g2x := 570;   g2y := 298;' + #13#10 +
-'  score1 := 0;  score2 := 0;' + #13#10 +
-'  player := 1;  round_no := 1;' + #13#10 +
-'  playing := true;' + #13#10 +
-'  gravity := 0.4;' + #13#10 +
-'' + #13#10 +
-'  DrawScene;  GfxShow;' + #13#10 +
-'' + #13#10 +
-'  while playing and GfxRunning do' + #13#10 +
-'  begin' + #13#10 +
-'    // Get throw angle and speed from player' + #13#10 +
-'    if player = 1 then' + #13#10 +
-'      ang_str := InputBox(''Player 1 - Angle (0-90):'', ''Gorilla'', ''45'')' + #13#10 +
-'    else' + #13#10 +
-'      ang_str := InputBox(''Player 2 - Angle (90-180):'', ''Gorilla'', ''135'');' + #13#10 +
-'' + #13#10 +
-'    if not GfxRunning then exit;' + #13#10 +
-'' + #13#10 +
-'    spd_str := InputBox(''Throw speed (1-100):'', ''Gorilla'', ''50'');' + #13#10 +
-'' + #13#10 +
-'    angle := StrToFloat(ang_str) * 3.14159 / 180;' + #13#10 +
-'    speed := StrToFloat(spd_str) / 5;' + #13#10 +
-'' + #13#10 +
-'    // Launch banana from gorilla position' + #13#10 +
-'    if player = 1 then' + #13#10 +
-'    begin' + #13#10 +
-'      bx := g1x;  by := g1y - 30;' + #13#10 +
-'    end' + #13#10 +
-'    else' + #13#10 +
-'    begin' + #13#10 +
-'      bx := g2x;  by := g2y - 30;' + #13#10 +
-'    end;' + #13#10 +
-'' + #13#10 +
-'    vx := cos(angle) * speed;' + #13#10 +
-'    vy := -sin(angle) * speed;' + #13#10 +
-'    hit := false;  t := 0;' + #13#10 +
-'' + #13#10 +
-'    // Animate the banana' + #13#10 +
-'    while (by < 490) and (not hit) and GfxRunning do' + #13#10 +
-'    begin' + #13#10 +
-'      DrawScene;' + #13#10 +
-'' + #13#10 +
-'      // Draw banana (rotating yellow circle)' + #13#10 +
-'      GfxColor(''yellow'');' + #13#10 +
-'      GfxFillCircle(round(bx), round(by), 6);' + #13#10 +
-'      GfxColor(''gold'');' + #13#10 +
-'      GfxFillCircle(round(bx) + 2, round(by) - 2, 3);' + #13#10 +
-'' + #13#10 +
-'      GfxShow;' + #13#10 +
-'      GfxDelay(16);' + #13#10 +
-'' + #13#10 +
-'      bx := bx + vx;' + #13#10 +
-'      vy := vy + gravity;' + #13#10 +
-'      by := by + vy;' + #13#10 +
-'' + #13#10 +
-'      // Check hit gorilla 2 (player 1 throwing)' + #13#10 +
-'      if player = 1 then' + #13#10 +
-'      begin' + #13#10 +
-'        if InRange(round(bx), g2x-20, g2x+20) and' + #13#10 +
-'           InRange(round(by), g2y-45, g2y) then' + #13#10 +
-'        begin' + #13#10 +
-'          hit := true;' + #13#10 +
-'          inc(score1);' + #13#10 +
-'          GfxColor(''orange'');' + #13#10 +
-'          GfxFillCircle(g2x, g2y - 20, 30);' + #13#10 +
-'          GfxColor(''yellow'');' + #13#10 +
-'          GfxDrawText(g2x - 30, g2y - 60, ''BOOM!'');' + #13#10 +
-'          GfxShow;  GfxDelay(1500);' + #13#10 +
-'        end;' + #13#10 +
-'      end' + #13#10 +
-'      else' + #13#10 +
-'      begin' + #13#10 +
-'        if InRange(round(bx), g1x-20, g1x+20) and' + #13#10 +
-'           InRange(round(by), g1y-45, g1y) then' + #13#10 +
-'        begin' + #13#10 +
-'          hit := true;' + #13#10 +
-'          inc(score2);' + #13#10 +
-'          GfxColor(''orange'');' + #13#10 +
-'          GfxFillCircle(g1x, g1y - 20, 30);' + #13#10 +
-'          GfxColor(''yellow'');' + #13#10 +
-'          GfxDrawText(g1x - 30, g1y - 60, ''BOOM!'');' + #13#10 +
-'          GfxShow;  GfxDelay(1500);' + #13#10 +
-'        end;' + #13#10 +
-'      end;' + #13#10 +
-'    end;' + #13#10 +
-'' + #13#10 +
-'    // Check win condition' + #13#10 +
-'    if score1 >= 3 then' + #13#10 +
-'    begin' + #13#10 +
-'      DrawScene;' + #13#10 +
-'      GfxColor(''gold'');' + #13#10 +
-'      GfxSetFont(32, true);' + #13#10 +
-'      GfxDrawText(160, 180, ''PLAYER 1 WINS!'');' + #13#10 +
-'      GfxShow;  GfxDelay(3000);' + #13#10 +
-'      playing := false;' + #13#10 +
-'    end' + #13#10 +
-'    else if score2 >= 3 then' + #13#10 +
-'    begin' + #13#10 +
-'      DrawScene;' + #13#10 +
-'      GfxColor(''cyan'');' + #13#10 +
-'      GfxSetFont(32, true);' + #13#10 +
-'      GfxDrawText(160, 180, ''PLAYER 2 WINS!'');' + #13#10 +
-'      GfxShow;  GfxDelay(3000);' + #13#10 +
-'      playing := false;' + #13#10 +
-'    end' + #13#10 +
-'    else' + #13#10 +
-'    begin' + #13#10 +
-'      // Switch player' + #13#10 +
-'      if player = 1 then player := 2' + #13#10 +
-'      else player := 1;' + #13#10 +
-'    end;' + #13#10 +
-'  end;' + #13#10 +
-'' + #13#10 +
-'  writeln(''Game over. P1='', score1, '' P2='', score2);' + #13#10 +
-'  GfxClose;' + #13#10 +
-'end.');
-
-Add('Kaleidoscope', 'Graphics',
-  'Hypnotic animated kaleidoscope pattern using symmetry',
-'// ============================================================' + #13#10 +
-'// KALEIDOSCOPE' + #13#10 +
-'// Mesmerising rotating symmetric pattern.' + #13#10 +
-'// ============================================================' + #13#10 +
-'' + #13#10 +
-'var' + #13#10 +
-'  frame, cx, cy : Integer;' + #13#10 +
-'  t : Real;' + #13#10 +
-'  r, px, py, px2, py2 : Integer;' + #13#10 +
-'  a : Real;' + #13#10 +
-'  seg : Integer;' + #13#10 +
-'' + #13#10 +
-'begin' + #13#10 +
-'  GfxOpen(640, 480, ''Kaleidoscope'');' + #13#10 +
-'  cx := 320;  cy := 240;' + #13#10 +
-'  frame := 0;  t := 0;' + #13#10 +
-'' + #13#10 +
-'  while GfxRunning do' + #13#10 +
-'  begin' + #13#10 +
-'    GfxClear(''black'');' + #13#10 +
-'' + #13#10 +
-'    // Draw 12 symmetric segments' + #13#10 +
-'    for seg := 0 to 11 do' + #13#10 +
-'    begin' + #13#10 +
-'      a := (seg * 3.14159 / 6) + t;' + #13#10 +
-'      r := 80 + round(60 * sin(t * 3 + seg));' + #13#10 +
-'' + #13#10 +
-'      px := cx + round(r * cos(a));' + #13#10 +
-'      py := cy + round(r * sin(a));' + #13#10 +
-'      px2 := cx + round((r div 2) * cos(a + 0.5));' + #13#10 +
-'      py2 := cy + round((r div 2) * sin(a + 0.5));' + #13#10 +
-'' + #13#10 +
-'      // Colour cycles' + #13#10 +
-'      case seg mod 6 of' + #13#10 +
-'        0 : GfxColor(''red'');' + #13#10 +
-'        1 : GfxColor(''orange'');' + #13#10 +
-'        2 : GfxColor(''yellow'');' + #13#10 +
-'        3 : GfxColor(''lime'');' + #13#10 +
-'        4 : GfxColor(''cyan'');' + #13#10 +
-'        5 : GfxColor(''magenta'');' + #13#10 +
-'      end;' + #13#10 +
-'' + #13#10 +
-'      GfxDrawLine(cx, cy, px, py);' + #13#10 +
-'      GfxFillCircle(px, py, 8);' + #13#10 +
-'      GfxFillCircle(px2, py2, 5);' + #13#10 +
-'    end;' + #13#10 +
-'' + #13#10 +
-'    // Centre decoration' + #13#10 +
-'    GfxColor(''white'');' + #13#10 +
-'    GfxFillCircle(cx, cy, 15);' + #13#10 +
-'' + #13#10 +
-'    GfxColor(''silver'');' + #13#10 +
-'    GfxSetFont(12, false);' + #13#10 +
-'    GfxDrawText(10, 10, ''KALEIDOSCOPE  —  Close to stop'');' + #13#10 +
-'' + #13#10 +
-'    GfxShow;' + #13#10 +
-'    GfxDelay(20);' + #13#10 +
-'    t := t + 0.04;' + #13#10 +
-'    inc(frame);' + #13#10 +
-'  end;' + #13#10 +
-'end.');
-
-// ---------------------------------------------------------------------------
-Add('Sudoku', 'Games & Fun', 'Full graphical Sudoku with iterative generator, daily challenge and SQLite saves',
-  '// ============================================================' + #13#10 +
-  '// SUDOKU  —  Pythia Pascal  —  Nomidor Software' + #13#10 +
-  '// No Exit statements — all control flow uses boolean flags' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  WIN_W  : Integer;' + #13#10 +
-  '  WIN_H  : Integer;' + #13#10 +
-  '  CELL   : Integer;' + #13#10 +
-  '  GRID_X : Integer;' + #13#10 +
-  '  GRID_Y : Integer;' + #13#10 +
-  '  GRID_W : Integer;' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  board    : array of Integer;' + #13#10 +
-  '  given    : array of Integer;' + #13#10 +
-  '  solution : array of Integer;' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  selRow    : Integer;' + #13#10 +
-  '  selCol    : Integer;' + #13#10 +
-  '  gameWon   : Boolean;' + #13#10 +
-  '  gameMode  : Integer;' + #13#10 +
-  '  elapsed   : Integer;' + #13#10 +
-  '  lastSec   : Integer;' + #13#10 +
-  '  wasDown   : Boolean;' + #13#10 +
-  '  dbPath    : String;' + #13#10 +
-  '  tickCount : Integer;' + #13#10 +
-  '  hintsUsed : Integer;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  UTILITY' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'function RC(r, c: Integer): Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := r * 9 + c;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function Pad2(n: Integer): String;' + #13#10 +
-  'begin' + #13#10 +
-  '  if n < 10 then Result := ''0'' + IntToStr(n)' + #13#10 +
-  '  else            Result := IntToStr(n);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function FmtTime(secs: Integer): String;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := Pad2(secs div 60) + '':'' + Pad2(secs mod 60);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  CONFLICT DETECTION — no Exit, uses boolean short-circuit' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'function Conflicts(r, c, d: Integer): Boolean;' + #13#10 +
-  'var' + #13#10 +
-  '  i, br, bc, dr, dc, tr, tc : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := False;' + #13#10 +
-  '  if d = 0 then' + #13#10 +
-  '  begin' + #13#10 +
-  '    Result := False;' + #13#10 +
-  '  end' + #13#10 +
-  '  else' + #13#10 +
-  '  begin' + #13#10 +
-  '    // Row check' + #13#10 +
-  '    i := 0;' + #13#10 +
-  '    while (i < 9) and (not Result) do' + #13#10 +
-  '    begin' + #13#10 +
-  '      if (i <> c) and (board[RC(r, i)] = d) then Result := True;' + #13#10 +
-  '      i := i + 1;' + #13#10 +
-  '    end;' + #13#10 +
-  '' + #13#10 +
-  '    // Column check' + #13#10 +
-  '    i := 0;' + #13#10 +
-  '    while (i < 9) and (not Result) do' + #13#10 +
-  '    begin' + #13#10 +
-  '      if (i <> r) and (board[RC(i, c)] = d) then Result := True;' + #13#10 +
-  '      i := i + 1;' + #13#10 +
-  '    end;' + #13#10 +
-  '' + #13#10 +
-  '    // Box check' + #13#10 +
-  '    if not Result then' + #13#10 +
-  '    begin' + #13#10 +
-  '      br := (r div 3) * 3;' + #13#10 +
-  '      bc := (c div 3) * 3;' + #13#10 +
-  '      dr := 0;' + #13#10 +
-  '      while (dr < 3) and (not Result) do' + #13#10 +
-  '      begin' + #13#10 +
-  '        dc := 0;' + #13#10 +
-  '        while (dc < 3) and (not Result) do' + #13#10 +
-  '        begin' + #13#10 +
-  '          tr := br + dr;' + #13#10 +
-  '          tc := bc + dc;' + #13#10 +
-  '          if (tr <> r) or (tc <> c) then' + #13#10 +
-  '            if board[RC(tr, tc)] = d then Result := True;' + #13#10 +
-  '          dc := dc + 1;' + #13#10 +
-  '        end;' + #13#10 +
-  '        dr := dr + 1;' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  ITERATIVE BOARD FILLER — no Exit, no Break' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'procedure FillBoard;' + #13#10 +
-  'var' + #13#10 +
-  '  order  : array of Integer;' + #13#10 +
-  '  tryAt  : array of Integer;' + #13#10 +
-  '  pos, i, j, tmp, digit : Integer;' + #13#10 +
-  '  found  : Boolean;' + #13#10 +
-  'begin' + #13#10 +
-  '  SetLength(order, 81 * 9);' + #13#10 +
-  '  SetLength(tryAt, 81);' + #13#10 +
-  '' + #13#10 +
-  '  for pos := 0 to 80 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    for i := 0 to 8 do order[pos * 9 + i] := i + 1;' + #13#10 +
-  '    for i := 8 downto 1 do' + #13#10 +
-  '    begin' + #13#10 +
-  '      j   := Random(i + 1);' + #13#10 +
-  '      tmp := order[pos * 9 + i];' + #13#10 +
-  '      order[pos * 9 + i] := order[pos * 9 + j];' + #13#10 +
-  '      order[pos * 9 + j] := tmp;' + #13#10 +
-  '    end;' + #13#10 +
-  '    tryAt[pos] := 0;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  pos := 0;' + #13#10 +
-  '  while (pos >= 0) and (pos < 81) do' + #13#10 +
-  '  begin' + #13#10 +
-  '    found := False;' + #13#10 +
-  '    while (tryAt[pos] < 9) and (not found) do' + #13#10 +
-  '    begin' + #13#10 +
-  '      digit := order[pos * 9 + tryAt[pos]];' + #13#10 +
-  '      tryAt[pos] := tryAt[pos] + 1;' + #13#10 +
-  '      if not Conflicts(pos div 9, pos mod 9, digit) then' + #13#10 +
-  '      begin' + #13#10 +
-  '        board[pos] := digit;' + #13#10 +
-  '        found := True;' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '' + #13#10 +
-  '    if found then' + #13#10 +
-  '      pos := pos + 1' + #13#10 +
-  '    else' + #13#10 +
-  '    begin' + #13#10 +
-  '      board[pos] := 0;' + #13#10 +
-  '      tryAt[pos] := 0;' + #13#10 +
-  '      for i := 0 to 8 do order[pos * 9 + i] := i + 1;' + #13#10 +
-  '      for i := 8 downto 1 do' + #13#10 +
-  '      begin' + #13#10 +
-  '        j   := Random(i + 1);' + #13#10 +
-  '        tmp := order[pos * 9 + i];' + #13#10 +
-  '        order[pos * 9 + i] := order[pos * 9 + j];' + #13#10 +
-  '        order[pos * 9 + j] := tmp;' + #13#10 +
-  '      end;' + #13#10 +
-  '      pos := pos - 1;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  PUZZLE GENERATOR' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'procedure GeneratePuzzle(difficulty: Integer);' + #13#10 +
-  'var' + #13#10 +
-  '  toRemove, attempts, pos, i : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  for i := 0 to 80 do board[i] := 0;' + #13#10 +
-  '  FillBoard;' + #13#10 +
-  '  for i := 0 to 80 do solution[i] := board[i];' + #13#10 +
-  '' + #13#10 +
-  '  if difficulty = 1 then toRemove := 36' + #13#10 +
-  '  else if difficulty = 2 then toRemove := 46' + #13#10 +
-  '  else toRemove := 54;' + #13#10 +
-  '' + #13#10 +
-  '  attempts := 0;' + #13#10 +
-  '  while (toRemove > 0) and (attempts < 300) do' + #13#10 +
-  '  begin' + #13#10 +
-  '    pos := Random(81);' + #13#10 +
-  '    if board[pos] <> 0 then' + #13#10 +
-  '    begin' + #13#10 +
-  '      board[pos] := 0;' + #13#10 +
-  '      dec(toRemove);' + #13#10 +
-  '    end;' + #13#10 +
-  '    inc(attempts);' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  for i := 0 to 80 do' + #13#10 +
-  '    if board[i] <> 0 then given[i] := 1' + #13#10 +
-  '    else                   given[i] := 0;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  DAILY CHALLENGE' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'procedure SeedFromDate;' + #13#10 +
-  'var' + #13#10 +
-  '  ds      : String;' + #13#10 +
-  '  y, m, d : Integer;' + #13#10 +
-  '  seed, i : Integer;' + #13#10 +
-  '  waste   : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  ds   := DateStr;' + #13#10 +
-  '  y    := StrToInt(Copy(ds, 1, 4));' + #13#10 +
-  '  m    := StrToInt(Copy(ds, 6, 2));' + #13#10 +
-  '  d    := StrToInt(Copy(ds, 9, 2));' + #13#10 +
-  '  seed := y * 10000 + m * 100 + d;' + #13#10 +
-  '  Randomize;' + #13#10 +
-  '  for i := 1 to (seed mod 997) + 1 do' + #13#10 +
-  '    waste := Random(1000);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  PERSISTÊNCIA SQLite / SQLite PERSISTENCE' + #13#10 +
-  '//  Banco de dados: pythia.db / Database: pythia.db' + #13#10 +
-  '//  Tabelas / Tables:' + #13#10 +
-  '//    sudoku_state      — jogo atual / current game' + #13#10 +
-  '//    sudoku_best_times — melhores tempos / best times' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'procedure InitDB;' + #13#10 +
-  'begin' + #13#10 +
-  '  DbOpen(dbPath);' + #13#10 +
-  '  // Cria tabelas se não existirem / Create tables if they don''t exist' + #13#10 +
-  '  DbExec(''CREATE TABLE IF NOT EXISTS sudoku_state ('' +' + #13#10 +
-  '    ''id INTEGER PRIMARY KEY,'' +' + #13#10 +
-  '    ''board TEXT,'' +' + #13#10 +
-  '    ''given TEXT,'' +' + #13#10 +
-  '    ''solution TEXT,'' +' + #13#10 +
-  '    ''mode INTEGER,'' +' + #13#10 +
-  '    ''elapsed INTEGER,'' +' + #13#10 +
-  '    ''saved_at TEXT'' +' + #13#10 +
-  '  '')'');' + #13#10 +
-  '  DbExec(''CREATE TABLE IF NOT EXISTS sudoku_best_times ('' +' + #13#10 +
-  '    ''mode INTEGER PRIMARY KEY,'' +' + #13#10 +
-  '    ''best_seconds INTEGER,'' +' + #13#10 +
-  '    ''achieved_at TEXT'' +' + #13#10 +
-  '  '')'');' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure SaveBestTime(diff, secs: Integer);' + #13#10 +
-  'var' + #13#10 +
-  '  existing : Integer;' + #13#10 +
-  '  row      : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  InitDB;' + #13#10 +
-  '  row := DbQueryValue(''SELECT best_seconds FROM sudoku_best_times WHERE mode = '' + IntToStr(diff));' + #13#10 +
-  '  if row = '''' then' + #13#10 +
-  '  begin' + #13#10 +
-  '    DbExec(''INSERT INTO sudoku_best_times (mode, best_seconds, achieved_at) VALUES ('' +' + #13#10 +
-  '      IntToStr(diff) + '', '' + IntToStr(secs) + '', '''''' + DateStr + '''''')'');' + #13#10 +
-  '  end' + #13#10 +
-  '  else' + #13#10 +
-  '  begin' + #13#10 +
-  '    existing := StrToInt(row);' + #13#10 +
-  '    if secs < existing then' + #13#10 +
-  '      DbExec(''UPDATE sudoku_best_times SET best_seconds = '' + IntToStr(secs) +' + #13#10 +
-  '        '', achieved_at = '''''' + DateStr + '''''''' +' + #13#10 +
-  '        '' WHERE mode = '' + IntToStr(diff));' + #13#10 +
-  '  end;' + #13#10 +
-  '  DbClose;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function LoadBestTime(diff: Integer): Integer;' + #13#10 +
-  'var' + #13#10 +
-  '  row : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  InitDB;' + #13#10 +
-  '  row := DbQueryValue(''SELECT best_seconds FROM sudoku_best_times WHERE mode = '' + IntToStr(diff));' + #13#10 +
-  '  DbClose;' + #13#10 +
-  '  if row = '''' then Result := 0' + #13#10 +
-  '  else              Result := StrToInt(row);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure SaveState;' + #13#10 +
-  'var' + #13#10 +
-  '  bline, gline, sline : String;' + #13#10 +
-  '  i                   : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  bline := '''';' + #13#10 +
-  '  gline := '''';' + #13#10 +
-  '  sline := '''';' + #13#10 +
-  '  for i := 0 to 80 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    bline := bline + IntToStr(board[i]);' + #13#10 +
-  '    gline := gline + IntToStr(given[i]);' + #13#10 +
-  '    sline := sline + IntToStr(solution[i]);' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  InitDB;' + #13#10 +
-  '  DbExec(''DELETE FROM sudoku_state'');' + #13#10 +
-  '  DbExec(''INSERT INTO sudoku_state (board, given, solution, mode, elapsed, saved_at) VALUES ('''''' +' + #13#10 +
-  '    bline + '''''','''''' +' + #13#10 +
-  '    gline + '''''','''''' +' + #13#10 +
-  '    sline + '''''','' +' + #13#10 +
-  '    IntToStr(gameMode) + '','' +' + #13#10 +
-  '    IntToStr(elapsed) + '','''''' +' + #13#10 +
-  '    DateStr + '' '' + TimeStr + '''''')'');' + #13#10 +
-  '  DbClose;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function LoadState: Boolean;' + #13#10 +
-  'var' + #13#10 +
-  '  bstr, gstr, sstr, mstr, estr : String;' + #13#10 +
-  '  i                             : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := False;' + #13#10 +
-  '  InitDB;' + #13#10 +
-  '  bstr := DbQueryValue(''SELECT board     FROM sudoku_state LIMIT 1'');' + #13#10 +
-  '  gstr := DbQueryValue(''SELECT given     FROM sudoku_state LIMIT 1'');' + #13#10 +
-  '  sstr := DbQueryValue(''SELECT solution  FROM sudoku_state LIMIT 1'');' + #13#10 +
-  '  mstr := DbQueryValue(''SELECT mode      FROM sudoku_state LIMIT 1'');' + #13#10 +
-  '  estr := DbQueryValue(''SELECT elapsed   FROM sudoku_state LIMIT 1'');' + #13#10 +
-  '  DbClose;' + #13#10 +
-  '' + #13#10 +
-  '  if (Length(bstr) = 81) and (Length(gstr) = 81) and (Length(sstr) = 81) then' + #13#10 +
-  '  begin' + #13#10 +
-  '    for i := 0 to 80 do' + #13#10 +
-  '    begin' + #13#10 +
-  '      board[i]    := StrToInt(Copy(bstr, i + 1, 1));' + #13#10 +
-  '      given[i]    := StrToInt(Copy(gstr, i + 1, 1));' + #13#10 +
-  '      solution[i] := StrToInt(Copy(sstr, i + 1, 1));' + #13#10 +
-  '    end;' + #13#10 +
-  '    if mstr <> '''' then gameMode := StrToInt(mstr);' + #13#10 +
-  '    if estr <> '''' then elapsed  := StrToInt(estr);' + #13#10 +
-  '    Result := True;' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  WIN CHECK — no Exit' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'function CheckWin: Boolean;' + #13#10 +
-  'var i : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  Result := True;' + #13#10 +
-  '  i := 0;' + #13#10 +
-  '  while (i < 81) and Result do' + #13#10 +
-  '  begin' + #13#10 +
-  '    if board[i] <> solution[i] then Result := False;' + #13#10 +
-  '    i := i + 1;' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  DRAWING' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'procedure DrawGrid;' + #13#10 +
-  'var' + #13#10 +
-  '  r, c, x, y, digit, i : Integer;' + #13#10 +
-  '  isSel, isGiv, hasCon  : Boolean;' + #13#10 +
-  '  s                     : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  GfxColor(''black'');' + #13#10 +
-  '  GfxFillRect(0, 0, WIN_W, WIN_H);' + #13#10 +
-  '' + #13#10 +
-  '  for r := 0 to 8 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    for c := 0 to 8 do' + #13#10 +
-  '    begin' + #13#10 +
-  '      x := GRID_X + c * CELL;' + #13#10 +
-  '      y := GRID_Y + r * CELL;' + #13#10 +
-  '' + #13#10 +
-  '      digit  := board[RC(r, c)];' + #13#10 +
-  '      isSel  := (r = selRow) and (c = selCol);' + #13#10 +
-  '      isGiv  := given[RC(r, c)] = 1;' + #13#10 +
-  '      hasCon := (digit <> 0) and Conflicts(r, c, digit);' + #13#10 +
-  '' + #13#10 +
-  '      if isSel then' + #13#10 +
-  '        GfxColor(''#003366'')' + #13#10 +
-  '      else if hasCon then' + #13#10 +
-  '        GfxColor(''#330000'')' + #13#10 +
-  '      else if isGiv then' + #13#10 +
-  '        GfxColor(''#141428'')' + #13#10 +
-  '      else' + #13#10 +
-  '        GfxColor(''#0a0a1a'');' + #13#10 +
-  '      GfxFillRect(x + 1, y + 1, CELL - 2, CELL - 2);' + #13#10 +
-  '' + #13#10 +
-  '      if digit <> 0 then' + #13#10 +
-  '      begin' + #13#10 +
-  '        GfxSetFont(22, isGiv);' + #13#10 +
-  '        if hasCon then       GfxColor(''red'')' + #13#10 +
-  '        else if isSel then   GfxColor(''cyan'')' + #13#10 +
-  '        else if isGiv then   GfxColor(''white'')' + #13#10 +
-  '        else                 GfxColor(''#7ec8e3'');' + #13#10 +
-  '        s := IntToStr(digit);' + #13#10 +
-  '        GfxDrawText(x + 18, y + 14, s);' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  for i := 0 to 9 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    if (i mod 3) = 0 then GfxColor(''white'')' + #13#10 +
-  '    else                  GfxColor(''#333355'');' + #13#10 +
-  '    GfxDrawLine(GRID_X,          GRID_Y + i * CELL, GRID_X + GRID_W, GRID_Y + i * CELL);' + #13#10 +
-  '    GfxDrawLine(GRID_X + i * CELL, GRID_Y,          GRID_X + i * CELL, GRID_Y + GRID_W);' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure DrawStatus;' + #13#10 +
-  'var' + #13#10 +
-  '  sy, best : Integer;' + #13#10 +
-  '  mstr     : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  sy := GRID_Y + GRID_W + 10;' + #13#10 +
-  '  GfxColor(''black'');' + #13#10 +
-  '  GfxFillRect(0, sy - 2, WIN_W, 56);' + #13#10 +
-  '' + #13#10 +
-  '  if gameMode = 1 then mstr := ''EASY''' + #13#10 +
-  '  else if gameMode = 2 then mstr := ''MEDIUM''' + #13#10 +
-  '  else if gameMode = 3 then mstr := ''HARD''' + #13#10 +
-  '  else mstr := ''DAILY  '' + DateStr;' + #13#10 +
-  '' + #13#10 +
-  '  GfxSetFont(11, True);' + #13#10 +
-  '  GfxColor(''#9999bb'');' + #13#10 +
-  '  GfxDrawText(GRID_X, sy, mstr);' + #13#10 +
-  '' + #13#10 +
-  '  GfxSetFont(14, True);' + #13#10 +
-  '  if gameWon then GfxColor(''lime'')' + #13#10 +
-  '  else            GfxColor(''white'');' + #13#10 +
-  '  GfxDrawText(GRID_X + 190, sy, FmtTime(elapsed));' + #13#10 +
-  '' + #13#10 +
-  '  best := LoadBestTime(gameMode);' + #13#10 +
-  '  if best > 0 then' + #13#10 +
-  '  begin' + #13#10 +
-  '    GfxSetFont(11, False);' + #13#10 +
-  '    GfxColor(''#777788'');' + #13#10 +
-  '    GfxDrawText(GRID_X + 320, sy + 2, ''Best: '' + FmtTime(best));' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure DrawButtons;' + #13#10 +
-  'var' + #13#10 +
-  '  by, bh, bw, i, bx : Integer;' + #13#10 +
-  '  lbl                : String;' + #13#10 +
-  '  clr                : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  by := GRID_Y + GRID_W + 44;' + #13#10 +
-  '  bh := 36;' + #13#10 +
-  '  bw := 108;' + #13#10 +
-  '' + #13#10 +
-  '  for i := 0 to 3 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    bx := GRID_X + i * 118;' + #13#10 +
-  '' + #13#10 +
-  '    if i = 0 then begin lbl := ''Easy'';   clr := ''#1a472a''; end' + #13#10 +
-  '    else if i = 1 then begin lbl := ''Medium''; clr := ''#1a3a47''; end' + #13#10 +
-  '    else if i = 2 then begin lbl := ''Hard'';   clr := ''#472a1a''; end' + #13#10 +
-  '    else begin lbl := ''Daily''; clr := ''#2e1a47''; end;' + #13#10 +
-  '' + #13#10 +
-  '    GfxColor(clr);' + #13#10 +
-  '    GfxFillRect(bx, by, bw, bh);' + #13#10 +
-  '    GfxColor(''#445566'');' + #13#10 +
-  '    GfxDrawRect(bx, by, bw, bh);' + #13#10 +
-  '    GfxSetFont(13, True);' + #13#10 +
-  '    GfxColor(''white'');' + #13#10 +
-  '    GfxDrawText(bx + 20, by + 10, lbl);' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  // Hint button — Easy mode only' + #13#10 +
-  '  if (gameMode = 1) and (not gameWon) then' + #13#10 +
-  '  begin' + #13#10 +
-  '    GfxColor(''#4a4a00'');' + #13#10 +
-  '    GfxFillRect(GRID_X + GRID_W - 64, GRID_Y - 34, 64, 26);' + #13#10 +
-  '    GfxColor(''#888800'');' + #13#10 +
-  '    GfxDrawRect(GRID_X + GRID_W - 64, GRID_Y - 34, 64, 26);' + #13#10 +
-  '    GfxSetFont(11, True);' + #13#10 +
-  '    GfxColor(''yellow'');' + #13#10 +
-  '    GfxDrawText(GRID_X + GRID_W - 52, GRID_Y - 28, ''Hint'');' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure DrawWin;' + #13#10 +
-  'var cx, cy : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  cx := GRID_X + 70;' + #13#10 +
-  '  cy := GRID_Y + (GRID_W div 2) - 30;' + #13#10 +
-  '  GfxSetFont(30, True);' + #13#10 +
-  '  GfxColor(''lime'');' + #13#10 +
-  '  GfxDrawText(cx, cy, ''SOLVED!'');' + #13#10 +
-  '  GfxSetFont(14, False);' + #13#10 +
-  '  GfxColor(''yellow'');' + #13#10 +
-  '  GfxDrawText(cx + 10, cy + 40, ''Time: '' + FmtTime(elapsed));' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure DrawAll;' + #13#10 +
-  'begin' + #13#10 +
-  '  DrawGrid;' + #13#10 +
-  '  DrawStatus;' + #13#10 +
-  '  DrawButtons;' + #13#10 +
-  '  if gameWon then DrawWin;' + #13#10 +
-  '  GfxShow;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  HIT TESTING — no Exit' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'function HitCell(px, py: Integer; var r, c: Integer): Boolean;' + #13#10 +
-  'var gx, gy : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  gx := px - GRID_X;' + #13#10 +
-  '  gy := py - GRID_Y;' + #13#10 +
-  '  if (gx >= 0) and (gy >= 0) and (gx < GRID_W) and (gy < GRID_W) then' + #13#10 +
-  '  begin' + #13#10 +
-  '    c      := gx div CELL;' + #13#10 +
-  '    r      := gy div CELL;' + #13#10 +
-  '    Result := True;' + #13#10 +
-  '  end' + #13#10 +
-  '  else' + #13#10 +
-  '    Result := False;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function HitButton(px, py: Integer): Integer;' + #13#10 +
-  'var by, bh, bw, i, bx : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  by := GRID_Y + GRID_W + 44;' + #13#10 +
-  '  bh := 36;' + #13#10 +
-  '  bw := 108;' + #13#10 +
-  '  Result := 0;' + #13#10 +
-  '  if (py >= by) and (py <= by + bh) then' + #13#10 +
-  '  begin' + #13#10 +
-  '    i := 0;' + #13#10 +
-  '    while (i < 4) and (Result = 0) do' + #13#10 +
-  '    begin' + #13#10 +
-  '      bx := GRID_X + i * 118;' + #13#10 +
-  '      if (px >= bx) and (px <= bx + bw) then' + #13#10 +
-  '        Result := i + 1;' + #13#10 +
-  '      i := i + 1;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'function HitHint(px, py: Integer): Boolean;' + #13#10 +
-  'var hx, hy : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  hx := GRID_X + GRID_W - 64;' + #13#10 +
-  '  hy := GRID_Y - 34;' + #13#10 +
-  '  Result := (gameMode = 1) and (not gameWon)' + #13#10 +
-  '        and (px >= hx) and (px <= hx + 64)' + #13#10 +
-  '        and (py >= hy) and (py <= hy + 26);' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  GIVE HINT' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'procedure GiveHint;' + #13#10 +
-  'var' + #13#10 +
-  '  candidates : array of Integer;' + #13#10 +
-  '  count, i, pick : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  SetLength(candidates, 81);' + #13#10 +
-  '  count := 0;' + #13#10 +
-  '  for i := 0 to 80 do' + #13#10 +
-  '    if (board[i] = 0) and (given[i] = 0) then' + #13#10 +
-  '    begin' + #13#10 +
-  '      candidates[count] := i;' + #13#10 +
-  '      count := count + 1;' + #13#10 +
-  '    end;' + #13#10 +
-  '' + #13#10 +
-  '  if count > 0 then' + #13#10 +
-  '  begin' + #13#10 +
-  '    pick         := candidates[Random(count)];' + #13#10 +
-  '    board[pick]  := solution[pick];' + #13#10 +
-  '    given[pick]  := 1;' + #13#10 +
-  '    inc(hintsUsed);' + #13#10 +
-  '    selRow := pick div 9;' + #13#10 +
-  '    selCol := pick mod 9;' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  START GAME' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'procedure StartGame(difficulty: Integer);' + #13#10 +
-  'var' + #13#10 +
-  '  firstEmpty, fi : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  gameMode  := difficulty;' + #13#10 +
-  '  gameWon   := False;' + #13#10 +
-  '  selRow    := -1;' + #13#10 +
-  '  selCol    := -1;' + #13#10 +
-  '  elapsed   := 0;' + #13#10 +
-  '  lastSec   := -1;' + #13#10 +
-  '  hintsUsed := 0;' + #13#10 +
-  '' + #13#10 +
-  '  if difficulty = 4 then' + #13#10 +
-  '  begin' + #13#10 +
-  '    SeedFromDate;' + #13#10 +
-  '    GeneratePuzzle(2);' + #13#10 +
-  '  end' + #13#10 +
-  '  else' + #13#10 +
-  '  begin' + #13#10 +
-  '    Randomize;' + #13#10 +
-  '    GeneratePuzzle(difficulty);' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  SaveState;' + #13#10 +
-  '' + #13#10 +
-  '  // Seleciona automaticamente a primeira célula vazia' + #13#10 +
-  '  firstEmpty := -1;' + #13#10 +
-  '  fi := 0;' + #13#10 +
-  '  while (fi < 81) and (firstEmpty = -1) do' + #13#10 +
-  '  begin' + #13#10 +
-  '    if given[fi] = 0 then firstEmpty := fi;' + #13#10 +
-  '    fi := fi + 1;' + #13#10 +
-  '  end;' + #13#10 +
-  '  if firstEmpty >= 0 then' + #13#10 +
-  '  begin' + #13#10 +
-  '    selRow := firstEmpty div 9;' + #13#10 +
-  '    selCol := firstEmpty mod 9;' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  MAIN' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  i, mx, my, btn, hr, hc : Integer;' + #13#10 +
-  '  isDown, needDrw         : Boolean;' + #13#10 +
-  '  key                     : String;' + #13#10 +
-  '  fi2                     : Integer;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  WIN_W  := 560;' + #13#10 +
-  '  WIN_H  := 620;' + #13#10 +
-  '  CELL   := 54;' + #13#10 +
-  '  GRID_X := 28;' + #13#10 +
-  '  GRID_Y := 40;' + #13#10 +
-  '  GRID_W := 9 * CELL;' + #13#10 +
-  '' + #13#10 +
-  '  dbPath  := GetAppPath + ''pythia.db'';' + #13#10 +
-  '' + #13#10 +
-  '  SetLength(board,    81);' + #13#10 +
-  '  SetLength(given,    81);' + #13#10 +
-  '  SetLength(solution, 81);' + #13#10 +
-  '' + #13#10 +
-  '  for i := 0 to 80 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    board[i]    := 0;' + #13#10 +
-  '    given[i]    := 0;' + #13#10 +
-  '    solution[i] := 0;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  GfxOpen(WIN_W, WIN_H, ''Sudoku  —  Pythia  v1.0'');' + #13#10 +
-  '' + #13#10 +
-  '  if LoadState then' + #13#10 +
-  '  begin' + #13#10 +
-  '    // Pergunta se quer retomar ou novo jogo' + #13#10 +
-  '    // Ask if user wants to resume or start new' + #13#10 +
-  '    if Confirm(''Jogo salvo encontrado. Retomar?'' + chr(10) + ''Saved game found. Resume?'') then' + #13#10 +
-  '    begin' + #13#10 +
-  '      // Retoma o jogo salvo / Resume saved game' + #13#10 +
-  '      gameWon := CheckWin;' + #13#10 +
-  '    end' + #13#10 +
-  '    else' + #13#10 +
-  '    begin' + #13#10 +
-  '      // Começa novo jogo fácil / Start new easy game' + #13#10 +
-  '      StartGame(1);' + #13#10 +
-  '    end;' + #13#10 +
-  '  end' + #13#10 +
-  '  else' + #13#10 +
-  '    StartGame(1);' + #13#10 +
-  '' + #13#10 +
-  '  gameWon   := CheckWin;' + #13#10 +
-  '  wasDown   := False;' + #13#10 +
-  '  tickCount := 0;' + #13#10 +
-  '  hintsUsed := 0;' + #13#10 +
-  '' + #13#10 +
-  '  // Se o jogo foi carregado (não gerado), seleciona a primeira célula vazia' + #13#10 +
-  '  if (selRow < 0) and (not gameWon) then' + #13#10 +
-  '  begin' + #13#10 +
-  '    fi2 := 0;' + #13#10 +
-  '    while (fi2 < 81) and (selRow < 0) do' + #13#10 +
-  '    begin' + #13#10 +
-  '      if given[fi2] = 0 then' + #13#10 +
-  '      begin' + #13#10 +
-  '        selRow := fi2 div 9;' + #13#10 +
-  '        selCol := fi2 mod 9;' + #13#10 +
-  '      end;' + #13#10 +
-  '      fi2 := fi2 + 1;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  DrawAll;' + #13#10 +
-  '' + #13#10 +
-  '  while GfxRunning do' + #13#10 +
-  '  begin' + #13#10 +
-  '    Sleep(50);' + #13#10 +
-  '    inc(tickCount);' + #13#10 +
-  '' + #13#10 +
-  '    if not gameWon then' + #13#10 +
-  '    begin' + #13#10 +
-  '      if (tickCount mod 20) = 0 then' + #13#10 +
-  '      begin' + #13#10 +
-  '        inc(elapsed);' + #13#10 +
-  '        if elapsed <> lastSec then' + #13#10 +
-  '        begin' + #13#10 +
-  '          lastSec := elapsed;' + #13#10 +
-  '          DrawAll;' + #13#10 +
-  '        end;' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '' + #13#10 +
-  '    mx     := GfxMouseX;' + #13#10 +
-  '    my     := GfxMouseY;' + #13#10 +
-  '    isDown := GfxMouseDown;' + #13#10 +
-  '' + #13#10 +
-  '    if isDown and (not wasDown) then' + #13#10 +
-  '    begin' + #13#10 +
-  '      btn := HitButton(mx, my);' + #13#10 +
-  '      if btn > 0 then' + #13#10 +
-  '      begin' + #13#10 +
-  '        StartGame(btn);' + #13#10 +
-  '        DrawAll;' + #13#10 +
-  '      end' + #13#10 +
-  '      else if HitHint(mx, my) then' + #13#10 +
-  '      begin' + #13#10 +
-  '        GiveHint;' + #13#10 +
-  '        SaveState;' + #13#10 +
-  '        DrawAll;' + #13#10 +
-  '      end' + #13#10 +
-  '      else if (not gameWon) and HitCell(mx, my, hr, hc) then' + #13#10 +
-  '      begin' + #13#10 +
-  '        if given[RC(hr, hc)] = 0 then' + #13#10 +
-  '        begin' + #13#10 +
-  '          selRow := hr;' + #13#10 +
-  '          selCol := hc;' + #13#10 +
-  '        end' + #13#10 +
-  '        else' + #13#10 +
-  '        begin' + #13#10 +
-  '          selRow := -1;' + #13#10 +
-  '          selCol := -1;' + #13#10 +
-  '        end;' + #13#10 +
-  '        DrawAll;' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '    wasDown := isDown;' + #13#10 +
-  '' + #13#10 +
-  '    while GfxKeyPressed do' + #13#10 +
-  '    begin' + #13#10 +
-  '      key     := GfxReadKey;' + #13#10 +
-  '      needDrw := False;' + #13#10 +
-  '' + #13#10 +
-  '      if (not gameWon) and (selRow >= 0) and (selCol >= 0) then' + #13#10 +
-  '      begin' + #13#10 +
-  '        if (key >= ''1'') and (key <= ''9'') then' + #13#10 +
-  '        begin' + #13#10 +
-  '          board[RC(selRow, selCol)] := StrToInt(key);' + #13#10 +
-  '          needDrw := True;' + #13#10 +
-  '          if CheckWin then' + #13#10 +
-  '          begin' + #13#10 +
-  '            gameWon := True;' + #13#10 +
-  '            SaveBestTime(gameMode, elapsed);' + #13#10 +
-  '            // Limpa estado salvo ao vencer / Clear saved state on win' + #13#10 +
-  '            InitDB;' + #13#10 +
-  '            DbExec(''DELETE FROM sudoku_state'');' + #13#10 +
-  '            DbClose;' + #13#10 +
-  '          end;' + #13#10 +
-  '        end' + #13#10 +
-  '        else if (key = ''BACK'') or (key = ''DEL'') or (key = ''0'') then' + #13#10 +
-  '        begin' + #13#10 +
-  '          board[RC(selRow, selCol)] := 0;' + #13#10 +
-  '          needDrw := True;' + #13#10 +
-  '        end' + #13#10 +
-  '        else if key = ''UP''    then begin if selRow > 0 then dec(selRow); needDrw := True; end' + #13#10 +
-  '        else if key = ''DOWN''  then begin if selRow < 8 then inc(selRow); needDrw := True; end' + #13#10 +
-  '        else if key = ''LEFT''  then begin if selCol > 0 then dec(selCol); needDrw := True; end' + #13#10 +
-  '        else if key = ''RIGHT'' then begin if selCol < 8 then inc(selCol); needDrw := True; end;' + #13#10 +
-  '      end' + #13#10 +
-  '      else if key = ''ESC'' then' + #13#10 +
-  '      begin' + #13#10 +
-  '        selRow  := -1;' + #13#10 +
-  '        selCol  := -1;' + #13#10 +
-  '        needDrw := True;' + #13#10 +
-  '      end;' + #13#10 +
-  '' + #13#10 +
-  '      if needDrw then' + #13#10 +
-  '      begin' + #13#10 +
-  '        SaveState;' + #13#10 +
-  '        DrawAll;' + #13#10 +
-  '      end;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  GfxClose;' + #13#10 +
-  'end.' + #13#10);
-
-
-  // ---------------------------------------------------------------------------
-Add('Language Pack Editor', 'Tools', 'Crie e edite pacotes de idioma personalizados para o Pythia / Create and edit custom language packs for Pythia',
-  '// ============================================================' + #13#10 +
-  '// Editor de Pacotes de Idioma — Pythia' + #13#10 +
-  '// Language Pack Editor — Pythia' + #13#10 +
-  '// Nomidor Software, LLC' + #13#10 +
-  '//' + #13#10 +
-  '// Crie ou edite pacotes de idioma personalizados para o Pythia.' + #13#10 +
-  '// Create or edit custom language packs for Pythia.' + #13#10 +
-  '//' + #13#10 +
-  '// O arquivo é salvo em:' + #13#10 +
-  '// The file is saved to:' + #13#10 +
-  '//   <pastaDoExe>\LangPacks\<codigo>.ini' + #13#10 +
-  '//' + #13#10 +
-  '// Formato / Format:' + #13#10 +
-  '//   [Meta]' + #13#10 +
-  '//   Name=Meu Idioma' + #13#10 +
-  '//   Code=xx' + #13#10 +
-  '//   Author=Seu Nome' + #13#10 +
-  '//   Version=1.0' + #13#10 +
-  '//   [Strings]' + #13#10 +
-  '//   TabCompiler=...' + #13#10 +
-  '//   BtnRun=...' + #13#10 +
-  '//   ...' + #13#10 +
-  '// ============================================================' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  packPath  : String;' + #13#10 +
-  '  packName  : String;' + #13#10 +
-  '  packCode  : String;' + #13#10 +
-  '  packAuthor: String;' + #13#10 +
-  '  packVer   : String;' + #13#10 +
-  '' + #13#10 +
-  '// Todas as chaves que precisam ser traduzidas' + #13#10 +
-  '// All keys that need to be translated' + #13#10 +
-  'var' + #13#10 +
-  '  keys : array of String;' + #13#10 +
-  '  vals : array of String;' + #13#10 +
-  '' + #13#10 +
-  'procedure InitKeys;' + #13#10 +
-  'begin' + #13#10 +
-  '  SetLength(keys, 76);' + #13#10 +
-  '  SetLength(vals, 76);' + #13#10 +
-  '' + #13#10 +
-  '  keys[0]  := ''TabCompiler'';     keys[1]  := ''TabCalculator'';' + #13#10 +
-  '  keys[2]  := ''TabLearn'';        keys[3]  := ''TabProjects'';' + #13#10 +
-  '  keys[4]  := ''TabForms'';        keys[5]  := ''TabMacros'';' + #13#10 +
-  '  keys[6]  := ''BtnRun'';          keys[7]  := ''BtnStop'';' + #13#10 +
-  '  keys[8]  := ''BtnClear'';        keys[9]  := ''BtnNew'';' + #13#10 +
-  '  keys[10] := ''BtnOpen'';         keys[11] := ''BtnSave'';' + #13#10 +
-  '  keys[12] := ''BtnSaveAs'';       keys[13] := ''BtnDelete'';' + #13#10 +
-  '  keys[14] := ''MenuFile'';        keys[15] := ''MenuView'';' + #13#10 +
-  '  keys[16] := ''MenuHelp'';        keys[17] := ''MenuNewFile'';' + #13#10 +
-  '  keys[18] := ''MenuOpenFile'';    keys[19] := ''MenuSave'';' + #13#10 +
-  '  keys[20] := ''MenuSaveAs'';      keys[21] := ''MenuExit'';' + #13#10 +
-  '  keys[22] := ''MenuPreferences''; keys[23] := ''MenuAbout'';' + #13#10 +
-  '  keys[24] := ''MenuExamples'';    keys[25] := ''MenuTokens'';' + #13#10 +
-  '  keys[26] := ''MenuAST'';         keys[27] := ''MenuProjectSrc'';' + #13#10 +
-  '  keys[28] := ''StatusReady'';     keys[29] := ''StatusCleared'';' + #13#10 +
-  '  keys[30] := ''StatusRunning'';   keys[31] := ''StatusDone'';' + #13#10 +
-  '  keys[32] := ''StatusError'';     keys[33] := ''StatusExLoaded'';' + #13#10 +
-  '  keys[34] := ''StatusSaved'';     keys[35] := ''StatusOpened'';' + #13#10 +
-  '  keys[36] := ''CalcPrompt'';      keys[37] := ''CalcBtn'';' + #13#10 +
-  '  keys[38] := ''CalcHint'';' + #13#10 +
-  '  keys[39] := ''ProjectAndExamples''; keys[40] := ''ExampleProjects'';' + #13#10 +
-  '  keys[41] := ''SourceEditor'';    keys[42] := ''Output'';' + #13#10 +
-  '  keys[43] := ''PrefsTitle'';      keys[44] := ''PrefsAppearance'';' + #13#10 +
-  '  keys[45] := ''PrefsLanguage'';   keys[46] := ''PrefsTheme'';' + #13#10 +
-  '  keys[47] := ''PrefsLangNote'';' + #13#10 +
-  '  keys[48] := ''PrefsThemeDark'';  keys[49] := ''PrefsThemeLight'';' + #13#10 +
-  '  keys[50] := ''PrefsThemeSys'';   keys[51] := ''PrefsThemeNote'';' + #13#10 +
-  '  keys[52] := ''PrefsBtnOK'';      keys[53] := ''PrefsBtnCancel'';' + #13#10 +
-  '  keys[54] := ''DlgOpenFilter'';   keys[55] := ''DlgSaveFilter'';' + #13#10 +
-  '  keys[56] := ''DlgConfirmDelete''; keys[57] := ''DlgUnsaved'';' + #13#10 +
-  '  keys[58] := ''MacroTrusted'';    keys[59] := ''MacroRun'';' + #13#10 +
-  '  keys[60] := ''MacroNew'';' + #13#10 +
-  '  keys[61] := ''FormNew'';         keys[62] := ''FormPalette'';' + #13#10 +
-  '  keys[63] := ''FormInspector'';   keys[64] := ''FormPreview'';' + #13#10 +
-  '  keys[65] := ''LearnTitle'';      keys[66] := ''LearnNext'';' + #13#10 +
-  '  keys[67] := ''LearnPrev'';       keys[68] := ''LearnCheck'';' + #13#10 +
-  '  keys[69] := ''LearnHint'';' + #13#10 +
-  '  keys[70] := ''AboutTitle'';' + #13#10 +
-  '  keys[71] := ''LangPackEditor'';  keys[72] := ''LangPackNew'';' + #13#10 +
-  '  keys[73] := ''LangPackSave'';    keys[74] := ''LangPackTest'';' + #13#10 +
-  '  keys[75] := ''LangPackName'';' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure LoadExistingPack(filename: String);' + #13#10 +
-  'var' + #13#10 +
-  '  content, line, key, val : String;' + #13#10 +
-  '  i, eqpos               : Integer;' + #13#10 +
-  '  inStrings              : Boolean;' + #13#10 +
-  'begin' + #13#10 +
-  '  if not FileExists(filename) then' + #13#10 +
-  '  begin' + #13#10 +
-  '    writeln(''Arquivo não encontrado: '' + filename);' + #13#10 +
-  '    writeln(''File not found: '' + filename);' + #13#10 +
-  '    writeln(''Iniciando pacote em branco / Starting blank pack.'');' + #13#10 +
-  '    exit;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  content   := ReadFile(filename);' + #13#10 +
-  '  inStrings := False;' + #13#10 +
-  '' + #13#10 +
-  '  // Processa linha por linha' + #13#10 +
-  '  var lines : array of String;' + #13#10 +
-  '  SetLength(lines, 0);' + #13#10 +
-  '' + #13#10 +
-  '  // Divide em linhas manualmente' + #13#10 +
-  '  var pos1, pos2 : Integer;' + #13#10 +
-  '  pos1 := 1;' + #13#10 +
-  '  pos2 := Pos(chr(10), content);' + #13#10 +
-  '  while pos2 > 0 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    SetLength(lines, Length(lines) + 1);' + #13#10 +
-  '    lines[Length(lines) - 1] := Copy(content, pos1, pos2 - pos1);' + #13#10 +
-  '    pos1 := pos2 + 1;' + #13#10 +
-  '    pos2 := Pos(chr(10), Copy(content, pos1, Length(content)));' + #13#10 +
-  '    if pos2 > 0 then pos2 := pos2 + pos1 - 1;' + #13#10 +
-  '  end;' + #13#10 +
-  '  if pos1 <= Length(content) then' + #13#10 +
-  '  begin' + #13#10 +
-  '    SetLength(lines, Length(lines) + 1);' + #13#10 +
-  '    lines[Length(lines) - 1] := Copy(content, pos1, Length(content));' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  for i := 0 to Length(lines) - 1 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    line := Trim(lines[i]);' + #13#10 +
-  '    if line = ''[Meta]'' then inStrings := False' + #13#10 +
-  '    else if line = ''[Strings]'' then inStrings := True' + #13#10 +
-  '    else if (not inStrings) and (Pos(''='', line) > 0) then' + #13#10 +
-  '    begin' + #13#10 +
-  '      eqpos := Pos(''='', line);' + #13#10 +
-  '      key   := Trim(Copy(line, 1, eqpos - 1));' + #13#10 +
-  '      val   := Trim(Copy(line, eqpos + 1, Length(line)));' + #13#10 +
-  '      if key = ''Name''    then packName   := val' + #13#10 +
-  '      else if key = ''Code''    then packCode   := val' + #13#10 +
-  '      else if key = ''Author''  then packAuthor := val' + #13#10 +
-  '      else if key = ''Version'' then packVer    := val;' + #13#10 +
-  '    end' + #13#10 +
-  '    else if inStrings and (Pos(''='', line) > 0) then' + #13#10 +
-  '    begin' + #13#10 +
-  '      eqpos := Pos(''='', line);' + #13#10 +
-  '      key   := Trim(Copy(line, 1, eqpos - 1));' + #13#10 +
-  '      val   := Trim(Copy(line, eqpos + 1, Length(line)));' + #13#10 +
-  '      var ki : Integer;' + #13#10 +
-  '      for ki := 0 to Length(keys) - 1 do' + #13#10 +
-  '        if keys[ki] = key then vals[ki] := val;' + #13#10 +
-  '    end;' + #13#10 +
-  '  end;' + #13#10 +
-  '  writeln(''Pacote carregado / Pack loaded: '' + packName + ''  ['' + packCode + '']'');' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure SavePack;' + #13#10 +
-  'var' + #13#10 +
-  '  content : String;' + #13#10 +
-  '  i       : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  if packCode = '''' then' + #13#10 +
-  '  begin' + #13#10 +
-  '    writeln(''Erro: código do idioma não definido / Error: language code not set.'');' + #13#10 +
-  '    exit;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  content := ''[Meta]'' + chr(13) + chr(10);' + #13#10 +
-  '  content := content + ''Name=''    + packName   + chr(13) + chr(10);' + #13#10 +
-  '  content := content + ''Code=''    + packCode   + chr(13) + chr(10);' + #13#10 +
-  '  content := content + ''Author=''  + packAuthor + chr(13) + chr(10);' + #13#10 +
-  '  content := content + ''Version='' + packVer    + chr(13) + chr(10);' + #13#10 +
-  '  content := content + chr(13) + chr(10);' + #13#10 +
-  '  content := content + ''[Strings]'' + chr(13) + chr(10);' + #13#10 +
-  '' + #13#10 +
-  '  for i := 0 to Length(keys) - 1 do' + #13#10 +
-  '    if vals[i] <> '''' then' + #13#10 +
-  '      content := content + keys[i] + ''='' + vals[i] + chr(13) + chr(10);' + #13#10 +
-  '' + #13#10 +
-  '  packPath := GetAppPath + ''LangPacks\'' + packCode + ''.ini'';' + #13#10 +
-  '  WriteFile(packPath, content);' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''Pacote salvo em / Pack saved to:'');' + #13#10 +
-  '  writeln(''  '' + packPath);' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''Reinicie o Pythia para carregar o novo idioma.'');' + #13#10 +
-  '  writeln(''Restart Pythia to load the new language.'');' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure ShowMenu;' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''======================================'');' + #13#10 +
-  '  writeln(''  Editor de Pacotes de Idioma / Language Pack Editor'');' + #13#10 +
-  '  writeln(''======================================'');' + #13#10 +
-  '  writeln(''  Idioma / Language: '' + packName + ''  ['' + packCode + '']'');' + #13#10 +
-  '  writeln(''  Autor / Author:    '' + packAuthor);' + #13#10 +
-  '  writeln(''  Versão / Version:  '' + packVer);' + #13#10 +
-  '  writeln(''--------------------------------------'');' + #13#10 +
-  '  writeln(''  1. Definir metadados / Set metadata'');' + #13#10 +
-  '  writeln(''  2. Traduzir strings / Translate strings'');' + #13#10 +
-  '  writeln(''  3. Ver strings atuais / View current strings'');' + #13#10 +
-  '  writeln(''  4. Salvar pacote / Save pack'');' + #13#10 +
-  '  writeln(''  5. Carregar pacote existente / Load existing pack'');' + #13#10 +
-  '  writeln(''  0. Sair / Exit'');' + #13#10 +
-  '  writeln(''======================================'');' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure SetMetadata;' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''--- Metadados / Metadata ---'');' + #13#10 +
-  '  writeln(''Nome do idioma (ex: Español): '');' + #13#10 +
-  '  packName   := InputBox(''Metadados'', ''Nome do idioma / Language name:'', packName);' + #13#10 +
-  '  packCode   := InputBox(''Metadados'', ''Código (ex: es, de, ja):'', packCode);' + #13#10 +
-  '  packAuthor := InputBox(''Metadados'', ''Autor / Author:'', packAuthor);' + #13#10 +
-  '  packVer    := InputBox(''Metadados'', ''Versão / Version:'', packVer);' + #13#10 +
-  '  writeln(''Metadados definidos / Metadata set.'');' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure TranslateStrings;' + #13#10 +
-  'var' + #13#10 +
-  '  i   : Integer;' + #13#10 +
-  '  val : String;' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''--- Tradução / Translation ---'');' + #13#10 +
-  '  writeln(''Pressione Enter para manter o valor atual.'');' + #13#10 +
-  '  writeln(''Press Enter to keep the current value.'');' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '' + #13#10 +
-  '  for i := 0 to Length(keys) - 1 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    writeln(''['' + IntToStr(i + 1) + ''/'' + IntToStr(Length(keys)) + ''] '' + keys[i]);' + #13#10 +
-  '    if vals[i] <> '''' then' + #13#10 +
-  '      writeln(''  Atual / Current: '' + vals[i]);' + #13#10 +
-  '    val := InputBox(''Tradução'', keys[i] + '':'', vals[i]);' + #13#10 +
-  '    if val <> '''' then vals[i] := val;' + #13#10 +
-  '  end;' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''Tradução concluída / Translation complete.'');' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  'procedure ViewStrings;' + #13#10 +
-  'var i : Integer;' + #13#10 +
-  'begin' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''--- Strings Atuais / Current Strings ---'');' + #13#10 +
-  '  for i := 0 to Length(keys) - 1 do' + #13#10 +
-  '  begin' + #13#10 +
-  '    if vals[i] <> '''' then' + #13#10 +
-  '      writeln(''  '' + keys[i] + '' = '' + vals[i])' + #13#10 +
-  '    else' + #13#10 +
-  '      writeln(''  '' + keys[i] + '' = (não traduzido / not translated)'');' + #13#10 +
-  '  end;' + #13#10 +
-  'end;' + #13#10 +
-  '' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '//  MAIN' + #13#10 +
-  '// ===========================================================================' + #13#10 +
-  '' + #13#10 +
-  'var' + #13#10 +
-  '  choice : String;' + #13#10 +
-  '  running: Boolean;' + #13#10 +
-  '  i      : Integer;' + #13#10 +
-  '' + #13#10 +
-  'begin' + #13#10 +
-  '  InitKeys;' + #13#10 +
-  '' + #13#10 +
-  '  // Inicializa valores com strings em branco' + #13#10 +
-  '  for i := 0 to Length(vals) - 1 do vals[i] := '''';' + #13#10 +
-  '' + #13#10 +
-  '  // Metadados padrão / Default metadata' + #13#10 +
-  '  packName   := '''';' + #13#10 +
-  '  packCode   := '''';' + #13#10 +
-  '  packAuthor := '''';' + #13#10 +
-  '  packVer    := ''1.0'';' + #13#10 +
-  '' + #13#10 +
-  '  writeln(''Editor de Pacotes de Idioma do Pythia'');' + #13#10 +
-  '  writeln(''Pythia Language Pack Editor'');' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''Para carregar um pacote existente, informe o caminho.'');' + #13#10 +
-  '  writeln(''To load an existing pack, enter the path.'');' + #13#10 +
-  '  writeln(''(Deixe em branco para criar novo / Leave blank to create new)'');' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '' + #13#10 +
-  '  var existingPath : String;' + #13#10 +
-  '  existingPath := InputBox(''Carregar Pacote'', ''Caminho do arquivo .ini (ou deixe em branco):'', '''');' + #13#10 +
-  '  if existingPath <> '''' then' + #13#10 +
-  '    LoadExistingPack(existingPath);' + #13#10 +
-  '' + #13#10 +
-  '  running := True;' + #13#10 +
-  '  while running do' + #13#10 +
-  '  begin' + #13#10 +
-  '    ShowMenu;' + #13#10 +
-  '    choice := InputBox(''Menu'', ''Escolha / Choose (0-5):'', '''');' + #13#10 +
-  '' + #13#10 +
-  '    if choice = ''1'' then SetMetadata' + #13#10 +
-  '    else if choice = ''2'' then TranslateStrings' + #13#10 +
-  '    else if choice = ''3'' then ViewStrings' + #13#10 +
-  '    else if choice = ''4'' then SavePack' + #13#10 +
-  '    else if choice = ''5'' then' + #13#10 +
-  '    begin' + #13#10 +
-  '      var path2 : String;' + #13#10 +
-  '      path2 := InputBox(''Carregar'', ''Caminho do .ini:'', '''');' + #13#10 +
-  '      if path2 <> '''' then LoadExistingPack(path2);' + #13#10 +
-  '    end' + #13#10 +
-  '    else if choice = ''0'' then running := False;' + #13#10 +
-  '  end;' + #13#10 +
-  '' + #13#10 +
-  '  writeln('''');' + #13#10 +
-  '  writeln(''Até logo! / Goodbye!'');' + #13#10 +
-  'end.' + #13#10);
-
-
-end;
 end.

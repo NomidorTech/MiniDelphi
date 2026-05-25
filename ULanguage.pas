@@ -80,7 +80,10 @@ type
     // Ferramenta de pack / Pack tool
     lsLangPackEditor, lsLangPackNew, lsLangPackSave, lsLangPackTest,
     lsLangPackName, lsLangPackCode, lsLangPackAuthor, lsLangPackVersion,
-    lsLangPackInstalled, lsLangPackRestart
+    lsLangPackInstalled, lsLangPackRestart,
+    // Interpreter error messages / Mensagens de erro do interpretador
+    lsErrStepLimit,
+    lsErrStopped
   );
 
   // Um pacote de idioma carregado / A loaded language pack
@@ -152,7 +155,9 @@ const
     'AboutTitle',
     'LangPackEditor', 'LangPackNew', 'LangPackSave', 'LangPackTest',
     'LangPackName', 'LangPackCode', 'LangPackAuthor', 'LangPackVersion',
-    'LangPackInstalled', 'LangPackRestart'
+    'LangPackInstalled', 'LangPackRestart',
+    'ErrStepLimit',
+    'ErrStopped'
   );
 
 // =============================================================================
@@ -614,19 +619,21 @@ procedure TLanguageManager.LoadBuiltIns;
   end;
 
 begin
-  Add('en',     'English',          EN);
-  Add('pt',     'Português',        PT);
-  Add('fr',     'Français',         FR);
-  Add('es',     'Español',          ES);
-  Add('es-419', 'Español (Latinoamérica)', ES_LATAM);
-  Add('uk',     'Українська',       UK);
-  Add('de',     'Deutsch',          DE);
-  Add('it',     'Italiano',         IT);
-  Add('ja',     '日本語',           JA);
-  Add('zh',     '简体中文',         ZH);
-  Add('ko',     '한국어',           KO);
-  Add('hi',     'हिन्दी',           HI);
-  Add('ar',     'العربية',          AR);
+  // Prime Directive order: English, Português, then alphabetical
+  // Ordem da Diretiva Principal: Inglês, Português, depois alfabético
+  Add('en',     'English',                  EN);
+  Add('pt',     'Português',                PT);
+  Add('ar',     'العربية',                  AR);
+  Add('de',     'Deutsch',                  DE);
+  Add('es',     'Español',                  ES);
+  Add('es-419', 'Español (Latinoamérica)',  ES_LATAM);
+  Add('fr',     'Français',                 FR);
+  Add('hi',     'हिन्दी',                   HI);
+  Add('it',     'Italiano',                 IT);
+  Add('ja',     '日本語',                   JA);
+  Add('ko',     '한국어',                   KO);
+  Add('uk',     'Українська',               UK);
+  Add('zh',     '简体中文',                 ZH);
 end;
 
 // ---------------------------------------------------------------------------
